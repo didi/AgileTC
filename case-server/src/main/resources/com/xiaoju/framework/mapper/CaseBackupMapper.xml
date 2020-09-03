@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xiaoju.framework.mapper.CaseBackupMapper">
+  <resultMap id="BaseResultMap" type="com.xiaoju.framework.entity.CaseBackup">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="case_id" jdbcType="BIGINT" property="caseId" />
+    <result column="title" jdbcType="VARCHAR" property="title" />
+    <result column="creator" jdbcType="VARCHAR" property="creator" />
+    <result column="gmt_created" jdbcType="TIMESTAMP" property="gmtCreated" />
+    <result column="case_content" jdbcType="LONGVARCHAR" property="caseContent" />
+    <result column="record_content" jdbcType="LONGVARCHAR" property="recordContent" />
+    <result column="extra" jdbcType="VARCHAR" property="extra" />
+      <result column="is_delete" jdbcType="INTEGER" property="isDelete" />
+  </resultMap>
+
+  <sql id="Base_Column_List">
+    id, case_id, title, creator, gmt_created,case_content, record_content,extra,is_delete
+  </sql>
+  <select id="selectByCaseId" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from case_backup
+    where case_id = #{caseId,jdbcType=BIGINT} and is_delete = 0
+    <if test="beginTime != null">
+      and gmt_created &gt;= #{beginTime,jdbcType=TIMESTAMP}
+    </if>
+    <if test="endTime != null">
+      and gmt_created &lt;= #{endTime,jdbcType=TIMESTAMP}
+    </if>
+    order by id desc
+  </select>
+
+  <delete id="updateByCaseId" parameterType="java.lang.Long">
+    update case_backup set is_delete =1
+    where case_id = #{case_id,jdbcType=BIGINT} and is_delete = 0
+  </delete>
+
+  <insert id="insert" parameterType="com.xiaoju.framework.entity.CaseBackup">
+    <selectKey resultType="java.lang.Long" order="AFTER" keyProperty="id">
+      SELECT LAST_INSERT_ID() AS id
+    </selectKey>
+    insert into case_backup
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+    <if test="id != null">
+      id,
+    </if>
+      <if test="caseId != null">
+        case_id,
+      </if>
+      <if test="title != null" >
+        title,
+      </if>
+      <if test="creator != null">
+        creator,
+      </if>
+      <if test="gmtCreated != null">
+        gmt_created,
+      </if>
+      <if test="caseContent != null">
+        case_content,
+      </if>
+      <if test="recordContent != null">
+        record_content,
+      </if>
+      <if test="extra != null">
+        extra,
+    </if>
+      <if test="isDelete != null">
+      is_delete,
+    </if>
+    </trim>
+   <trim prefix="values (" suffix=")" suffixOverrides=",">
+    <if test="id != null">
+      #{id,jdbcType=BIGINT},
+    </if>
+     <if test="caseId != null">
+       #{caseId,jdbcType=BIGINT},
+     </if>
+     <if test="title != null">
+       #{title,jdbcType=VARCHAR},
+     </if>
+     <if test="creator != null">
+       #{creator,jdbcType=VARCHAR},
+     </if>
+       <if test="gmtCreated != null">
+           #{gmtCreated,jdbcType=TIMESTAMP},
+       </if>
+     <if test="caseContent != null">
+       #{caseContent,jdbcType=LONGVARCHAR},
+     </if>
+       <if test="recordContent != null">
+           #{recordContent,jdbcType=LONGVARCHAR},
+       </if>
+       <if test="extra != null">
+           #{extra,jdbcType=VARCHAR},
+       </if>
+       <if test="isDelete != null">
+           #{isDelete,jdbcType=INTEGER},
+       </if>
+    </trim>
+  </insert>
+
+</mapper>

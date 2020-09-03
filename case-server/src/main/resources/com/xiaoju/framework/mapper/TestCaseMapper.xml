@@ -1,0 +1,403 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xiaoju.framework.mapper.TestCaseMapper">
+  <resultMap id="BaseResultMap" type="com.xiaoju.framework.entity.TestCase">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="group_id" jdbcType="BIGINT" property="groupId" />
+    <result column="title" jdbcType="VARCHAR" property="title" />
+    <result column="description" jdbcType="VARCHAR" property="description" />
+    <result column="is_delete" jdbcType="INTEGER" property="isDelete" />
+    <result column="creator" jdbcType="VARCHAR" property="creator" />
+    <result column="modifier" jdbcType="VARCHAR" property="modifier" />
+    <result column="gmt_created" jdbcType="TIMESTAMP" property="gmtCreated" />
+    <result column="gmt_modified" jdbcType="TIMESTAMP" property="gmtModified" />
+    <result column="extra" jdbcType="VARCHAR" property="extra" />
+    <result column="product_line_id" jdbcType="BIGINT" property="productLineId" />
+    <result column="case_type" jdbcType="INTEGER" property="caseType" />
+    <result column="module_node_id" jdbcType="BIGINT" property="moduleNodeId" />
+    <result column="requirement_id" jdbcType="VARCHAR" property="requirementId" />
+    <result column="smk_case_id" jdbcType="BIGINT" property="smkCaseId" />
+    <result column="channel" jdbcType="INTEGER" property="channel" />
+  </resultMap>
+  <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="com.xiaoju.framework.entity.TestCase">
+    <result column="case_content" jdbcType="LONGVARCHAR" property="caseContent" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, group_id, title, description, is_delete, creator, modifier, gmt_created, gmt_modified, 
+    extra, product_line_id, case_type, module_node_id, requirement_id, smk_case_id,channel
+  </sql>
+  <sql id="Blob_Column_List">
+    case_content
+  </sql>
+
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="ResultMapWithBLOBs">
+    select 
+    <include refid="Base_Column_List" />
+    ,
+    <include refid="Blob_Column_List" />
+    from test_case
+    where id = #{id,jdbcType=BIGINT}
+  </select>
+
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+    delete from test_case
+    where id = #{id,jdbcType=BIGINT}
+  </delete>
+
+  <insert id="insert" parameterType="com.xiaoju.framework.entity.TestCase">
+    <selectKey resultType="java.lang.Long" order="AFTER" keyProperty="id">
+      SELECT LAST_INSERT_ID() AS id
+    </selectKey>
+    insert into test_case
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="groupId != null">
+        group_id,
+      </if>
+      <if test="title != null">
+        title,
+      </if>
+      <if test="description != null">
+        description,
+      </if>
+      <if test="isDelete != null">
+        is_delete,
+      </if>
+      <if test="creator != null">
+        creator,
+      </if>
+      <if test="modifier != null">
+        modifier,
+      </if>
+      <if test="gmtCreated != null">
+        gmt_created,
+      </if>
+      <if test="gmtModified != null">
+        gmt_modified,
+      </if>
+      <if test="extra != null">
+        extra,
+      </if>
+      <if test="productLineId != null">
+        product_line_id,
+      </if>
+      <if test="caseType != null">
+        case_type,
+      </if>
+      <if test="moduleNodeId != null">
+        module_node_id,
+      </if>
+      <if test="requirementId != null">
+        requirement_id,
+      </if>
+      <if test="smkCaseId != null">
+        smk_case_id,
+      </if>
+      <if test="caseContent != null">
+        case_content,
+      </if>
+      <if test="channel != null">
+        channel,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=BIGINT},
+      </if>
+      <if test="groupId != null">
+        #{groupId,jdbcType=BIGINT},
+      </if>
+      <if test="title != null">
+        #{title,jdbcType=VARCHAR},
+      </if>
+      <if test="description != null">
+        #{description,jdbcType=VARCHAR},
+      </if>
+      <if test="isDelete != null">
+        #{isDelete,jdbcType=INTEGER},
+      </if>
+      <if test="creator != null">
+        #{creator,jdbcType=VARCHAR},
+      </if>
+      <if test="modifier != null">
+        #{modifier,jdbcType=VARCHAR},
+      </if>
+      <if test="gmtCreated != null">
+        #{gmtCreated,jdbcType=TIMESTAMP},
+      </if>
+      <if test="gmtModified != null">
+        #{gmtModified,jdbcType=TIMESTAMP},
+      </if>
+      <if test="extra != null">
+        #{extra,jdbcType=VARCHAR},
+      </if>
+      <if test="productLineId != null">
+        #{productLineId,jdbcType=BIGINT},
+      </if>
+      <if test="caseType != null">
+        #{caseType,jdbcType=INTEGER},
+      </if>
+      <if test="moduleNodeId != null">
+        #{moduleNodeId,jdbcType=BIGINT},
+      </if>
+      <if test="requirementId != null">
+        #{requirementId,jdbcType=BIGINT},
+      </if>
+      <if test="smkCaseId != null">
+        #{smkCaseId,jdbcType=BIGINT},
+      </if>
+      <if test="caseContent != null">
+        #{caseContent,jdbcType=LONGVARCHAR},
+      </if>
+      <if test="channel != null">
+        #{channel,jdbcType=INTEGER},
+      </if>
+    </trim>
+  </insert>
+
+  <update id="updateByPrimaryKeySelective" parameterType="com.xiaoju.framework.entity.TestCase">
+    update test_case
+    <set>
+      <if test="groupId != null">
+        group_id = #{groupId,jdbcType=BIGINT},
+      </if>
+      <if test="title != null">
+        title = #{title,jdbcType=VARCHAR},
+      </if>
+      <if test="description != null">
+        description = #{description,jdbcType=VARCHAR},
+      </if>
+      <if test="isDelete != null">
+        is_delete = #{isDelete,jdbcType=INTEGER},
+      </if>
+      <if test="creator != null">
+        creator = #{creator,jdbcType=VARCHAR},
+      </if>
+      <if test="modifier != null">
+        modifier = #{modifier,jdbcType=VARCHAR},
+      </if>
+      <if test="gmtCreated != null">
+        gmt_created = #{gmtCreated,jdbcType=TIMESTAMP},
+      </if>
+      <if test="gmtModified != null">
+        gmt_modified = #{gmtModified,jdbcType=TIMESTAMP},
+      </if>
+      <if test="extra != null">
+        extra = #{extra,jdbcType=VARCHAR},
+      </if>
+      <if test="productLineId != null">
+        product_line_id = #{productLineId,jdbcType=BIGINT},
+      </if>
+      <if test="caseType != null">
+        case_type = #{caseType,jdbcType=INTEGER},
+      </if>
+      <if test="moduleNodeId != null">
+        module_node_id = #{moduleNodeId,jdbcType=BIGINT},
+      </if>
+      <if test="requirementId != null">
+        requirement_id = #{requirementId,jdbcType=BIGINT},
+      </if>
+      <if test="smkCaseId != null">
+        smk_case_id = #{smkCaseId,jdbcType=BIGINT},
+      </if>
+      <if test="caseContent != null">
+        case_content = #{caseContent,jdbcType=LONGVARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+
+  <update id="updateByPrimaryKeyWithBLOBs" parameterType="com.xiaoju.framework.entity.TestCase">
+    update test_case
+    set group_id = #{groupId,jdbcType=BIGINT},
+      title = #{title,jdbcType=VARCHAR},
+      description = #{description,jdbcType=VARCHAR},
+      is_delete = #{isDelete,jdbcType=INTEGER},
+      creator = #{creator,jdbcType=VARCHAR},
+      modifier = #{modifier,jdbcType=VARCHAR},
+      gmt_created = #{gmtCreated,jdbcType=TIMESTAMP},
+      gmt_modified = #{gmtModified,jdbcType=TIMESTAMP},
+      extra = #{extra,jdbcType=VARCHAR},
+      product_line_id = #{productLineId,jdbcType=BIGINT},
+      case_type = #{caseType,jdbcType=INTEGER},
+      module_node_id = #{moduleNodeId,jdbcType=BIGINT},
+      requirement_id = #{requirementId,jdbcType=VARCHAR},
+      smk_case_id = #{smkCaseId,jdbcType=BIGINT},
+      case_content = #{caseContent,jdbcType=LONGVARCHAR}
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+
+  <update id="updateByPrimaryKey" parameterType="com.xiaoju.framework.entity.TestCase">
+    update test_case
+    set group_id = #{groupId,jdbcType=BIGINT},
+      title = #{title,jdbcType=VARCHAR},
+      description = #{description,jdbcType=VARCHAR},
+      is_delete = #{isDelete,jdbcType=INTEGER},
+      creator = #{creator,jdbcType=VARCHAR},
+      modifier = #{modifier,jdbcType=VARCHAR},
+      gmt_created = #{gmtCreated,jdbcType=TIMESTAMP},
+      gmt_modified = #{gmtModified,jdbcType=TIMESTAMP},
+      extra = #{extra,jdbcType=VARCHAR},
+      product_line_id = #{productLineId,jdbcType=BIGINT},
+      case_type = #{caseType,jdbcType=INTEGER},
+      module_node_id = #{moduleNodeId,jdbcType=BIGINT},
+      requirement_id = #{requirementId,jdbcType=VARCHAR},
+      smk_case_id = #{smkCaseId,jdbcType=BIGINT}
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+
+  <select id="listByRequirementId" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from test_case
+    where requirement_id like concat('%',#{requirementId,jdbcType=VARCHAR},'%') and is_delete = 0 and case_type = 0
+    order by id desc
+  </select>
+
+  <select id="selectNameById" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select title
+    from test_case
+    where id = #{id,jdbcType=BIGINT}
+  </select>
+
+  <select id="getCountTestCase"  resultType="java.lang.Integer" >
+    select count(*) from test_case
+    <where>
+      <if test="requirement_id == null">
+        product_line_id = #{productLineId,jdbcType=BIGINT} and is_delete = 0 and case_type =#{case_type,jdbcType=INTEGER}
+        <if test="id != null">
+          and id = #{id,jdbcType=BIGINT}
+        </if>
+        <if test="creator != null and creator != ''">
+          and creator = #{creator,jdbcType=VARCHAR}
+        </if>
+        <if test="beginTime != null">
+          and gmt_created &gt;= #{beginTime,jdbcType=TIMESTAMP}
+        </if>
+        <if test="endTime != null">
+          and gmt_created &lt;= #{endTime,jdbcType=TIMESTAMP}
+        </if>
+        <if test="title != null and title != ''">
+          and title like CONCAT('%',#{title,jdbcType=VARCHAR},'%')
+        </if>
+        <if test="channel!= null ">
+          and channel = #{channel,jdbcType=INTEGER}
+        </if>
+      </if>
+      <if test="requirement_id != null">
+        <foreach collection="requirement_id" item="item" separator="or">
+          product_line_id = #{productLineId,jdbcType=BIGINT} and is_delete = 0 and case_type =#{case_type,jdbcType=INTEGER}
+          <if test="id != null">
+            and id = #{id,jdbcType=BIGINT}
+          </if>
+          <if test="creator != null and creator != ''">
+            and creator = #{creator,jdbcType=VARCHAR}
+          </if>
+          <if test="requirement_id != null">
+            and FIND_IN_SET(#{item,jdbcType=VARCHAR},requirement_id)
+          </if>
+          <if test="beginTime != null">
+            and gmt_created &gt;= #{beginTime,jdbcType=TIMESTAMP}
+          </if>
+          <if test="endTime != null">
+            and gmt_created &lt;= #{endTime,jdbcType=TIMESTAMP}
+          </if>
+          <if test="title != null and title != ''">
+            and title like CONCAT('%',#{title,jdbcType=VARCHAR},'%')
+          </if>
+          <if test="channel!= null ">
+            and channel = #{channel,jdbcType=INTEGER}
+          </if>
+        </foreach>
+      </if>
+    </where>
+  </select>
+
+  <select id="listTestCaseByids" parameterType="java.lang.Long" resultMap="ResultMapWithBLOBs">
+    select
+    <include refid="Base_Column_List" />
+    ,
+    <include refid="Blob_Column_List"/>
+    from test_case
+    <where>
+      <if test="requirement_id == null">
+        product_line_id = #{productLineId,jdbcType=BIGINT} and is_delete = 0 and case_type = #{case_type,jdbcType=INTEGER }
+        <if test="id != null">
+          and id = #{id,jdbcType=BIGINT}
+        </if>
+        <if test="creator != null and creator != ''">
+          and creator = #{creator,jdbcType=VARCHAR}
+        </if>
+        <if test="beginTime != null">
+          and gmt_created &gt;= #{beginTime,jdbcType=TIMESTAMP}
+        </if>
+        <if test="endTime != null">
+          and gmt_created &lt;= #{endTime,jdbcType=TIMESTAMP}
+        </if>
+        <if test="title != null and title != ''">
+          and title like CONCAT('%',#{title,jdbcType=VARCHAR},'%')
+        </if>
+        <if test="channel!= null ">
+          and channel = #{channel,jdbcType=INTEGER}
+        </if>
+      </if>
+      <if test="requirement_id != null">
+        <foreach collection="requirement_id" item="item" separator="or">
+          product_line_id = #{productLineId,jdbcType=BIGINT} and is_delete = 0 and case_type = #{case_type,jdbcType=INTEGER }
+          <if test="id != null">
+            and id = #{id,jdbcType=BIGINT}
+          </if>
+          <if test="creator != null and creator != ''">
+            and creator = #{creator,jdbcType=VARCHAR}
+          </if>
+          <if test="requirement_id != null">
+            and FIND_IN_SET(#{item,jdbcType=VARCHAR},requirement_id)
+          </if>
+          <if test="beginTime != null">
+            and gmt_created &gt;= #{beginTime,jdbcType=TIMESTAMP}
+          </if>
+          <if test="endTime != null">
+            and gmt_created &lt;= #{endTime,jdbcType=TIMESTAMP}
+          </if>
+          <if test="title != null and title != ''">
+            and title like CONCAT('%',#{title,jdbcType=VARCHAR},'%')
+          </if>
+          <if test="channel!= null ">
+            and channel = #{channel,jdbcType=INTEGER}
+          </if>
+        </foreach>
+      </if>
+    </where>
+    order by id desc
+    limit ${offset},${pageSize}
+  </select>
+
+  <select id="listCreators" parameterType="java.lang.Integer" resultType="String">
+    select distinct(creator) from test_case
+    <where>
+      <if test="case_type != null and case_type != ''">
+        and case_type=#{case_type,jdbcType=INTEGER}
+      </if>
+      <if test="productLineId != null and productLineId != ''">
+        and product_line_id=#{productLineId,jdbcType=BIGINT}
+      </if>
+        and is_delete=0 and creator!=''
+    </where>
+  </select>
+
+  <update id="updateRequirementId">
+    update test_case
+    set
+    <if test="requirement_id != null">
+      requirement_id= #{requirement_id,jdbcType=VARCHAR}
+    </if>
+    where id=#{id,jdbcType=INTEGER}
+  </update>
+
+  <select id="listProductLineId" parameterType="java.lang.Integer">
+    select distinct(product_line_id) from test_case where is_delete=0
+  </select>
+
+</mapper>

@@ -1,0 +1,59 @@
+{
+  "scripts": {
+    "start": "umi dev",
+    "build": "umi build",
+    "test": "umi test",
+    "lint": "eslint --ext .js src mock tests",
+    "precommit": "lint-staged"
+  },
+  "dependencies": {
+    "antd": "^3.23.6",
+    "axios": "^0.19.0",
+    "dva": "^2.6.0-beta.6",
+    "lodash.debounce": "^4.0.8",
+    "moment": "^2.24.0",
+    "qrcode.react": "^1.0.0",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6"
+  },
+  "devDependencies": {
+    "babel-eslint": "^9.0.0",
+    "eslint": "^5.4.0",
+    "eslint-config-prettier": "^6.1.0",
+    "eslint-config-standard": "^11.0.0",
+    "eslint-config-umi": "^1.4.0",
+    "eslint-plugin-flowtype": "^2.50.0",
+    "eslint-plugin-import": "^2.14.0",
+    "eslint-plugin-jsx-a11y": "^5.1.1",
+    "eslint-plugin-node": "^6.0.1",
+    "eslint-plugin-prettier": "^3.1.0",
+    "eslint-plugin-promise": "^3.8.0",
+    "eslint-plugin-react": "^7.14.3",
+    "eslint-plugin-standard": "^3.1.0",
+    "husky": "^0.14.3",
+    "lint-staged": "^9.2.5",
+    "node-sass": "^4.12.0",
+    "prettier": "^1.18.2",
+    "react-test-renderer": "^16.7.0",
+    "sass-loader": "^7.3.1",
+    "umi": "^2.7.7",
+    "umi-plugin-react": "^1.8.4"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.{js,jsx}": [
+      "eslint --fix",
+      "git add"
+    ]
+  },
+  "engines": {
+    "node": ">=8.0.0"
+  },
+  "eslintIgnore": [
+    "dist/"
+  ]
+}

@@ -1,0 +1,73 @@
+.doneHeader {
+  background: linear-gradient(to right, #404e67 0, #6f85ad 100%);
+  // padding: 0 0 0 240px;
+  padding: 0;
+  ul {
+    background: transparent;
+  }
+  .user {
+    height: 64px;
+    text-align: right;
+    padding: 16px 16px 16px 0;
+    line-height: 32px;
+    a {
+      color: #fff;
+      height: 32px;
+      line-height: 32px;
+      display: inline-block;
+    }
+    .ant-dropdown ul.ant-dropdown-menu {
+      background: #fff;
+      .ant-dropdown-menu-item > a {
+        color: rgba(0, 0, 0, 0.65);
+      }
+    }
+    @media screen and (max-width: 576px) {
+      font-size: 0.8em;
+    }
+    @media screen and (max-width: 375px) {
+      font-size: 0.6em;
+    }
+  }
+}
+.ant-badge {
+  @media screen and (max-width: 576px) {
+    font-size: 0.8em;
+  }
+  @media screen and (max-width: 375px) {
+    font-size: 0.6em;
+  }
+}
+.logo {
+  height: 64px;
+  padding: 16px;
+  line-height: 32px;
+  a {
+    display: inline-block;
+    height: 32px;
+    line-height: 32px;
+  }
+  img {
+    max-width: 100%;
+    max-height: 32px;
+  }
+}
+.doneSider {
+  background: #2b3037;
+  color: #fff;
+  padding: 16px 0;
+}
+.doneSiderUl {
+  list-style: none;
+  padding-inline-start: 0px;
+  margin-bottom: 0;
+  text-align: center;
+  li {
+    padding: 8px;
+  }
+}
+.doneSiderItemText {
+  color: #fff;
+  display: inline-block;
+  padding: 4px 0 8px 0;
+}

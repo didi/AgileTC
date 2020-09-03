@@ -1,0 +1,36 @@
+.progress{
+
+    .border-wrap{
+        display: inline-block;
+        width:100%;
+        border-radius: 5px ;
+    }
+    .div-wrap{
+        display: inline-block;
+        height:10px;
+        cursor: pointer;
+    }
+
+    .div-wrap:first-child{    border-bottom-left-radius: 3px 3px;
+        border-top-left-radius: 3px 3px;}
+    .div-wrap:last-child{   border-bottom-right-radius: 3px 3px;
+            border-top-right-radius: 3px 3px;}
+}
+.case-title{
+    font-size: 16px;
+    color: #8B9ABE;
+}
+.description-case{
+    font-size: 12px;
+}
+.m-b-18{
+    margin-bottom: 18px;
+}
+.font-size-12{
+    font-size: 12px;
+}
+.elipsis-case{
+
+ 
+    overflow:hidden; white-space: nowrap; word-break:break-all;text-overflow:ellipsis;
+}
