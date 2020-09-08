@@ -29,9 +29,10 @@ AgileTC 是一套敏捷的线上测试用例管理平台，支持测试用例集
     - mysql
 
  - 准备
-    - 创建依赖数据库
-    - 利用sql中的脚本配置对应表
+    - 创建依赖数据库，application-dev.properties中配置数据库名称为case_manager。create database case_manager
+    - 利用sql中的脚本配置对应表。创建脚本路径：case-server/sql/case-server.sql
     - 修改properties中spring.datasource的配置
+    - 安装xmind jar包。 mvn install:install-file -Dfile=org.xmind.core_3.5.2.201505201101.jar -DgroupId=com.xmind -DartifactId=sdk-Java -Dversion=201505201101 -Dpackaging=jar
 
  - 运行
     - mvn spring-boot:run 
