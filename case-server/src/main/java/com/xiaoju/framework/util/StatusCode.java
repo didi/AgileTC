@@ -1,11 +1,10 @@
 package com.xiaoju.framework.util;
 
-import org.springframework.ext.common.object.Status;
 
 /**
  * Created by didi on 2019/9/29.
  */
-public enum StatusCode implements Status{
+public enum StatusCode {
     JSON_FORMAT_ERROR(10004, "JSON格式不正确"),
     DATA_FORMAT_ERROR(10005, "数据格式化异常"),
     HTTP_ACESS_ERROR(10006, "HTTP访问异常"),
@@ -25,27 +24,22 @@ public enum StatusCode implements Status{
         this.msg = message;
     }
 
-    @Override
     public boolean isSuccess() {
         return getStatus() == 10000;
     }
 
-    @Override
     public int getStatus() {
         return status;
     }
 
-    @Override
     public String getCode() {
         return name();
     }
 
-    @Override
     public String getMsg() {
         return String.format(msg, "");
     }
 
-    @Override
     public String getMsg(Object... objects) {
         if (objects == null) {
             return getMsg();

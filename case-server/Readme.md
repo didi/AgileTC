@@ -34,7 +34,7 @@ AgileTC 是一套敏捷的线上测试用例管理平台，支持测试用例集
     - 修改properties中spring.datasource的配置
 
  - 运行
-    - mvn sprint-boot:run 
+    - mvn spring-boot:run 
     - 浏览器打开 http://localhost:8094/case/caseList/1
 
 
