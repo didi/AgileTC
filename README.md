@@ -1,4 +1,5 @@
 #### AgileTC
+![image](https://dpubstatic.udache.com/static/dpubimg/RQnYIFAwEd/logo.png)
 #### 简介
 
 >AgileTC AgileTC是一套敏捷的测试用例管理平台，支持测试用例管理、执行计划管理、进度计算、多人实时协同等能力，方便测试人员对用例进行管理和沉淀。产品以脑图方式编辑可快速上手，用例关联需求形成流程闭环，并支持组件化引用，可在各个平台嵌入使用，是测试人员的贴心助手！
