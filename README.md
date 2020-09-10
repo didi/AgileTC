@@ -1,38 +1,44 @@
 #### AgileTC
 #### 简介
 
->AgileTC 是一套敏捷的线上测试用例管理平台，支持测试用例集管理、用例分级管理、任务管理、进度计算、多人实施协同等通用能力。适用于软件测试/开发人员用例编写、用例评审、测试任务管理等场景。
-
+>AgileTC AgileTC是一套敏捷的测试用例管理平台，支持测试用例管理、执行计划管理、进度计算、多人实时协同等能力，方便测试人员对用例进行管理和沉淀。产品以脑图方式编辑可快速上手，用例关联需求形成流程闭环，并支持组件化引用，可在各个平台嵌入使用，是测试人员的贴心助手！
 
 #### 功能描述
-##### 特性
 
->+ 敏捷： 与xmind一致的操作体验；支持用例分级管理、执行状态管理；用例关联需求和BUG，线上化展示需求测试进展和质量状态。
->+ 高效： 支持多人实时协同编辑，测试合作更高效；通过用例优先级标识、筛选，实现测试任务的分解和管理。
->+ 稳定：定时巡检和探活保障连接的有效性；完整的用户日志记录，操作过程可回溯；异常情况下的降级保存机制。
+##### 测试用例集管理
+>AgileTC能够将用例集与需求关联，支持xmind/xmind zen的导入/导出，具备丰富的搜索能力，如根据用例集名称、创建人、管理需求和创建时间进行搜索。
 
-##### 功能
+##### 用例编辑
+>AgileTC支持多人实时协同编辑用例集，其中一个人的修改，会实时同步到打开相同用例的其他客户端，实现更加高效的测试集编写和测试执行协同。支持用例优先级和自定义标签标记。服务端和客户端增加了定时巡检探活机制保障连接稳定性。支持连接异常（如浏览器异常退出或系统故障等）场景下，自动保存用例集。
 
->+ 用例集服务
->    - 复杂搜索
->    - 导入导出
->    - 需求关联
->    - 用例集增删改
+##### 测试任务管理
+>用户可以根据用例中的优先级和标签圈选测试用例，组合成自身需要的测试任务。支持任务分配邮件通知机制，用户可以在测试任务中标记用例测试状态，并查看测试任务的整体进展。
 
->+ 任务服务
->    - 需求绑定
->    - 任务分配邮件和dchat通知
->    -  圈选用例
->    -  任务执行
->    -  进度计算
->    -  任务增删改
+##### 如何使用
+##### 环境依赖
+- mac环境（暂未在windows环境运行） 
+- java 1.8 
+- mysql 服务端 
+- Chrome
 
->+ 用例服务
->    - 多人实时协同
->    - 定时巡检探活
->    - 历史记录
+##### 下载
+```
+git clone https://github.com/didi/AgileTC.git 
+或者 直接Download ZIP
+```
+
+##### 准备
+- 创建依赖数据库，application-dev.properties中配置数据库名称为case_manager create database case_manager 
+- 利用sql中的脚本配置对应表。创建脚本路径：case-server/sql/case-server.sql 
+- 修改application-dev.properties中spring.datasource的配置。默认数据库端口号为3306 
+- 安装xmind jar包。 mvn install:install-file -Dfile=org.xmind.core_3.5.2.201505201101.jar -DgroupId=com.xmind -DartifactId=sdk-Java -Dversion=201505201101 -Dpackaging=jar
+
+##### 运行
+- mvn spring-boot:run 
+- 浏览器打开 http://localhost:8094/case/caseList/1
 
 #### 整体架构
+![整体架构](https://dpubstatic.udache.com/static/dpubimg/f1f36dbd-d85a-452e-85d6-47738aa3f459.png)
 
 #### 联系我们
-
+![image](https://dpubstatic.udache.com/static/dpubimg/12d91285-ab4c-406b-97ab-d68199ef09c2.png)
