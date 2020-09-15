@@ -114,12 +114,12 @@ class OeFilter extends React.Component {
     });
   };
   handleChange = value => {
-    let val = value.map(item => item.key.split('-')[0]).join(',');
+    // let val = value.map(item => item.key.split('-')[0]).join(',');
 
     this.setState({
       value,
       data: [],
-      iterationFilter: val,
+      iterationFilter: value,
       fetching: false,
     });
   };
@@ -175,36 +175,12 @@ class OeFilter extends React.Component {
           </Col>
           <Col span={24} className="m-b-24">
             <div className="filter-item">
-              <Select
-                mode="multiple"
-                labelInValue
+              <Input
                 value={value}
                 placeholder="关联需求"
-                notFoundContent={
-                  fetching ? <span>搜索中...</span> : '搜索不到该需求'
-                }
-                filterOption={(input, option) => {
-                  if (option) {
-                    return (
-                      option.props.value
-                        .toLowerCase()
-                        .indexOf(input.toLowerCase()) >= 0
-                    );
-                  }
-                }}
-                onSearch={value => {
-                  this.getOeRequirement(value);
-                }}
-                onChange={this.handleChange}
+                onChange={e => this.handleChange(e.target.value)}
                 style={{ width: '100%' }}
-              >
-                {this.state.requirementOe.length > 0 &&
-                  this.state.requirementOe.map(d => (
-                    <Option key={d.id} value={d.id + '-' + d.oeIssue.title}>
-                      {d.id + '-' + d.oeIssue.title}
-                    </Option>
-                  ))}
-              </Select>
+              />
             </div>
           </Col>
           <Col span={24} className="m-b-24">

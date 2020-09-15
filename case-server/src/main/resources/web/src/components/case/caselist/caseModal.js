@@ -1,6 +1,7 @@
 /* eslint-disable */
 import React from 'react';
 import PropTypes from 'prop-types';
+import router from 'umi/router';
 import {
   Upload,
   Form,
@@ -120,11 +121,11 @@ class CaseModal extends React.Component {
   // 确认新建
   saveEditerData(values) {
     let requirementId = values.requirementId;
-    if (this.props.type == 'oe') {
-      requirementId = values.requirementId
-        .map(item => item.key.split('-')[0])
-        .join(',');
-    }
+    // if (this.props.type == 'oe') {
+    //   requirementId = values.requirementId
+    //     .map(item => item.key.split('-')[0])
+    //     .join(',');
+    // }
     let params = {
       groupId: '1',
       channel: '0',
@@ -134,7 +135,7 @@ class CaseModal extends React.Component {
       isDelete: 0,
       productLineId: this.props.productId,
       caseContent: initData,
-      requirementId: requirementId,
+      requirementId,
       caseType: 0,
       id: this.state.operate != 'add' ? this.props.data.id : '',
       channel: this.props.type === 'oe' ? 1 : 0,
@@ -172,18 +173,8 @@ class CaseModal extends React.Component {
             : '复制测试用例集成功',
         );
         if (this.state.operate === 'add') {
-          let urls = '';
-          if (window.location.origin.indexOf('127.0.0.1') > -1) {
-            urls =
-              window.location.href.split('#')[0] +
-              '#' +
-              `/caseManager/${this.props.productId}/${res.data}/0`;
-          } else {
-            urls =
-              window.location.origin +
-              `${this.props.baseUrl}/caseManager/${this.props.productId}/${res.data}/0`;
-          }
-          window.location.href = urls;
+          let urls = `${this.props.baseUrl}/caseManager/${this.props.productId}/${res.data}/undefined/0`;
+          router.push(urls);
         }
 
         this.props.onClose(false);
@@ -196,16 +187,16 @@ class CaseModal extends React.Component {
   // 确认重命名
   renameOk = values => {
     let requirementId = values.requirementId;
-    if (this.props.type == 'oe') {
-      requirementId = values.requirementId
-        .map(item => item.key.split('-')[0])
-        .join(',');
-    }
+    // if (this.props.type == 'oe') {
+    //   requirementId = values.requirementId
+    //     .map(item => item.key.split('-')[0])
+    //     .join(',');
+    // }
 
     let params = {
       title: values.case,
       id: this.state.data.id,
-      requirementId: requirementId,
+      requirementId,
       caseType: 0,
       description: values.description,
       modifier: getCookies('username'),
@@ -293,10 +284,11 @@ class CaseModal extends React.Component {
     let newRequirementArr =
       requirementArr &&
       requirementArr.map(item => {
-        return {
-          label: item.title,
-          key: `${item.requirementId}-${item.title}`,
-        };
+        // return {
+        //   label: item.title,
+        //   key: `${item.requirementId}-${item.title}`,
+        // };
+        return item.requirementId;
       });
     return (
       <Modal
@@ -371,89 +363,16 @@ class CaseModal extends React.Component {
                 requirement && requirement.status != '关闭' && operate != 'copy'
                   ? requirement.id
                   : '',
-            })(
-              <Select
-                style={{ Width: '100%' }}
-                placeholder="所属需求"
-                showSearch
-                optionFilterProp="children"
-                filterOption={(input, option) => {
-                  return (
-                    option.props.children
-                      .toLowerCase()
-                      .indexOf(input.toLowerCase()) >= 0
-                  );
-                }}
-              >
-                {options &&
-                  options.requirementLs &&
-                  options.requirementLs.map((item, index) => {
-                    if (item.iterationId == currProjectId) {
-                      if (
-                        (requirement && item.id == requirement.id) ||
-                        item.status != '关闭'
-                      ) {
-                        return (
-                          <Option
-                            key={item.id}
-                            value={item.id}
-                            disabled={item.status == '关闭'}
-                          >
-                            {`${item.name}${
-                              item.status == '关闭' ? '(已关闭)' : ''
-                            }`}
-                          </Option>
-                        );
-                      }
-                    }
-                  })}
-              </Select>,
-            )}
+            })(<Input style={{ Width: '100%' }} placeholder="所属需求" />)}
           </Form.Item>
         )) || (
           <Form.Item {...formItemLayout} label="关联需求：">
             {getFieldDecorator('requirementId', {
               initialValue:
-                (this.state.operate !== 'copy' && newRequirementArr) || [],
-            })(
-              <Select
-                mode="multiple"
-                placeholder="请选择需求"
-                labelInValue
-                placeholder="关联需求"
-                filterOption={(input, option) => {
-                  if (option) {
-                    return (
-                      option.props.value
-                        .toLowerCase()
-                        .indexOf(input.toLowerCase()) >= 0
-                    );
-                  }
-                }}
-                notFoundContent={
-                  fetching ? (
-                    <span>搜索中...</span>
-                  ) : requirementSeach ? (
-                    '搜索不到该需求'
-                  ) : (
-                    '请输入需求名进行搜索'
-                  )
-                }
-                onSearch={value => {
-                  this.getOeRequirement(value);
-                }}
-                // onChange={this.handleChange}
-                style={{ width: '100%' }}
-                onBlur={e => this.setState({ requirementSeach: '' })}
-              >
-                {this.state.requirementOe.length > 0 &&
-                  this.state.requirementOe.map(d => (
-                    <Option key={d.id} value={d.id + '-' + d.oeIssue.title}>
-                      {d.id + '-' + d.oeIssue.title}
-                    </Option>
-                  ))}
-              </Select>,
-            )}
+                (this.state.operate !== 'copy' &&
+                  newRequirementArr.join(',')) ||
+                '',
+            })(<Input placeholder="关联需求" style={{ width: '100%' }} />)}
           </Form.Item>
         )}
         {(isOE && (

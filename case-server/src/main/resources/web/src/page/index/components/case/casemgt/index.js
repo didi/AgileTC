@@ -344,7 +344,8 @@ export default class CaseMgt extends React.Component {
                 关联需求:
               </Col>
               <Col span="14" className="font-size-12">
-                {(requirementObj &&
+                {casedetail ? casedetail.requirementId : ''}
+                {/* {(requirementObj &&
                   requirementObj.map((item, index) => {
                     let titleStr = item.title;
                     if (index !== 0) {
@@ -361,7 +362,7 @@ export default class CaseMgt extends React.Component {
                       </Link>
                     );
                   })) ||
-                  null}
+                  null} */}
               </Col>
             </Row>
           )) ||
@@ -392,7 +393,12 @@ export default class CaseMgt extends React.Component {
             tags={['前置条件', '执行步骤', '预期结果']}
             progressShow={progressShow}
             readOnly={readOnly}
-            editorStyle={{ height: 'calc(100vh - 300px)' }}
+            editorStyle={{ height: 'calc(100vh - 200px)' }}
+            toolbar={{
+              image: false,
+              theme: ['classic-compact', 'fresh-blue', 'fresh-green-compat'],
+              template: ['default', 'right', 'fish-bone'],
+            }}
             baseUrl="/"
             uploadUrl="/api/projmgr/common/uploadAttachment"
             wsUrl={`ws://${window.location.host}/api/case/${caseId}/${itemid}/${iscore}/${user}`}

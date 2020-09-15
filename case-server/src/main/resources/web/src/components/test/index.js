@@ -1,6 +1,7 @@
 /* eslint-disable */
 import React, { Component } from 'react';
 import request from '@/utils/axios';
+import router from 'umi/router';
 import {
   Table,
   Icon,
@@ -86,10 +87,7 @@ class TestTask extends Component {
         dataIndex: 'title',
         key: 'title',
         render: (t, record) => {
-          let url = `/case/caseManager/${this.props.productId}/${record.caseId}/${record.id}/3`;
-          if (this.props.type == 'oe') {
-            url = `${this.props.baseUrl}/caseManager/${this.props.productId}/${record.caseId}/${record.id}/3`;
-          }
+          let url = `${this.props.baseUrl}/caseManager/${this.props.productId}/${record.caseId}/${record.id}/3`;
           return <a onClick={() => this.taskLink(url, record)}>{t}</a>;
         },
       },
@@ -226,7 +224,7 @@ class TestTask extends Component {
   taskLink = (url, record) => {
     let loginUser = getCookies('username');
     if (record.owner === '' || record.owner.indexOf(loginUser) > -1) {
-      window.location.href = url;
+      router.push(url);
     } else {
       this.showConfirm(url);
     }
@@ -236,7 +234,7 @@ class TestTask extends Component {
     return Modal.confirm({
       title: '您不是当前测试任务指派的负责人，确认要执行该任务？',
       onOk() {
-        window.location.href = url;
+        router.push(url);
       },
       onCancel() {},
       icon: <Icon type="question-circle" style={{ color: '#1890FF' }} />,

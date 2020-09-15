@@ -1,6 +1,7 @@
 /* eslint-disable */
 import React from 'react';
 import Link from 'umi/link';
+import router from 'umi/router';
 import request from '@/utils/axios';
 import {
   Table,
@@ -148,83 +149,18 @@ class Lists extends React.Component {
         key: 'title',
         width: 200,
         render: (text, record) => {
-          let url = `/case/caseManager/${this.props.productId}/${record.id}/0`;
+          let url = `/case/caseManager/${this.props.productId}/${record.id}/undefined/0`;
           if (this.props.type == 'oe') {
-            url = `${this.props.baseUrl}/caseManager/${this.props.productId}/${record.id}/0`;
+            url = `${this.props.baseUrl}/caseManager/${this.props.productId}/${record.id}/undefined/0`;
           }
           return <Link to={url}>{text}</Link>;
         },
       },
       {
-        title: `${'关联需求'}`,
+        title: '关联需求',
         dataIndex: 'requirementId',
         key: 'requirementId',
         width: 200,
-        render: text => {
-          if (this.props.type !== 'oe') {
-            const { requirementLs } = this.props.options;
-
-            let requirement = _.find(requirementLs, function(item) {
-              return item.id === text;
-            });
-            if (requirement) {
-              return (
-                <div
-                  className="min-overflow"
-                  style={{ maxWidth: '100px' }}
-                  title={requirement.name}
-                >
-                  <Link
-                    key={text}
-                    to={`/product/${
-                      requirement.isIterationDone === 1 ||
-                      (requirement.iterationId === 0 &&
-                        requirement.status === '关闭')
-                        ? 'done'
-                        : 'ing'
-                    }/${this.props.productId}/${text}`}
-                  >
-                    {requirement.name}
-                  </Link>
-                </div>
-              );
-            }
-            return '未知';
-          } else {
-            let textArr = text.split(',');
-            let requirement = [];
-            this.state.requirementObj.filter(item => {
-              if (textArr.indexOf(String(item.requirementId)) > -1) {
-                requirement.push({ title: item.title, id: item.requirementId });
-              }
-            });
-
-            return requirement.map((item, index) => {
-              if (index == 0) {
-                return (
-                  <Link
-                    to={`${this.props.baseUrl}/${item.id}`}
-                    key={item.id}
-                    target="_blank"
-                  >
-                    {item.title}
-                  </Link>
-                );
-              } else {
-                return (
-                  <Link
-                    to={`${this.props.baseUrl}/${item.id}`}
-                    key={item.id}
-                    target="_blank"
-                  >
-                    {' '}
-                    , {item.title}
-                  </Link>
-                );
-              }
-            });
-          }
-        },
       },
       {
         title: '最近更新人',
@@ -496,10 +432,7 @@ class Lists extends React.Component {
         key: 'title',
         width: 200,
         render: (text, record) => {
-          let url = `/case/caseManager/${this.props.productId}/${record.caseId}/${record.id}/3`;
-          if (this.props.type == 'oe') {
-            url = `${this.props.baseUrl}/caseManager/${this.props.productId}/${record.caseId}/${record.id}/3`;
-          }
+          let url = `${this.props.baseUrl}/caseManager/${this.props.productId}/${record.caseId}/${record.id}/3`;
           return (
             <Tooltip title={text}>
               <a
@@ -671,7 +604,7 @@ class Lists extends React.Component {
   taskLink = (url, record) => {
     let loginUser = getCookies('username');
     if (record.owner === '' || record.owner.indexOf(loginUser) > -1) {
-      window.location.href = url;
+      router.push(url);
     } else {
       this.showConfirm(url);
     }
@@ -681,7 +614,7 @@ class Lists extends React.Component {
     return Modal.confirm({
       title: '您不是当前测试任务指派的负责人，确认要执行该任务？',
       onOk() {
-        window.location.href = url;
+        router.push(url);
       },
       onCancel() {},
       icon: <Icon type="question-circle" style={{ color: '#1890FF' }} />,

@@ -29,14 +29,14 @@ const proxy =
   NODE_ENV !== 'production'
     ? {
         '/api': {
-          target: `http://localhost:8080`, // 测试环境
+          target: `http://localhost:8081`, // 测试环境
           changeOrigin: true,
           pathRewrite: { '^/api': '' },
         },
       }
     : {};
 
-const chainWebpack = (config) => {
+const chainWebpack = config => {
   if (NODE_ENV === 'production') {
     config.merge({
       optimization: {

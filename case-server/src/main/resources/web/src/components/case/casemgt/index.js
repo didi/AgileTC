@@ -1,7 +1,7 @@
 /* eslint-disable */
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Row, Button, Col, message, Tooltip } from 'antd';
+import { Breadcrumb, Row, Button, Col, message, Tooltip } from 'antd';
 import './index.scss';
 import request from '@/utils/axios';
 import getQueryString from '@/utils/getCookies';
@@ -166,7 +166,13 @@ export default class CaseMgt extends React.Component {
     const { type, match, baseUrl } = this.props;
     const { iscore, caseId, itemid } = match.params;
     const user = getCookies('username');
-    const { recordDetail, casedetail, requirementObj } = this.state;
+    const { recordDetail, casedetail } = this.state;
+    // let requirementObj = {};
+    // if (casedetail) {
+    //   requirementObj = casedetail.requirementId
+    //     ? casedetail.requirementId.split(',')
+    //     : [];
+    // }
     let readOnly = false;
     let progressShow = false;
     if (iscore === '0' || iscore === '1') {
@@ -178,6 +184,12 @@ export default class CaseMgt extends React.Component {
     }
     return (
       <div style={{ position: 'relative', minHeight: '80vh' }}>
+        <Breadcrumb style={{ marginBottom: 8, fontSize: 12 }}>
+          <Breadcrumb.Item>
+            <Link to="/case/caseList/1">用例管理</Link>
+          </Breadcrumb.Item>
+          <Breadcrumb.Item>用例详情</Breadcrumb.Item>
+        </Breadcrumb>
         <div
           style={{
             padding: 12,
@@ -333,7 +345,6 @@ export default class CaseMgt extends React.Component {
                   <Col span="22">{casedetail.title}</Col>
                 </Row>
               </Col>
-
               <Col span="6" className="description-case elipsis-case">
                 <Tooltip title={casedetail.description} placement="topLeft">
                   {casedetail.description}
@@ -344,24 +355,25 @@ export default class CaseMgt extends React.Component {
                 关联需求:
               </Col>
               <Col span="14" className="font-size-12">
-                {(requirementObj &&
+                {casedetail ? casedetail.requirementId : ''}
+                {/* {(requirementObj &&
                   requirementObj.map((item, index) => {
-                    let titleStr = item.title;
-                    if (index !== 0) {
-                      titleStr = ' , ' + item.title;
-                    }
+                    // let titleStr = item.title;
+                    // if (index !== 0) {
+                    //   titleStr = ' , ' + item.title;
+                    // }
 
                     return (
                       <Link
-                        to={`${baseUrl}/${item.requirementId}`}
-                        key={item.requirementId}
+                        to={`${baseUrl}/${item}`}
+                        key={index}
                         target="_blank"
                       >
-                        {titleStr}
+                        {item}
                       </Link>
                     );
                   })) ||
-                  null}
+                  null} */}
               </Col>
             </Row>
           )) ||
@@ -392,7 +404,12 @@ export default class CaseMgt extends React.Component {
             tags={['前置条件', '执行步骤', '预期结果']}
             progressShow={progressShow}
             readOnly={readOnly}
-            editorStyle={{ height: 'calc(100vh - 300px)' }}
+            editorStyle={{ height: 'calc(100vh - 200px)' }}
+            toolbar={{
+              image: false,
+              theme: ['classic-compact', 'fresh-blue', 'fresh-green-compat'],
+              template: ['default', 'right', 'fish-bone'],
+            }}
             baseUrl="/"
             uploadUrl="/api/projmgr/common/uploadAttachment"
             wsUrl={`ws://${window.location.host}/api/case/${caseId}/${itemid}/${iscore}/${user}`}
