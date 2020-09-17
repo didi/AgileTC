@@ -42,4 +42,4 @@ git clone https://github.com/didi/AgileTC.git 
 ![整体架构](https://dpubstatic.udache.com/static/dpubimg/f1f36dbd-d85a-452e-85d6-47738aa3f459.png)
 
 #### 联系我们
-![image](https://dpubstatic.udache.com/static/dpubimg/12d91285-ab4c-406b-97ab-d68199ef09c2.png)
+![image](https://dpubstatic.udache.com/static/dpubimg/22391f2f-f03c-4b3b-92a7-92f41313b473.png)
