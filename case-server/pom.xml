@@ -157,7 +157,7 @@
 			<artifactId>sdk-Java</artifactId>
 			<version>201505201101</version>
 		</dependency>
-		<!--xmind解析-->
+		<!--xMind解析-->
 		<dependency>
 			<groupId>dom4j</groupId>
 			<artifactId>dom4j</artifactId>
