@@ -17,7 +17,7 @@
 
 ##### 如何使用
 ##### 环境依赖
-- mac环境（暂未在windows环境运行） 
+- mac环境 
 - java 1.8 
 - mysql 服务端 
 - Chrome
