@@ -2,7 +2,7 @@
 ![image](https://dpubstatic.udache.com/static/dpubimg/RQnYIFAwEd/logo.png)
 #### 简介
 
->AgileTC AgileTC是一套敏捷的测试用例管理平台，支持测试用例管理、执行计划管理、进度计算、多人实时协同等能力，方便测试人员对用例进行管理和沉淀。产品以脑图方式编辑可快速上手，用例关联需求形成流程闭环，并支持组件化引用，可在各个平台嵌入使用，是测试人员的贴心助手！
+>AgileTC是一套敏捷的测试用例管理平台，支持测试用例管理、执行计划管理、进度计算、多人实时协同等能力，方便测试人员对用例进行管理和沉淀。产品以脑图方式编辑可快速上手，用例关联需求形成流程闭环，并支持组件化引用，可在各个平台嵌入使用，是测试人员的贴心助手！
 
 #### 功能描述
 
@@ -31,7 +31,7 @@ git clone https://github.com/didi/AgileTC.git 
 - 创建依赖数据库，application-dev.properties中配置数据库名称为case_manager create database case_manager 
 - 利用sql中的脚本配置对应表。创建脚本路径：case-server/sql/case-server.sql 
 - 修改application-dev.properties中spring.datasource的配置。默认数据库端口号为3306 
-- 安装xmind jar包。 mvn install:install-file -Dfile=org.xmind.core_3.5.2.201505201101.jar -DgroupId=com.xmind -DartifactId=sdk-Java -Dversion=201505201101 -Dpackaging=jar
+- 安装xmind jar包。 mvn install:install-file -Dfile=org.xmind.core_3.5.2.201505201101.jar -DgroupId=com.xmind -DartifactId=sdk-Java -Dversion=201505201101 -Dpackaging=jar
 
 ##### 运行
 - mvn spring-boot:run 
@@ -41,4 +41,6 @@ git clone https://github.com/didi/AgileTC.git 
 ![整体架构](https://dpubstatic.udache.com/static/dpubimg/f1f36dbd-d85a-452e-85d6-47738aa3f459.png)
 
 #### 联系我们
-![image](https://dpubstatic.udache.com/static/dpubimg/c2384ca1-488b-4826-b2d6-953468b7668a.png)
+群成员超200，需要扫描二维码添加客服，邀请入群
+
+![image](https://dpubstatic.udache.com/static/dpubimg/1caac875-675a-4078-a946-6680f30553ef.png)
