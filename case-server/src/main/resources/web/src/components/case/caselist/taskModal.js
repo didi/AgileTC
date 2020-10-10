@@ -104,7 +104,8 @@ class TaskModal extends React.Component {
           .endOf('day')
           .valueOf()
       : '';
-    params.owner = params.owner.join(',');
+    // params.owner = params.owner.join(',');
+    params.owner = params.owner || '';
     delete params.cyclePlan;
     let url =
       this.props.type !== 'oe'
@@ -212,39 +213,45 @@ class TaskModal extends React.Component {
 
         <Form.Item {...formItemLayout} label="负责人">
           {getFieldDecorator('owner', {
+            // initialValue:
+            //   this.props.titleModeTask === '编辑测试任务' &&
+            //   this.props.record.owner
+            //     ? this.props.record.owner.split(',')
+            //     : [],
             initialValue:
               this.props.titleModeTask === '编辑测试任务' &&
               this.props.record.owner
-                ? this.props.record.owner.split(',')
-                : [],
+                ? this.props.record.owner
+                : '',
           })(
-            <Select
-              mode="multiple"
-              placeholder="请输入负责人"
-              onSearch={value => {
-                this.props.getOwnerList(value);
-              }}
-              filterOption={false}
-              notFoundContent={
-                fetching ? (
-                  <span>搜索中...</span>
-                ) : requirementSeach ? (
-                  '搜索不到该负责人'
-                ) : (
-                  '请输入负责人名进行搜索'
-                )
-              }
-              onBlur={e => {
-                this.props.clearRequire();
-              }}
-            >
-              {ownerList &&
-                ownerList.map((item, index) => (
-                  <Option key={item.deptId} value={item.username}>
-                    {`${item.displayName}(${item.username})`}
-                  </Option>
-                ))}
-            </Select>,
+            <Input placeholder="请输入负责人" />,
+            // <Select
+            //   mode="multiple"
+            //   placeholder="请输入负责人"
+            //   onSearch={value => {
+            //     this.props.getOwnerList(value);
+            //   }}
+            //   filterOption={false}
+            //   notFoundContent={
+            //     fetching ? (
+            //       <span>搜索中...</span>
+            //     ) : requirementSeach ? (
+            //       '搜索不到该负责人'
+            //     ) : (
+            //       '请输入负责人名进行搜索'
+            //     )
+            //   }
+            //   onBlur={e => {
+            //     this.props.clearRequire();
+            //   }}
+            // >
+            //   {ownerList &&
+            //     ownerList.map((item, index) => (
+            //       <Option key={item.deptId} value={item.username}>
+            //         {`${item.displayName}(${item.username})`}
+            //       </Option>
+            //     ))}
+            // </Select>
           )}
         </Form.Item>
 

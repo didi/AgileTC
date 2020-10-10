@@ -545,7 +545,8 @@ class TestTask extends Component {
                 : `/${this.props.doneApiPrefix}/execRecord/addRecord`;
             params.caseId = values.relation;
             params.creator = getCookies('username');
-            params.owner = values.owner.join(',');
+            // params.owner = values.owner.join(',');
+            params.owner = values.owner || '';
             params.expectStartTime = choiseDate[0]
               ? moment(choiseDate[0])
                   .startOf('day')
