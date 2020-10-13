@@ -7,7 +7,7 @@ import request from '../../../../../util/request';
 import getQueryString from '../../../../../util/getCookies';
 const getCookies = getQueryString.getCookie;
 import moment from 'moment';
-import Link from 'umi/link';
+// import Link from 'umi/link';
 import AgileTCEditor from '@didi/react-agiletc-editor';
 /* global staffNamePY */
 export default class CaseMgt extends React.Component {
@@ -402,6 +402,14 @@ export default class CaseMgt extends React.Component {
             baseUrl="/"
             uploadUrl="/api/projmgr/common/uploadAttachment"
             wsUrl={`ws://${window.location.host}/api/case/${caseId}/${itemid}/${iscore}/${user}`}
+            onSave={
+              Number(iscore) !== 2
+                ? () => {
+                    message.loading('保存中......', 1);
+                    this.updateCase();
+                  }
+                : null
+            }
           />
         </div>
       </div>

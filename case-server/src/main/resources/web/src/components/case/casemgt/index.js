@@ -413,6 +413,14 @@ export default class CaseMgt extends React.Component {
             baseUrl="/"
             uploadUrl="/api/projmgr/common/uploadAttachment"
             wsUrl={`ws://${window.location.host}/api/case/${caseId}/${itemid}/${iscore}/${user}`}
+            onSave={
+              Number(iscore) !== 2
+                ? () => {
+                    message.loading('保存中......', 1);
+                    this.updateCase();
+                  }
+                : null
+            }
           />
         </div>
       </div>

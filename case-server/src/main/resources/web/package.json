@@ -1,7 +1,7 @@
 {
   "scripts": {
     "start": "umi dev",
-    "build": "umi build",
+    "build": "sudo umi build",
     "test": "umi test",
     "lint": "eslint --ext .js src mock tests",
     "precommit": "lint-staged"
@@ -32,7 +32,7 @@
     "eslint-plugin-standard": "^3.1.0",
     "husky": "^0.14.3",
     "lint-staged": "^9.2.5",
-    "node-sass": "^4.12.0",
+    "node-sass": "^4.14.1",
     "prettier": "^1.18.2",
     "react-test-renderer": "^16.7.0",
     "sass-loader": "^7.3.1",
