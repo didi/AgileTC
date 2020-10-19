@@ -238,14 +238,14 @@ class CaseModal extends React.Component {
       xmindFile,
       data,
       show,
-      currProjectId,
+      // currProjectId,
       project,
       requirement,
       options,
       operate,
-      requirementArr,
-      fetching,
-      requirementSeach,
+      // requirementArr,
+      // fetching,
+      // requirementSeach,
     } = this.state;
     const { type } = this.props;
     const isOE = type === 'oe';
@@ -257,9 +257,9 @@ class CaseModal extends React.Component {
       },
       beforeUpload: file => {
         this.setState(state => ({ xmindFile: file }));
-        const isLt2M = file.size / 1024 / 1024 <= 10;
+        const isLt2M = file.size / 1024 / 1024 <= 100;
         if (!isLt2M) {
-          message.error('用例集文件大小不能超过10M');
+          message.error('用例集文件大小不能超过100M');
         }
         return false;
       },
@@ -280,15 +280,15 @@ class CaseModal extends React.Component {
         break;
     }
 
-    let newRequirementArr =
-      requirementArr &&
-      requirementArr.map(item => {
-        // return {
-        //   label: item.title,
-        //   key: `${item.requirementId}-${item.title}`,
-        // };
-        return item.requirementId;
-      });
+    // let newRequirementArr =
+    //   requirementArr &&
+    //   requirementArr.map(item => {
+    //     // return {
+    //     //   label: item.title,
+    //     //   key: `${item.requirementId}-${item.title}`,
+    //     // };
+    //     return item.requirementId;
+    //   });
     return (
       <Modal
         visible={show}
@@ -367,10 +367,10 @@ class CaseModal extends React.Component {
         )) || (
           <Form.Item {...formItemLayout} label="关联需求：">
             {getFieldDecorator('requirementId', {
-              initialValue:
-                (this.state.operate !== 'copy' &&
-                  newRequirementArr.join(',')) ||
-                '',
+              initialValue: data ? data.requirementId : undefined,
+              // (this.state.operate !== 'copy' &&
+              //   newRequirementArr.join(',')) ||
+              // '',
             })(<Input placeholder="关联需求" style={{ width: '100%' }} />)}
           </Form.Item>
         )}

@@ -34,9 +34,9 @@ class CaseModal extends Component {
       },
       beforeUpload: file => {
         this.setState(state => ({ xmindFile: file }));
-        const isLt2M = file.size / 1024 / 1024 <= 10;
+        const isLt2M = file.size / 1024 / 1024 <= 100;
         if (!isLt2M) {
-          message.error('用例集文件大小不能超过10M');
+          message.error('用例集文件大小不能超过100M');
         }
         return false;
       },
