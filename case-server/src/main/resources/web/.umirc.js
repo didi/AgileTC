@@ -164,11 +164,17 @@ export default {
       },
     ],
   ],
+  disableRedirectHoist: true,
   routes: [
     {
       path: '/',
       component: '../layouts/index.js',
       routes: [
+        {
+          exact: true,
+          path: '/',
+          redirect: '/case/caseList/1',
+        },
         {
           path: '/case/caseList/:product_id',
           component: './casepage/index.js',
@@ -180,6 +186,10 @@ export default {
         {
           path: '/test/:productId/:requirementId',
           component: './testTaskList/index.js',
+        },
+        {
+          path: '*',
+          redirect: '/case/caseList/1',
         },
       ],
     },
