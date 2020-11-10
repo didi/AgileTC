@@ -189,7 +189,7 @@ export default {
         },
         {
           path: '*',
-          redirect: '/case/caseList/1',
+          redirect: '/',
         },
       ],
     },
