@@ -173,7 +173,7 @@ export default {
         {
           exact: true,
           path: '/',
-          redirect: '/case/caseList/1',
+          component: './landing/index.jsx',
         },
         {
           path: '/case/caseList/:product_id',
