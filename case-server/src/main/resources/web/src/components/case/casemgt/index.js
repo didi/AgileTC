@@ -53,7 +53,7 @@ export default class CaseMgt extends React.Component {
   }
   ///case/getRequirement
 
-  getRequirementsById = (requirementIds) => {
+  getRequirementsById = requirementIds => {
     // request(`${this.props.oeApiPrefix}/business-lines/requirements`, {
     //   method: 'GET',
     //   params: { requirementIds: requirementIds },
@@ -71,7 +71,7 @@ export default class CaseMgt extends React.Component {
     request(url, {
       method: 'GET',
       params: { id: this.props.match.params.caseId },
-    }).then((res) => {
+    }).then(res => {
       if (res.code == 200) {
         this.setState(
           {
@@ -98,7 +98,7 @@ export default class CaseMgt extends React.Component {
     request(url, {
       method: 'GET',
       params: { id: this.props.match.params.itemid },
-    }).then((res) => {
+    }).then(res => {
       if (res.code == 200) {
         this.setState({ recordDetail: res.data });
       } else {
@@ -127,7 +127,7 @@ export default class CaseMgt extends React.Component {
       url = `${this.props.doneApiPrefix}/case/update`;
     }
 
-    request(url, { method: 'POST', body: param }).then((res) => {
+    request(url, { method: 'POST', body: param }).then(res => {
       if (res.code == 200) {
         message.success('保存内容成功');
       } else {
@@ -151,7 +151,7 @@ export default class CaseMgt extends React.Component {
     if (this.props.type === 'oe') {
       url = `${this.props.doneApiPrefix}/execRecord/clearResult`;
     }
-    request(url, { method: 'POST', body: params }).then((res) => {
+    request(url, { method: 'POST', body: params }).then(res => {
       if (res.code == 200) {
         message.success('清除执行记录成功');
         this.editorNode.setEditerData(JSON.parse(res.data.caseContent));
@@ -186,11 +186,14 @@ export default class CaseMgt extends React.Component {
       <div style={{ position: 'relative', minHeight: '80vh' }}>
         <Breadcrumb style={{ marginBottom: 8, fontSize: 12 }}>
           <Breadcrumb.Item>
-            <Link to="/case/caseList/1">用例管理</Link>
+            <Link to="/case/caseList/1">
+              {casedetail ? '用例' : '任务'}管理
+            </Link>
           </Breadcrumb.Item>
-          <Breadcrumb.Item>用例详情</Breadcrumb.Item>
+          <Breadcrumb.Item>{casedetail ? '用例' : '任务'}详情</Breadcrumb.Item>
           <Breadcrumb.Item>
             {recordDetail ? recordDetail.title : ''}
+            {casedetail ? casedetail.title : ''}
           </Breadcrumb.Item>
         </Breadcrumb>
         <div
@@ -235,11 +238,9 @@ export default class CaseMgt extends React.Component {
                       <div
                         className="div-wrap"
                         style={{
-                          width: `${
-                            (recordDetail.successCount /
-                              recordDetail.totalCount) *
-                            100
-                          }%`,
+                          width: `${(recordDetail.successCount /
+                            recordDetail.totalCount) *
+                            100}%`,
                           backgroundColor: '#61C663',
                         }}
                       >
@@ -258,11 +259,9 @@ export default class CaseMgt extends React.Component {
                       <div
                         className="div-wrap"
                         style={{
-                          width: `${
-                            (recordDetail.blockCount /
-                              recordDetail.totalCount) *
-                            100
-                          }%`,
+                          width: `${(recordDetail.blockCount /
+                            recordDetail.totalCount) *
+                            100}%`,
                           backgroundColor: '#85A1D6',
                         }}
                       >
@@ -281,10 +280,9 @@ export default class CaseMgt extends React.Component {
                       <div
                         className="div-wrap"
                         style={{
-                          width: `${
-                            (recordDetail.bugNum / recordDetail.totalCount) *
-                            100
-                          }%`,
+                          width: `${(recordDetail.bugNum /
+                            recordDetail.totalCount) *
+                            100}%`,
                           backgroundColor: '#FF7575',
                         }}
                       >
@@ -295,9 +293,8 @@ export default class CaseMgt extends React.Component {
                     null}
                   {(recordDetail.totalCount - recordDetail.passCount > 0 && (
                     <Tooltip
-                      title={`未执行:${
-                        recordDetail.totalCount - recordDetail.passCount
-                      } (${(
+                      title={`未执行:${recordDetail.totalCount -
+                        recordDetail.passCount} (${(
                         ((recordDetail.totalCount - recordDetail.passCount) /
                           recordDetail.totalCount) *
                         100
@@ -306,12 +303,10 @@ export default class CaseMgt extends React.Component {
                       <div
                         className="div-wrap"
                         style={{
-                          width: `${
-                            ((recordDetail.totalCount -
-                              recordDetail.passCount) /
-                              recordDetail.totalCount) *
-                            100
-                          }%`,
+                          width: `${((recordDetail.totalCount -
+                            recordDetail.passCount) /
+                            recordDetail.totalCount) *
+                            100}%`,
                           backgroundColor: '#EDF0FA',
                         }}
                       >
@@ -341,13 +336,6 @@ export default class CaseMgt extends React.Component {
 
           {(casedetail && (
             <Row>
-              <Col className="case-title">
-                <Row className="m-b-18">
-                  <Col span="2">用例集名称:</Col>
-
-                  <Col span="22">{casedetail.title}</Col>
-                </Row>
-              </Col>
               <Col span="6" className="description-case elipsis-case">
                 <Tooltip title={casedetail.description} placement="topLeft">
                   {casedetail.description}
@@ -403,7 +391,7 @@ export default class CaseMgt extends React.Component {
             )}
           </div>
           <AgileTCEditor
-            ref={(editorNode) => (this.editorNode = editorNode)}
+            ref={editorNode => (this.editorNode = editorNode)}
             tags={['前置条件', '执行步骤', '预期结果']}
             progressShow={progressShow}
             readOnly={readOnly}
