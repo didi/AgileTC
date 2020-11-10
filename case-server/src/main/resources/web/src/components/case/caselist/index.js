@@ -45,7 +45,6 @@ class CaseLists extends React.Component {
     };
   }
   componentDidMount() {
-    console.log(this.props);
     this.setState(
       {
         product_id: this.props.match.params.product_id,
@@ -247,7 +246,6 @@ class CaseLists extends React.Component {
       choiseDate,
     } = this.state;
     const { product_id } = this.props.match.params;
-    console.log(this.props);
     return (
       <div className="min-hig-content">
         <div className="site-drawer-render-in-current-wrapper">

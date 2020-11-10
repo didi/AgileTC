@@ -1,10 +1,10 @@
-import React from 'react';
-import Casemgt from '../../components/case/casemgt';
-import 'antd/dist/antd.css';
+import React from 'react'
+import Casemgt from '../../components/case/casemgt'
+import 'antd/dist/antd.css'
 class casePage extends React.Component {
   render() {
     return (
-      <section style={{ marginBottom: 30 }}>
+      <section style={{ padding: 24 }}>
         <Casemgt
           {...this.props}
           type="oe"
@@ -16,7 +16,7 @@ class casePage extends React.Component {
           // doneApiPrefix="DONE_dev"
         />
       </section>
-    );
+    )
   }
 }
-export default casePage;
+export default casePage
