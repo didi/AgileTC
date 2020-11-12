@@ -22,6 +22,7 @@ MYSQL_DATABASE=case_manager
 MYSQL_USER=agile
 MYSQL_PASSWORD=agile
 MYSQL_ROOT_PASSWORD=agile
+TZ=Asia/Shanghai
 ```
 
 ###### 二. docker-compose.yml 文件
