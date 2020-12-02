@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xiaoju.framework.mapper.BizMapper">
+  <resultMap id="BaseResultMap" type="com.xiaoju.framework.entity.persistent.Biz">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="product_line_id" jdbcType="BIGINT" property="productLineId" />
+    <result column="channel" jdbcType="INTEGER" property="channel"/>
+    <result column="is_delete" jdbcType="INTEGER" property="isDelete" />
+    <result column="gmt_modified" jdbcType="TIMESTAMP" property="gmtModified" />
+    <result column="gmt_created" jdbcType="TIMESTAMP" property="gmtCreated" />
+  </resultMap>
+  <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="com.xiaoju.framework.entity.persistent.Biz">
+    <result column="content" jdbcType="LONGVARCHAR" property="content" />
+  </resultMap>
+
+  <sql id="Base_Column_List">
+    id, product_line_id, channel, is_delete, gmt_modified, gmt_created
+  </sql>
+  <sql id="Blob_Column_List">
+    content
+  </sql>
+
+  <select id="selectOne" resultMap="ResultMapWithBLOBs">
+    select
+    <include refid="Base_Column_List" />
+    ,
+    <include refid="Blob_Column_List" />
+    from biz where product_line_id = #{productLineId, jdbcType=BIGINT} and is_delete=0 and channel = #{channel, jdbcType=INTEGER};
+  </select>
+
+  <insert id="insert" parameterType="com.xiaoju.framework.entity.persistent.Biz">
+    insert into biz
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="productLineId != null">
+        product_line_id,
+      </if>
+      <if test="channel != null">
+        channel,
+      </if>
+      <if test="isDelete != null">
+        is_delete,
+      </if>
+      <if test="gmtModified != null">
+        gmt_modified,
+      </if>
+      <if test="gmtCreated != null">
+        gmt_created,
+      </if>
+      <if test="content != null">
+        content,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=BIGINT},
+      </if>
+      <if test="productLineId != null">
+        #{productLineId,jdbcType=BIGINT},
+      </if>
+      <if test="channel != null">
+        #{channel,jdbcType=INTEGER},
+      </if>
+      <if test="isDelete != null">
+        #{isDelete,jdbcType=INTEGER},
+      </if>
+      <if test="gmtModified != null">
+        #{gmtModified,jdbcType=TIMESTAMP},
+      </if>
+      <if test="gmtCreated != null">
+        #{gmtCreated,jdbcType=TIMESTAMP},
+      </if>
+      <if test="content != null">
+        #{content,jdbcType=LONGVARCHAR},
+      </if>
+    </trim>
+  </insert>
+
+  <update id="update" parameterType="com.xiaoju.framework.entity.persistent.Biz">
+    update biz
+    set product_line_id = #{productLineId,jdbcType=BIGINT},
+      channel = #{channel,jdbcType=INTEGER},
+      is_delete = #{isDelete,jdbcType=INTEGER},
+      gmt_modified = #{gmtModified,jdbcType=TIMESTAMP},
+      gmt_created = #{gmtCreated,jdbcType=TIMESTAMP},
+      content = #{content,jdbcType=LONGVARCHAR}
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+
+  <update id="updateContent">
+    update biz
+    set content = #{content, jdbcType=LONGVARCHAR}
+    where product_line_id = #{productLineId, jdbcType=BIGINT} and channel = #{channel, jdbcType=INTEGER}
+  </update>
+
+</mapper>

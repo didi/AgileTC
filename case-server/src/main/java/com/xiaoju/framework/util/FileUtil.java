@@ -26,10 +26,8 @@ public class FileUtil {
         if(!pathFile.exists()){
             pathFile.mkdirs();
         }
-        ZipFile zip = null;
         try {
-
-            zip = new ZipFile(zipFile, Charset.forName("gbk"));//防止中文目录，乱码
+            ZipFile zip = new ZipFile(zipFile, Charset.forName("gbk"));
             for(Enumeration entries = zip.entries(); entries.hasMoreElements();){
                 ZipEntry entry = (ZipEntry)entries.nextElement();
                 String zipEntryName = entry.getName();
@@ -72,14 +70,14 @@ public class FileUtil {
      * @return 压缩文件
      */
     public static String compressZip(String sourcePath, String destPath) {
-        File resourcesFile = new File(sourcePath);     //源文件
-        File targetFile = new File(destPath);           //目的
+        File resourcesFile = new File(sourcePath);
+        File targetFile = new File(destPath);
         //如果目的路径不存在，则新建
         if(!targetFile.exists()){
             targetFile.mkdirs();
         }
 
-        String targetName = "mm"+".xmind";   //目的压缩文件名
+        String targetName = "mm"+".xmind";
         FileOutputStream outputStream = null;
         try {
             outputStream = new FileOutputStream(destPath+"\\"+targetName);
@@ -110,7 +108,7 @@ public class FileUtil {
 
             //循环将文件夹中的文件打包
             for(int i = 0 ; i < files.length ; i++){
-                createCompressedFile(out, files[i], dir + files[i].getName());         //递归处理
+                createCompressedFile(out, files[i], dir + files[i].getName());
             }
         }
         else{   //当前的是文件，打包处理
