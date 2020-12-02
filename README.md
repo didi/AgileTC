@@ -45,7 +45,7 @@ git clone https://github.com/didi/AgileTC.git 
 #### 整体架构
 <img width="60%" height="60%" src="https://dpubstatic.udache.com/static/dpubimg/7ad7eef0-0bbb-49c5-80fe-52aa192b02a9.png"/>
 
-> 更多介绍参考和使用说明 [wiki](https://github.com/didi/AgileTC/wiki)
+> 详细介绍和使用说明见 [wiki](https://github.com/didi/AgileTC/wiki)
 
 #### 联系我们
 群成员超200，需要扫描二维码添加客服，邀请入群
