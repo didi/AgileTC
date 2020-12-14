@@ -109,14 +109,14 @@ class TaskModal extends React.Component {
     delete params.cyclePlan;
     let url =
       this.props.type !== 'oe'
-        ? `/execRecord/addRecord`
-        : `${this.props.doneApiPrefix}/execRecord/addRecord`;
+        ? `/record/create`
+        : `${this.props.doneApiPrefix}/record/create`;
 
     if (this.props.titleModeTask == '编辑测试任务') {
       url =
         this.props.type !== 'oe'
-          ? `/execRecord/EditRecord`
-          : `${this.props.doneApiPrefix}/execRecord/EditRecord`;
+          ? `/record/edit`
+          : `${this.props.doneApiPrefix}/record/edit`;
 
       delete params.caseId;
       delete params.creator;
@@ -125,7 +125,7 @@ class TaskModal extends React.Component {
       params.modifier = getCookies('username');
     }
     request(url, { method: 'POST', body: params }).then(res => {
-      if (res.code == 200) {
+      if (res.code === 200) {
         this.props.handleOkTask(this.props.record);
         this.setState({ choiseDate: [], radioValue: '' });
         this.props.form.resetFields();

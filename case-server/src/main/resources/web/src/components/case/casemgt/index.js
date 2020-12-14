@@ -35,7 +35,6 @@ export default class CaseMgt extends React.Component {
   }
   componentDidMount() {
     const { iscore } = this.props.match.params;
-
     if (iscore === '3') {
       this.getContentById();
     } else {
@@ -45,14 +44,27 @@ export default class CaseMgt extends React.Component {
 
   componentWillMount() {
     // 拦截判断是否离开当前页面
-    window.addEventListener('beforeunload', this.beforeunload);
+    window.addEventListener('beforeunload', this.handleAutoSave);
   }
   componentWillUnmount() {
     // 销毁拦截判断是否离开当前页面
-    window.removeEventListener('beforeunload', this.beforeunload);
+    window.removeEventListener('beforeunload', this.handleAutoSave);
+    this.handleAutoSave();
   }
   ///case/getRequirement
-
+  handleAutoSave = () => {
+    const { iscore } = this.props.match.params;
+    const minderData = this.editorNode
+      ? this.editorNode.getAllData()
+      : { base: 0 };
+    if (Number(iscore) !== 2 && minderData) {
+      // 非冒烟case才可保存
+      if (Number(minderData.base) > 1) {
+        message.warn('即将离开页面，自动保存当前用例。');
+        this.updateCase();
+      }
+    }
+  };
   getRequirementsById = requirementIds => {
     // request(`${this.props.oeApiPrefix}/business-lines/requirements`, {
     //   method: 'GET',
@@ -63,10 +75,10 @@ export default class CaseMgt extends React.Component {
   };
 
   getCaseById = () => {
-    let url = `/case/getCaseById`;
+    let url = `/case/getCaseInfo`;
 
     if (this.props.type === 'oe') {
-      url = `${this.props.doneApiPrefix}/case/getCaseById`;
+      url = `${this.props.doneApiPrefix}/case/getCaseInfo`;
     }
     request(url, {
       method: 'GET',
@@ -88,12 +100,12 @@ export default class CaseMgt extends React.Component {
     });
   };
 
-  ///execRecord/getContentById
+  ///record/getContentById
   getContentById = () => {
-    let url = `/execRecord/getContentById`;
+    let url = `/record/getRecordInfo`;
 
     if (this.props.type === 'oe') {
-      url = `${this.props.doneApiPrefix}/execRecord/getContentById`;
+      url = `${this.props.doneApiPrefix}/record/getRecordInfo`;
     }
     request(url, {
       method: 'GET',
@@ -117,7 +129,7 @@ export default class CaseMgt extends React.Component {
     const param = {
       id: this.props.match.params.caseId,
       title: '更新内容，实际不会保存title',
-      groupId: recordId,
+      recordId,
       modifier: getCookies('username'),
       caseContent: JSON.stringify(this.editorNode.getAllData()),
     };
@@ -141,15 +153,12 @@ export default class CaseMgt extends React.Component {
     const params = {
       id: this.props.match.params.itemid,
       modifier: getCookies('username'),
-      productLineId: this.props.match.params.product_id
-        ? this.props.match.params.product_id
-        : '',
     };
 
-    let url = `/execRecord/clearResult`;
+    let url = `/record/clear`;
 
     if (this.props.type === 'oe') {
-      url = `${this.props.doneApiPrefix}/execRecord/clearResult`;
+      url = `${this.props.doneApiPrefix}/record/clear`;
     }
     request(url, { method: 'POST', body: params }).then(res => {
       if (res.code == 200) {
@@ -163,16 +172,10 @@ export default class CaseMgt extends React.Component {
 
   render() {
     //this.props.match.params.iscore  0:需求case  3:执行记录详情
-    const { type, match, baseUrl } = this.props;
+    const { match } = this.props;
     const { iscore, caseId, itemid } = match.params;
     const user = getCookies('username');
     const { recordDetail, casedetail } = this.state;
-    // let requirementObj = {};
-    // if (casedetail) {
-    //   requirementObj = casedetail.requirementId
-    //     ? casedetail.requirementId.split(',')
-    //     : [];
-    // }
     let readOnly = false;
     let progressShow = false;
     if (iscore === '0' || iscore === '1') {
@@ -190,8 +193,8 @@ export default class CaseMgt extends React.Component {
               {casedetail ? '用例' : '任务'}管理
             </Link>
           </Breadcrumb.Item>
-          <Breadcrumb.Item>{casedetail ? '用例' : '任务'}详情</Breadcrumb.Item>
           <Breadcrumb.Item>
+            {casedetail ? '用例' : '任务'}详情：
             {recordDetail ? recordDetail.title : ''}
             {casedetail ? casedetail.title : ''}
           </Breadcrumb.Item>
@@ -204,7 +207,7 @@ export default class CaseMgt extends React.Component {
         >
           {(recordDetail && (
             <Row>
-              <Col span="6" className="description-case elipsis-case">
+              <Col span={6} className="description-case elipsis-case">
                 <Tooltip
                   title={recordDetail.description}
                   placement="bottomLeft"
@@ -212,17 +215,17 @@ export default class CaseMgt extends React.Component {
                   {recordDetail.description}
                 </Tooltip>
               </Col>
-              <Col span="1"></Col>
+              <Col span={1}></Col>
 
-              <Col span="2" className="font-size-12">
+              <Col span={2} className="font-size-12">
                 通过率: {recordDetail.passRate.toFixed(2) + '%'}
               </Col>
-              <Col span="2" className="font-size-12">
+              <Col span={2} className="font-size-12">
                 {' '}
                 已测: {recordDetail.passCount + '/' + recordDetail.totalCount}
               </Col>
               <Col
-                span="4"
+                span={4}
                 style={{ textAlign: 'center' }}
                 className="progress"
               >
@@ -317,11 +320,11 @@ export default class CaseMgt extends React.Component {
                     null}
                 </div>
               </Col>
-              <Col span="1"></Col>
-              <Col span="2" className="font-size-12">
+              <Col span={1}></Col>
+              <Col span={2} className="font-size-12">
                 计划周期:
               </Col>
-              <Col span="4" className="font-size-12">
+              <Col span={4} className="font-size-12">
                 {recordDetail.expectStartTime
                   ? moment(recordDetail.expectStartTime).format('YYYY/MM/DD')
                   : null}
@@ -336,35 +339,17 @@ export default class CaseMgt extends React.Component {
 
           {(casedetail && (
             <Row>
-              <Col span="6" className="description-case elipsis-case">
+              <Col span={6} className="description-case elipsis-case">
                 <Tooltip title={casedetail.description} placement="topLeft">
                   {casedetail.description}
                 </Tooltip>
               </Col>
-              <Col span="1"></Col>
-              <Col span="2" className="font-size-12">
+              <Col span={1}></Col>
+              <Col span={2} className="font-size-12">
                 关联需求:
               </Col>
-              <Col span="14" className="font-size-12">
+              <Col span={14} className="font-size-12">
                 {casedetail ? casedetail.requirementId : ''}
-                {/* {(requirementObj &&
-                  requirementObj.map((item, index) => {
-                    // let titleStr = item.title;
-                    // if (index !== 0) {
-                    //   titleStr = ' , ' + item.title;
-                    // }
-
-                    return (
-                      <Link
-                        to={`${baseUrl}/${item}`}
-                        key={index}
-                        target="_blank"
-                      >
-                        {item}
-                      </Link>
-                    );
-                  })) ||
-                  null} */}
               </Col>
             </Row>
           )) ||
@@ -375,7 +360,7 @@ export default class CaseMgt extends React.Component {
               position: 'fixed',
               bottom: '30px',
               right: '20px',
-              zIndex: 9,
+              zIndex: 999,
             }}
           >
             {iscore != 2 && (
