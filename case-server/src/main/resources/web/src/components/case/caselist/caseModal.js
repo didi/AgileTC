@@ -25,7 +25,6 @@ import getQueryString from '@/utils/getCookies';
 const getCookies = getQueryString.getCookie;
 const { TextArea } = Input;
 const { TreeNode } = TreeSelect;
-import debounce from 'lodash/debounce';
 /* global moment, cardStatusList, priorityList, staffNameCN, staffNamePY */
 class CaseModal extends React.Component {
   static propTypes = {
@@ -57,15 +56,9 @@ class CaseModal extends React.Component {
       requirement: requirement,
       options: options,
       value: [],
-      fetching: false,
-      requirementOe: [],
-      requirementArr: [],
-      requirementSeach: '',
       cardTree: [],
       bizIds: [],
     };
-    this.lastFetchId = 0;
-    this.getOeRequirement = debounce(this.getOeRequirement, 800);
   }
   componentDidMount() {
     this.getCardTree();
@@ -80,7 +73,6 @@ class CaseModal extends React.Component {
     this.setState(nextProps);
     if (!nextProps.show) {
       this.props.form.resetFields();
-      this.setState({ requirementSeach: '' });
     }
     if (nextProps.show && nextProps.show !== this.state.show) {
       let { options, product, requirement } = nextProps;
@@ -144,13 +136,13 @@ class CaseModal extends React.Component {
   saveEditerData(values) {
     let requirementId = values.requirementId;
     let params = {
-      productLineId: this.props.productId,
+      productLineId: Number(this.props.productId),
       creator: getCookies('username'),
       caseType: 0,
       caseContent: initData,
       title: values.case,
       channel: this.props.type === 'oe' ? 1 : 0,
-      bizId: '-1',
+      bizId: values.bizId ? values.bizId.join(',') : '-1',
       id: this.state.operate != 'add' ? this.props.data.id : '',
       requirementId,
       description: values.description,
@@ -173,12 +165,12 @@ class CaseModal extends React.Component {
       params.append('file', xmindFile);
       params.append('creator', getCookies('username'));
       params.append('title', values.case);
-      params.append('productLineId', this.props.productId);
+      params.append('productLineId', Number(this.props.productId));
       params.append('requirementId', requirementId);
 
       params.append('description', values.description);
       params.append('channel', this.props.type === 'oe' ? 1 : 0);
-      params.append('bizId', '-1');
+      params.append('bizId', values.bizId ? values.bizId.join(',') : '-1');
     }
     request(url, { method: 'POST', body: params }).then(res => {
       if (res.code == 200) {
@@ -215,7 +207,7 @@ class CaseModal extends React.Component {
       caseType: 0,
       description: values.description,
       modifier: getCookies('username'),
-      bizId: '-1',
+      bizId: values.bizId ? values.bizId.join(',') : '-1',
       channel: this.props.type === 'oe' ? 1 : 0,
     };
 
@@ -230,22 +222,6 @@ class CaseModal extends React.Component {
       } else {
         message.error(res.msg);
       }
-    });
-  };
-
-  getOeRequirement = title => {
-    this.lastFetchId += 1;
-    const fetchId = this.lastFetchId;
-    this.setState({ requirementSeach: title, fetching: true });
-    request(
-      `${this.props.oeApiPrefix}/business-lines/${this.props.productId}/requirements`,
-      { method: 'GET', params: { title: title, pageNum: 1, pageSize: 25 } },
-    ).then(res => {
-      let { requirementDetails } = res;
-      if (fetchId !== this.lastFetchId) {
-        return;
-      }
-      this.setState({ requirementOe: requirementDetails, fetching: false });
     });
   };
   renderTreeNodes = data =>
@@ -266,16 +242,7 @@ class CaseModal extends React.Component {
       return <TreeNode {...item} />;
     });
   render() {
-    const {
-      xmindFile,
-      data,
-      show,
-      operate,
-      bizIds,
-      // requirementArr,
-      // fetching,
-      // requirementSeach,
-    } = this.state;
+    const { xmindFile, data, show, operate, bizIds } = this.state;
     const { getFieldDecorator } = this.props.form;
     const props = {
       accept: '.xmind',
@@ -306,7 +273,6 @@ class CaseModal extends React.Component {
       default:
         break;
     }
-
     // let newRequirementArr =
     //   requirementArr &&
     //   requirementArr.map(item => {
