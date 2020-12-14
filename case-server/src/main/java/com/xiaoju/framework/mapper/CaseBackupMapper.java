@@ -1,8 +1,6 @@
 package com.xiaoju.framework.mapper;
 
-import com.xiaoju.framework.entity.CaseBackup;
-import org.apache.ibatis.annotations.Insert;
-import org.apache.ibatis.annotations.Options;
+import com.xiaoju.framework.entity.persistent.CaseBackup;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
@@ -11,18 +9,41 @@ import java.util.List;
 
 
 /**
- * Created by didi on 2019/11/5.
+ * 备份映射
+ *
+ * @author didi
+ * @date 2020/11/5
+ * @see CaseBackup
  */
 @Repository
 public interface CaseBackupMapper {
-    @Insert(value = "insert into case_backup values (null,#{caseId},#{title},#{creator},"
-            + "CURRENT_TIMESTAMP,#{caseContent},#{recordContent},extra,0)")
-    @Options(useGeneratedKeys = true, keyProperty = "id")
-    int insertCaseBackup(CaseBackup caseBackup);
 
+    /**
+     * 获取一份用例下所有的用例备份记录
+     *
+     * @param caseId 用例id
+     * @param beginTime 开始时间
+     * @param endTime 结束时间
+     * @return 所有备份记录
+     */
     List<CaseBackup> selectByCaseId(@Param("caseId") Long caseId,
                                     @Param("beginTime") Date beginTime,
                                     @Param("endTime")  Date endTime);
+
+    /**
+     * 删除一批备份记录
+     *
+     * @param caseId 用例id
+     * @return int
+     * @see com.xiaoju.framework.service.impl.CaseBackupServiceImpl#deleteBackup(java.lang.Long)
+     */
     int updateByCaseId(Long caseId);
+
+    /**
+     * 插入备份记录
+     *
+     * @param caseBackup 实体
+     * @return int
+     */
     int insert(CaseBackup caseBackup);
 }

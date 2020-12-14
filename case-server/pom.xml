@@ -16,12 +16,20 @@
 
 	<properties>
 		<java.version>1.8</java.version>
-		<mysql-connector>8.0.11</mysql-connector>
-		<entity.target.dir>src/main/java/</entity.target.dir>
-		<dao.resources.dir>src/main/resources/</dao.resources.dir>
+		<mysql.connector.version>8.0.11</mysql.connector.version>
+		<mybatis.starter.version>2.1.0</mybatis.starter.version>
+		<mybatis.spring.version>1.2.2</mybatis.spring.version>
+		<mybatis.version>3.2.4</mybatis.version>
+		<druid.version>1.1.16</druid.version>
+		<json.version>1.2.70</json.version>
+		<common.version>3.4</common.version>
+		<websocket.version>5.1.9.RELEASE</websocket.version>
+		<ext.version>1.0.3-SNAPSHOT</ext.version>
+		<page.helper.version>1.2.5</page.helper.version>
 	</properties>
 
 	<dependencies>
+		<!-- SpringBoot五件套 -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-jdbc</artifactId>
@@ -35,20 +43,9 @@
 			<artifactId>spring-boot-starter-web-services</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.mybatis.spring.boot</groupId>
-			<artifactId>mybatis-spring-boot-starter</artifactId>
-			<version>2.1.0</version>
-		</dependency>
-
-		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-devtools</artifactId>
 			<scope>runtime</scope>
-			<optional>true</optional>
-		</dependency>
-		<dependency>
-			<groupId>org.projectlombok</groupId>
-			<artifactId>lombok</artifactId>
 			<optional>true</optional>
 		</dependency>
 		<dependency>
@@ -56,64 +53,65 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<!-- Spring拓展包 -->
+		<dependency>
+			<groupId>org.springframework.ext</groupId>
+			<artifactId>springframework-ext-common</artifactId>
+			<version>${ext.version}</version>
+		</dependency>
 
-		<!-- https://mvnrepository.com/artifact/org.apache.commons/commons-lang3 -->
+		<!-- springboot所依赖的mybatis-boot包 -->
+		<dependency>
+			<groupId>org.mybatis.spring.boot</groupId>
+			<artifactId>mybatis-spring-boot-starter</artifactId>
+			<version>${mybatis.starter.version}</version>
+		</dependency>
+
+		<!-- 懒人工具lombok -->
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<optional>true</optional>
+		</dependency>
+
+		<!-- StringUtils、CollectionUtils的工具类 -->
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
-			<version>3.4</version>
+			<version>${common.version}</version>
 		</dependency>
 
 		<!-- MySQL 连接驱动依赖 -->
 		<dependency>
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
-			<version>${mysql-connector}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-websocket</artifactId>
-			<version>5.1.9.RELEASE</version>
+			<version>${mysql.connector.version}</version>
 		</dependency>
 
+		<!-- Druid数据库连接池 -->
 		<dependency>
 			<groupId>com.alibaba</groupId>
 			<artifactId>druid-spring-boot-starter</artifactId>
-			<version>1.1.16</version>
+			<version>${druid.version}</version>
 		</dependency>
-
 		<dependency>
 			<groupId>com.alibaba</groupId>
 			<artifactId>fastjson</artifactId>
-			<version>1.2.70</version>
+			<version>${json.version}</version>
 		</dependency>
 
+		<!-- myBatis分页 -->
 		<dependency>
-			<groupId>javax.websocket</groupId>
-			<artifactId>javax.websocket-client-api</artifactId>
-			<version>1.1</version>
-		</dependency>
-		<dependency>
-			<groupId>org.glassfish.tyrus.bundles</groupId>
-			<artifactId>tyrus-standalone-client</artifactId>
-			<version>1.9</version>
-		</dependency>
-		<!--swagger -->
-		<dependency>
-			<groupId>io.springfox</groupId>
-			<artifactId>springfox-swagger2</artifactId>
-			<version>2.8.0</version>
-		</dependency>
-		<dependency>
-			<groupId>io.springfox</groupId>
-			<artifactId>springfox-swagger-ui</artifactId>
-			<version>2.8.0</version>
+			<groupId>com.github.pagehelper</groupId>
+			<artifactId>pagehelper-spring-boot-starter</artifactId>
+			<version>${page.helper.version}</version>
 		</dependency>
 
-		<!-- redis配置 -->
+		<!-- springboot自带的web-socket相关包 -->
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-data-redis</artifactId>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-websocket</artifactId>
+			<version>${websocket.version}</version>
 		</dependency>
 
 		<dependency>
@@ -139,43 +137,32 @@
 		<dependency>
 			<groupId>com.lmax</groupId>
 			<artifactId>disruptor</artifactId>
-			<version>3.4.2</version>
+			<version>3.4.1</version>
 		</dependency>
 
-		<!--<dependency>-->
-			<!--<groupId>org.springframework.cloud</groupId>-->
-			<!--<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>-->
-			<!--<version>2.1.3.RELEASE</version>-->
-		<!--</dependency>-->
-		<dependency>
-			<groupId>io.github.openfeign</groupId>
-			<artifactId>feign-core</artifactId>
-			<version>9.5.1</version>
-		</dependency>
+		<!-- X-mind读取与解析相关 -->
 		<dependency>
 			<groupId>com.xmind</groupId>
 			<artifactId>sdk-Java</artifactId>
 			<version>201505201101</version>
 		</dependency>
-		<!--xmind解析-->
 		<dependency>
 			<groupId>dom4j</groupId>
 			<artifactId>dom4j</artifactId>
 		</dependency>
+
+		<!-- IOUtils -->
 		<dependency>
 			<groupId>org.apache.poi</groupId>
 			<artifactId>poi-ooxml</artifactId>
-			<version>3.16</version>
+			<version>4.1.1</version>
 		</dependency>
+
+		<!-- HTTP相关的组件 -->
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpclient</artifactId>
 			<version>4.5.5</version>
-		</dependency>
-<!--		发送邮件的必要依赖-->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-mail</artifactId>
 		</dependency>
 	</dependencies>
 
@@ -194,29 +181,19 @@
 					<dependency>
 						<groupId>mysql</groupId>
 						<artifactId>mysql-connector-java</artifactId>
-						<version>8.0.11</version>
+						<version>${mysql.connector.version}</version>
 					</dependency>
 					<dependency>
 						<groupId>org.mybatis</groupId>
 						<artifactId>mybatis-spring</artifactId>
-						<version>1.2.2</version>
+						<version>${mybatis.spring.version}</version>
 					</dependency>
-
 					<dependency>
 						<groupId>org.mybatis</groupId>
 						<artifactId>mybatis</artifactId>
-						<version>3.2.4</version>
+						<version>${mybatis.version}</version>
 					</dependency>
 				</dependencies>
-				<!--<executions>-->
-					<!--<execution>-->
-						<!--<id>Generate MyBatis Artifacts</id>-->
-						<!--<phase>package</phase>-->
-						<!--<goals>-->
-							<!--<goal>generate</goal>-->
-						<!--</goals>-->
-					<!--</execution>-->
-				<!--</executions>-->
 				<configuration>
 					<!--允许移动生成的文件 -->
 					<verbose>true</verbose>

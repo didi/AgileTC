@@ -3,7 +3,9 @@ package com.xiaoju.framework.util;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import lombok.extern.slf4j.Slf4j;
+import com.xiaoju.framework.constants.enums.ProgressEnum;
+import com.xiaoju.framework.entity.xmind.*;
+import org.apache.commons.collections4.CollectionUtils;
 import org.xmind.core.ITopic;
 import org.xmind.core.IWorkbook;
 import org.xmind.core.marker.IMarkerRef;
@@ -11,81 +13,111 @@ import org.xmind.core.marker.IMarkerRef;
 import java.util.*;
 
 /**
- * Created by didi on 2019/10/10.
+ * 树 - 数据结构处理类
+ * xmind 和 文件夹都用到了
+ *
+ * @author didi
+ * @date 2020/11/26
  */
-@Slf4j
 public class TreeUtil {
 
     // 剥离出progress的内容
     public static JSONObject parse(String caseContent) {
-        JSONObject progress = new JSONObject();
         JSONObject retContent = new JSONObject();
-        IntCount passCount = new IntCount(0);
-        IntCount totalCount = new IntCount(0);
-        IntCount successCount = new IntCount(0);
-        IntCount blockCount = new IntCount(0);
+        CaseContent content = JSONObject.parseObject(caseContent, CaseContent.class);
+        CaseCount count = caseDFS(content.getRoot());
         JSONObject caseObj = JSON.parseObject(caseContent);
-        if (caseObj.getJSONObject("root").getJSONArray("children").size() != 0) {
-            traverse(caseObj.getJSONObject("root"), progress, passCount, totalCount, successCount, blockCount, false, false, false);
-        }
-        retContent.put("progress", progress);
-        retContent.put("content", caseObj);
-        retContent.put("passCount", passCount.get());//执行个数
-        retContent.put("totalCount", totalCount.get());//总用例数
-        retContent.put("successCount", successCount.get());//成功个数
-        retContent.put("blockCount", blockCount.get());//阻塞个数
 
-        //log.debug("content parse："+retContent.toJSONString());
+        retContent.put("progress", count.getProgress());
+        retContent.put("content", caseObj);
+        retContent.put("passCount", count.getPassCount());
+        retContent.put("totalCount", count.getTotal());
+        retContent.put("successCount", count.getSuccess());
+        retContent.put("blockCount", count.getBlock());
+        retContent.put("failCount", count.getFail());
+        retContent.put("ignoreCount", count.getIgnore());
+
         return retContent;
     }
 
-    // 遍历json，剥离progress内容
-    public static void traverse(JSONObject caseObj, JSONObject progress, IntCount passCount, IntCount totalCount, IntCount successCount, IntCount blockCount, boolean passflag, boolean successflag, boolean blockflag) {
-        if (caseObj.getJSONArray("children").size() == 0) {
-            totalCount.add();
-            if (passflag) {
-                passCount.add();
-            }
-            if (blockflag) {
-                blockCount.add();
-            }
-            if (successflag) {
-                successCount.add();
-            }
-        }
+    /**
+     * ******深度递归，获取每个用例的具体内容，读出所有的计数**********
+     * 根据一份测试用例，递归获取其中所有底部节点的用例执行情况
+     * 分为两种情况：
+     * ①当前节点有子节点
+     *  <1>如果当前节点状态为1、5、9，那么值收集下游节点的个数total和，然后变成自己对应的状态个数+=childTotalSum,total++
+     *  <2>如果节点为4，则忽略
+     *  <3>如果节点为null，则total++
+     * ②当前节点无子节点
+     *  计数体对应的状态数++,total++
+     *
+     * @param rootData 当前用例节点
+     * @return 记录对象体
+     */
+    private static CaseCount caseDFS(RootData rootData) {
+        CaseCount currCount = new CaseCount();
 
-        for (Object o : caseObj.getJSONArray("children")) {
-            if (((JSONObject) o).getJSONObject("data").containsKey("progress") && ((JSONObject) o).getJSONObject("data").get("progress") != null) {
-                progress.put(((JSONObject) o).getJSONObject("data").getString("id"), ((JSONObject) o).getJSONObject("data").getString("progress"));
-                if (((JSONObject) o).getJSONObject("data").getString("progress").equals("9")) {//通过
-                    ((JSONObject) o).getJSONObject("data").remove("progress");
-                    traverse(((JSONObject) o), progress, passCount, totalCount, successCount, blockCount, true, true, false);
-                } else if (((JSONObject) o).getJSONObject("data").getString("progress").equals("5")) {//阻塞
-                    ((JSONObject) o).getJSONObject("data").remove("progress");
-                    traverse(((JSONObject) o), progress, passCount, totalCount, successCount, blockCount, true, false, true);
-                } else if (((JSONObject) o).getJSONObject("data").getString("progress").equals("1")) {//未通过1
-                    ((JSONObject) o).getJSONObject("data").remove("progress");
-                    traverse(((JSONObject) o), progress, passCount, totalCount, successCount, blockCount, true, false, false);
+        DataObj currNode = rootData.getData();
+        List<RootData> childNodes = rootData.getChildren();
+
+        if (!CollectionUtils.isEmpty(childNodes)) {
+
+            if (currNode.getProgress() != null) {
+                int num = 0;
+                for (RootData childNode : childNodes) {
+                    CaseCount cc = caseDFS(childNode);
+                    num += cc.getTotal();
+                    currCount.addAllProgress(cc.getProgress());
+                }
+                switch (ProgressEnum.findEnumByProgress(currNode.getProgress())) {
+                    case BLOCK:
+                        currCount.combineBlock(num);
+                        currCount.addProgress(currNode.getId(), currNode.getProgressStr());
+                        break;
+                    case SUCCESS:
+                        currCount.combineSuccess(num);
+                        currCount.addProgress(currNode.getId(), currNode.getProgressStr());
+                        break;
+                    case FAIL:
+                        currCount.combineFail(num);
+                        currCount.addProgress(currNode.getId(), currNode.getProgressStr());
+                        break;
+                    case IGNORE:
+                        currCount.combineIgnore(num);
+                        currCount.addProgress(currNode.getId(), currNode.getProgressStr());
+                        break;
+                    default:
+                        currCount.addTotal(num);
                 }
             } else {
-                if (passflag) {//执行过
-                    traverse(((JSONObject) o), progress, passCount, totalCount, successCount, blockCount, true, successflag, blockflag);
-                } else {//未执行过
-                    traverse(((JSONObject) o), progress, passCount, totalCount, successCount, blockCount, false, false, false);
+                for (RootData childNode : childNodes) {
+                    currCount.cover(caseDFS(childNode));
                 }
             }
+        } else {
+            // 最底部的节点，没有任何子节点
+            switch (ProgressEnum.findEnumByProgress(currNode.getProgress())) {
+                case BLOCK:
+                    currCount.addBlock();
+                    currCount.addProgress(currNode.getId(), currNode.getProgressStr());
+                    break;
+                case SUCCESS:
+                    currCount.addSuccess();
+                    currCount.addProgress(currNode.getId(), currNode.getProgressStr());
+                    break;
+                case FAIL:
+                    currCount.addFail();
+                    currCount.addProgress(currNode.getId(), currNode.getProgressStr());
+                    break;
+                case IGNORE:
+                    currCount.addIgnore();
+                    currCount.addProgress(currNode.getId(), currNode.getProgressStr());
+                    break;
+                default:
+                    currCount.addTotal();
+            }
         }
-    }
-
-    //获取用例总数
-    public static void getCaseNum(JSONObject caseObj, IntCount totalCount) {
-        if (caseObj.getJSONArray("children").size() == 0) {
-            totalCount.add();
-        }
-
-        for (Object o : caseObj.getJSONArray("children")) {
-            getCaseNum(((JSONObject) o), totalCount);
-        }
+        return currCount;
     }
 
     // 获取指定优先级的内容，入参为root节点
@@ -232,18 +264,6 @@ public class TreeUtil {
         }
     }
 
-//    public static void mergeExecRecord(JSONObject caseContent, JSONObject execContent) {
-//        String srcId = caseContent.getJSONObject("data").getString("id");
-//        if (execContent.containsKey(srcId)) {
-//            caseContent.getJSONObject("data").put("progress", execContent.getLong(srcId));
-//            log.info("merge result: " + caseContent.getJSONObject("data").toJSONString().substring(0,20));
-//        } else {
-//            for (Object o: caseContent.getJSONArray("children")) {
-//                mergeExecRecord(((JSONObject) o), execContent);
-//            }
-//        }
-//    }
-
     // 导出内容到xmind
     public static void exportData(JSONArray children, IWorkbook workbook, ITopic rootTopic) {
         for (Object o : children) {
@@ -337,13 +357,5 @@ public class TreeUtil {
             }
         }
     }
-
-//    public static void main(String argc[]) {
-//        String casexx = "{\"template\":\"right\",\"root\":{\"data\":{\"created\":1570860748267,\"text\":\"1.0模式中心仓维修11\",\"id\":\"6la3utf8ma7kg5v7ogjp6ldqo4\"},\"children\":[{\"data\":{\"created\":1571383198489,\"text\":\"取送车菜单111\",\"id\":\"7thvpm2hrotiunjvbrtbjbhbv3\"},\"children\":[{\"data\":{\"expandState\":\"expand\",\"created\":1570773444369,\"text\":\"任务单详情页\",\"id\":\"0lj7bpsp36cjtvl8oo0kmjnb25\",\"priority\":1},\"children\":[{\"data\":{\"created\":1570775783582,\"text\":\"操作按钮\",\"id\":\"3vcrns9ae148nftq883v82c14c\"},\"children\":[{\"data\":{\"created\":1570773444364,\"text\":\"已到店\",\"id\":\"1n1e0aba85urf50p7tel5gpmod\"},\"children\":[{\"data\":{\"created\":1570776550228,\"text\":\"开单\",\"id\":\"41b8en2c3pekojfkdk0m938s7n\"},\"children\":[{\"data\":{\"created\":1570773444364,\"text\":\"“已到店”&“返修到店”的卡片或详情页\",\"id\":\"6eenvq0j9qic0svejo77pm6hdo\"},\"children\":[{\"data\":{\"created\":1570773444364,\"text\":\"点击进入到“中心仓维修开单”页面\",\"id\":\"4r3mbhnao4569hh210ofabqik1\"},\"children\":[]}]}]}]}]}]},{\"data\":{\"created\":1570773444380,\"text\":\"中心仓同步维修入库结果\",\"id\":\"1vogjsnvdkj1695q6nikhelhsu\"},\"children\":[]},{\"data\":{\"created\":1572260203016,\"id\":\"by13q5zkcts0\",\"text\":\"分支主题\"},\"children\":[]},{\"data\":{\"created\":1572260203164,\"id\":\"by13q620wog0\",\"text\":\"分支主题\"},\"children\":[{\"data\":{\"created\":1572262036165,\"id\":\"by14dk4hz1c0\",\"text\":\"分支主题\"},\"children\":[]},{\"data\":{\"created\":1572262037801,\"id\":\"by14dkvkem00\",\"text\":\"分支主题\"},\"children\":[]},{\"data\":{\"created\":1572262037994,\"id\":\"by14dkyqygw0\",\"text\":\"分支主题\"},\"children\":[]},{\"data\":{\"created\":1572262038175,\"id\":\"by14dl1qmlk0\",\"text\":\"分支主题\"},\"children\":[]},{\"data\":{\"created\":1572262038331,\"id\":\"by14dl4bggw0\",\"text\":\"分支主题\",\"priority\":1},\"children\":[{\"data\":{\"created\":1572262040351,\"id\":\"by14dm1q4ps0\",\"text\":\"分支主题\"},\"children\":[{\"data\":{\"created\":1572262040593,\"id\":\"by14dm5qhu80\",\"text\":\"分支主题\"},\"children\":[{\"data\":{\"created\":1572262040875,\"id\":\"by14dmaed6g0\",\"text\":\"分支主题\"},\"children\":[{\"data\":{\"created\":1572262041174,\"id\":\"by14dmfcfhc0\",\"text\":\"分支主题\"},\"children\":[]}]}]},{\"data\":{\"created\":1572262043051,\"id\":\"by14dnae6go0\",\"text\":\"分支主题\"},\"children\":[]},{\"data\":{\"created\":1572262043492,\"id\":\"by14dnhoglc0\",\"text\":\"分支主题\"},\"children\":[]},{\"data\":{\"created\":1572262043661,\"id\":\"by14dnkh9s80\",\"text\":\"分支主题\"},\"children\":[]},{\"data\":{\"created\":1572262043824,\"id\":\"by14dnn60hc0\",\"text\":\"分支主题\"},\"children\":[]}]}]}]}]}]},\"theme\":\"fresh-green-compat\",\"version\":\"1.4.43\",\"base\":124}";
-//        Stack<JSONObject> objCheck = new Stack<>();
-//        JSONObject obj = JSON.parseObject(casexx);
-//        objCheck.push(obj.getJSONObject("root"));
-//        System.out.println("ret: " + obj.toJSONString());
-//    }
 
 }

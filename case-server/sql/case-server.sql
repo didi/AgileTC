@@ -55,7 +55,7 @@ CREATE TABLE `test_case` (
   `module_node_id` bigint(20) NOT NULL DEFAULT '0' COMMENT '模块节点id',
   `requirement_id` varchar(1000) NOT NULL DEFAULT '0' COMMENT '需求id',
   `smk_case_id` bigint(20) NOT NULL DEFAULT '0' COMMENT '冒烟case的id',
-  `channel` int(11) NOT NULL DEFAULT '0' COMMENT '渠道标志 0-done 1-oe',
+  `channel` int(11) NOT NULL DEFAULT '0' COMMENT '渠道标志 现默认1',
   PRIMARY KEY (`id`),
   KEY `idx_productline_isdelete` (`product_line_id`,`is_delete`),
   KEY `idx_requirement_id` (`requirement_id`)
