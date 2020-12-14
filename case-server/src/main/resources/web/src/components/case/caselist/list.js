@@ -27,7 +27,7 @@ const getCookies = getQueryString.getCookie;
 import debounce from 'lodash/debounce';
 class Lists extends React.Component {
   static contextTypes = {
-    router: PropTypes.object.isRequired,
+    router: PropTypes.object,
   };
   constructor(props) {
     super(props);
@@ -78,9 +78,9 @@ class Lists extends React.Component {
   delOk = record => {
     let { type } = this.props;
 
-    let url = '/case/softdelete';
+    let url = '/case/delete';
     if (type === 'oe') {
-      url = `${this.props.doneApiPrefix}/case/softdelete`;
+      url = `${this.props.doneApiPrefix}/case/delete`;
     }
 
     let params = {
@@ -116,7 +116,6 @@ class Lists extends React.Component {
   };
 
   onChangeCheckbox = e => {
-    console.log(e.target.checked);
     this.setState({ checked: e.target.checked });
   };
   seeSmkCase = record => {
@@ -132,14 +131,11 @@ class Lists extends React.Component {
     a.click();
   };
   setColumns = () => {
-    // const { type } = this.props.type;
-
     const columns = [
       {
         title: '用例集ID',
         dataIndex: 'id',
         key: 'id',
-
         width: 100,
         render: text => <div>{text}</div>,
       },
@@ -397,19 +393,15 @@ class Lists extends React.Component {
   };
   // 获取case信息
   getCaseInfo = (priority, resource) => {
-    const { record } = this.state;
+    const { record, titleModeTask } = this.state;
     let url = '/case/countByCondition';
     if (this.props.type === 'oe') {
       url = `${this.props.doneApiPrefix}/case/countByCondition`;
     }
     request(url, {
-      method: 'POST',
-      body: {
-        caseId: Number(
-          this.state.titleModeTask === '编辑测试任务'
-            ? record.caseId
-            : record.id,
-        ),
+      method: 'GET',
+      params: {
+        caseId: titleModeTask === '编辑测试任务' ? record.caseId : record.id,
         priority,
         resource: resource || [],
       },
@@ -476,27 +468,36 @@ class Lists extends React.Component {
       },
       {
         title: '通过率',
-        dataIndex: 'passRate',
-        key: 'passRate',
-        align: 'center',
-        render: text => <span className="table-operation">{text}%</span>,
-      },
-      {
-        title: '已测用例集',
-        dataIndex: 'passCount',
-        key: 'passCount',
+        dataIndex: 'successNum',
+        key: 'successNum',
         align: 'center',
         render: (text, record) => (
           <span className="table-operation">
-            {text} / {record.totalCount}
+            {parseInt((text / record.totalNum) * 100)}%
           </span>
         ),
       },
       {
-        title: '创建时间',
-        dataIndex: 'gmtCreated',
-        key: 'gmtCreated',
-        render: (text, record) => moment(text).format('YYYY-MM-DD HH:mm:ss'),
+        title: '已测用例集',
+        dataIndex: 'executeNum',
+        key: 'executeNum',
+        align: 'center',
+        render: (text, record) => (
+          <span className="table-operation">
+            {text} / {record.totalNum}
+          </span>
+        ),
+      },
+      {
+        title: '期望时间',
+        dataIndex: 'expectStartTime',
+        key: 'expectStartTime',
+        render: (text, record) =>
+          text
+            ? `${moment(text).format('YYYY-MM-DD')} 至 ${moment(
+                record.expectEndTime,
+              ).format('YYYY-MM-DD')}`
+            : '',
       },
       {
         title: '操作',
@@ -594,6 +595,7 @@ class Lists extends React.Component {
               pagination={false}
               loading={this.state.extendLoading.get(item.id)}
               rowKey="id"
+              size="middle"
             />
           ) ||
             null)}
@@ -657,9 +659,9 @@ class Lists extends React.Component {
   getRecordList = id => {
     let { type } = this.props;
 
-    let url = `/execRecord/getRecordByCaseId`;
+    let url = `/record/list`;
     if (type === 'oe') {
-      url = `${this.props.doneApiPrefix}/execRecord/getRecordByCaseId`;
+      url = `${this.props.doneApiPrefix}/record/list`;
     }
     request(url, { method: 'GET', params: { caseId: id } }).then(res => {
       if (res.code == 200) {
@@ -674,7 +676,7 @@ class Lists extends React.Component {
           }
         });
 
-        this.setState({ list: list }, () => {
+        this.setState({ list }, () => {
           let extendLoading = this.state.extendLoading.set(id, false);
 
           this.setState({
@@ -682,23 +684,26 @@ class Lists extends React.Component {
           });
         });
       } else {
-        message.error(response.msg);
+        message.error(res.msg);
       }
     });
   };
 
-  // /execRecord/softdelete
+  // /record/delete
   deleteRecordList = record => {
     let { type } = this.props;
 
-    let url = `/execRecord/softdelete`;
+    let url = `/record/delete`;
     if (type === 'oe') {
-      url = `${this.props.doneApiPrefix}/execRecord/softdelete`;
+      url = `${this.props.doneApiPrefix}/record/delete`;
     }
     request(url, { method: 'POST', body: { id: record.id } }).then(res => {
       if (res.code == 200) {
         this.getRecordList(record.caseId);
         this.setState({ checked: false });
+        message.success(res.data);
+      } else {
+        message.error(res.msg);
       }
     });
   };
@@ -750,6 +755,7 @@ class Lists extends React.Component {
           onExpand={this.onExpand}
           expandedRowKeys={expendKeys}
           rowKey="id"
+          size="middle"
           loading={loading}
           pagination={false}
           expandIcon={props => {

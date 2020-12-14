@@ -29,9 +29,9 @@ const proxy =
   NODE_ENV !== 'production'
     ? {
         '/api': {
-          target: `http://localhost:8081`, // 测试环境
+          target: `http://localhost:8094`, // 测试环境
           changeOrigin: true,
-          pathRewrite: { '^/api': '' },
+          // pathRewrite: { '^/api': '' },
         },
       }
     : {};
@@ -176,16 +176,12 @@ export default {
           component: './landing/index.jsx',
         },
         {
-          path: '/case/caseList/:product_id',
+          path: '/case/caseList/:productLineId',
           component: './casepage/index.js',
         },
         {
-          path: '/caseManager/:product_id/:caseId/:itemid/:iscore',
+          path: '/caseManager/:productLineId/:caseId/:itemid/:iscore',
           component: './testTask/index.js',
-        },
-        {
-          path: '/test/:productId/:requirementId',
-          component: './testTaskList/index.js',
         },
         {
           path: '*',
