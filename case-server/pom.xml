@@ -24,7 +24,6 @@
 		<json.version>1.2.70</json.version>
 		<common.version>3.4</common.version>
 		<websocket.version>5.1.9.RELEASE</websocket.version>
-		<ext.version>1.0.3-SNAPSHOT</ext.version>
 		<page.helper.version>1.2.5</page.helper.version>
 	</properties>
 
@@ -52,12 +51,6 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
-		</dependency>
-		<!-- Spring拓展包 -->
-		<dependency>
-			<groupId>org.springframework.ext</groupId>
-			<artifactId>springframework-ext-common</artifactId>
-			<version>${ext.version}</version>
 		</dependency>
 
 		<!-- springboot所依赖的mybatis-boot包 -->

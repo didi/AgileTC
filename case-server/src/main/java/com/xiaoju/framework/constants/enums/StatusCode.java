@@ -1,7 +1,7 @@
 package com.xiaoju.framework.constants.enums;
 
 
-import org.springframework.ext.common.object.Status;
+import com.xiaoju.framework.entity.response.controller.Status;
 
 /**
  * 自定义前后端传输编码

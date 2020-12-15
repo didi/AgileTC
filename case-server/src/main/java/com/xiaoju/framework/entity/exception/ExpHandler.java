@@ -6,7 +6,6 @@ import com.xiaoju.framework.constants.enums.StatusCode;
 import com.xiaoju.framework.entity.response.controller.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.ext.common.exception.NestedRuntimeException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -29,13 +28,6 @@ public class ExpHandler {
         e.printStackTrace();
         LOGGER.error(StatusCode.INTERNAL_ERROR.getCode(), e.getMessage());
         return Response.build(StatusCode.INTERNAL_ERROR, e.getMessage());
-    }
-
-    @ExceptionHandler(NestedRuntimeException.class)
-    public Response<?> handlerException(NestedRuntimeException e) {
-        e.printStackTrace();
-        LOGGER.error(e.getCode(), e.getMessage());
-        return Response.build(StatusCode.SERVER_BUSY_ERROR);
     }
 
     @ExceptionHandler(MissingServletRequestParameterException.class)

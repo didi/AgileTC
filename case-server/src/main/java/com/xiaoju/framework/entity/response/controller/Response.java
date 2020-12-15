@@ -2,7 +2,6 @@ package com.xiaoju.framework.entity.response.controller;
 
 import com.xiaoju.framework.constants.enums.StatusCode;
 import lombok.Data;
-import org.springframework.ext.common.object.Status;
 
 /**
  * controller层统一响应体
