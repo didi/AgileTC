@@ -95,6 +95,7 @@ public class TreeUtil {
                 }
             }
         } else {
+            // 先把超链接、备注都加进来
             // 最底部的节点，没有任何子节点
             switch (ProgressEnum.findEnumByProgress(currNode.getProgress())) {
                 case BLOCK:
@@ -258,7 +259,7 @@ public class TreeUtil {
             execCount.del();
         }
         for (Object o : caseContent.getJSONArray("children")) {
-            if (!(execCount.get() == 0)) {
+            if (execCount.get() != 0) {
                 mergeExecRecord(((JSONObject) o), execContent, execCount);
             }
         }
