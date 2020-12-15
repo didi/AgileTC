@@ -5,18 +5,17 @@ import router from 'umi/router';
 import {
   Upload,
   Form,
-  Select,
   message,
   Modal,
   Input,
   Icon,
   Row,
   Col,
+  TreeSelect,
 } from 'antd';
 const { Dragger } = Upload;
 import './index.scss';
-const initData = `{"root":{"data":{"id":"bv8nxhi3c800","created":1562059643204,"text":"中心主题"},"children":[]},"template":"default","theme":"fresh-blue","version":"1.4.43"}`;
-const Option = Select.Option;
+const initData = `{"root":{"data":{"id":"bv8nxhi3c800","created":1562059643204,"text":"中心主题"},"children":[]},"template":"default","theme":"fresh-blue","version":"1.4.43","base":0}`;
 const formItemLayout = {
   labelCol: { span: 6 },
   wrapperCol: { span: 16 },
@@ -25,7 +24,7 @@ import request from '@/utils/axios';
 import getQueryString from '@/utils/getCookies';
 const getCookies = getQueryString.getCookie;
 const { TextArea } = Input;
-import debounce from 'lodash/debounce';
+const { TreeNode } = TreeSelect;
 /* global moment, cardStatusList, priorityList, staffNameCN, staffNamePY */
 class CaseModal extends React.Component {
   static propTypes = {
@@ -33,8 +32,7 @@ class CaseModal extends React.Component {
     productId: PropTypes.any,
     requirementId: PropTypes.any,
     product: PropTypes.object,
-    project: PropTypes.object,
-    requirement: PropTypes.object,
+    requirement: PropTypes.array,
     data: PropTypes.object,
     options: PropTypes.object,
     form: PropTypes.object,
@@ -43,7 +41,7 @@ class CaseModal extends React.Component {
   };
   constructor(props) {
     super(props);
-    let { product, project, requirement, options, data, title } = this.props;
+    let { product, requirement, options, data, title } = this.props;
     this.state = {
       title: '',
       show: this.props.show,
@@ -55,20 +53,18 @@ class CaseModal extends React.Component {
       operate: title,
       data: data,
       product: product,
-      project: project,
       requirement: requirement,
       options: options,
       value: [],
-      fetching: false,
-      requirementOe: [],
-      currProjectId: project ? project.id : null,
-      requirementArr: [],
-      requirementSeach: '',
+      cardTree: [],
+      bizIds: [],
     };
-    this.lastFetchId = 0;
-    this.getOeRequirement = debounce(this.getOeRequirement, 800);
   }
   componentDidMount() {
+    this.getCardTree();
+    if (this.props.data && this.props.data.id) {
+      this.getDetailById();
+    }
     this.props.data &&
       this.props.data.requirementId &&
       this.getRequirementsById(this.props.data.requirementId);
@@ -77,22 +73,41 @@ class CaseModal extends React.Component {
     this.setState(nextProps);
     if (!nextProps.show) {
       this.props.form.resetFields();
-      this.setState({ requirementSeach: '' });
     }
     if (nextProps.show && nextProps.show !== this.state.show) {
-      let { project, options, product, requirement } = nextProps;
+      let { options, product, requirement } = nextProps;
 
       this.setState({
         data: nextProps.data,
         requirementId: requirement ? requirement.id : null,
         product: product,
         requirement: requirement,
-        project: project,
         options: options,
-        currProjectId: project ? project.id : null,
       });
     }
   }
+  getCardTree = () => {
+    request(`${this.props.doneApiPrefix}/dir/cardTree`, {
+      method: 'GET',
+      params: {
+        productLineId: this.props.productId,
+        channel: 1,
+      },
+    }).then(res => {
+      this.setState({ cardTree: res.data.children });
+    });
+  };
+  getDetailById = () => {
+    request(`${this.props.doneApiPrefix}/case/detail`, {
+      method: 'GET',
+      params: { caseId: this.props.data.id },
+    }).then(res => {
+      const bizIds = res.data.biz.map(item => {
+        return item.bizId;
+      });
+      this.setState({ bizIds });
+    });
+  };
   getRequirementsById = requirementIds => {
     // request(`${this.props.oeApiPrefix}/business-lines/requirements`, {
     //   method: 'GET',
@@ -120,24 +135,17 @@ class CaseModal extends React.Component {
   // 确认新建
   saveEditerData(values) {
     let requirementId = values.requirementId;
-    // if (this.props.type == 'oe') {
-    //   requirementId = values.requirementId
-    //     .map(item => item.key.split('-')[0])
-    //     .join(',');
-    // }
     let params = {
-      groupId: '1',
-      channel: '0',
-      title: values.case,
-      description: values.description,
+      productLineId: Number(this.props.productId),
       creator: getCookies('username'),
-      isDelete: 0,
-      productLineId: this.props.productId,
-      caseContent: initData,
-      requirementId,
       caseType: 0,
-      id: this.state.operate != 'add' ? this.props.data.id : '',
+      caseContent: initData,
+      title: values.case,
       channel: this.props.type === 'oe' ? 1 : 0,
+      bizId: values.bizId ? values.bizId.join(',') : '-1',
+      id: this.state.operate != 'add' ? this.props.data.id : '',
+      requirementId,
+      description: values.description,
     };
 
     // 判断是否上传了xmind文件
@@ -156,13 +164,13 @@ class CaseModal extends React.Component {
       params = new FormData();
       params.append('file', xmindFile);
       params.append('creator', getCookies('username'));
-      params.append('caseTitle', values.case);
-      params.append('productLine', this.props.productId);
+      params.append('title', values.case);
+      params.append('productLineId', Number(this.props.productId));
       params.append('requirementId', requirementId);
 
       params.append('description', values.description);
-      params.append('caseType', 0);
       params.append('channel', this.props.type === 'oe' ? 1 : 0);
+      params.append('bizId', values.bizId ? values.bizId.join(',') : '-1');
     }
     request(url, { method: 'POST', body: params }).then(res => {
       if (res.code == 200) {
@@ -199,14 +207,14 @@ class CaseModal extends React.Component {
       caseType: 0,
       description: values.description,
       modifier: getCookies('username'),
+      bizId: values.bizId ? values.bizId.join(',') : '-1',
+      channel: this.props.type === 'oe' ? 1 : 0,
     };
 
     let { type } = this.props;
 
     let url =
-      type === 'oe'
-        ? `${this.props.doneApiPrefix}/case/update`
-        : '/case/update';
+      type === 'oe' ? `${this.props.doneApiPrefix}/case/edit` : '/case/edit';
     request(url, { method: 'POST', body: params }).then(res => {
       if (res.code == 200) {
         this.props.onUpdate && this.props.onUpdate();
@@ -216,39 +224,25 @@ class CaseModal extends React.Component {
       }
     });
   };
-
-  getOeRequirement = title => {
-    this.lastFetchId += 1;
-    const fetchId = this.lastFetchId;
-    this.setState({ requirementSeach: title, fetching: true });
-    request(
-      `${this.props.oeApiPrefix}/business-lines/${this.props.productId}/requirements`,
-      { method: 'GET', params: { title: title, pageNum: 1, pageSize: 25 } },
-    ).then(res => {
-      let { requirementDetails } = res;
-      if (fetchId !== this.lastFetchId) {
-        return;
+  renderTreeNodes = data =>
+    data.map(item => {
+      item.title = <span>{item.text}</span>;
+      if (item.children) {
+        return (
+          <TreeNode
+            title={item.title}
+            value={item.id}
+            key={item.id}
+            dataRef={item}
+          >
+            {this.renderTreeNodes(item.children)}
+          </TreeNode>
+        );
       }
-      this.setState({ requirementOe: requirementDetails, fetching: false });
+      return <TreeNode {...item} />;
     });
-  };
-
   render() {
-    const {
-      xmindFile,
-      data,
-      show,
-      // currProjectId,
-      project,
-      requirement,
-      options,
-      operate,
-      // requirementArr,
-      // fetching,
-      // requirementSeach,
-    } = this.state;
-    const { type } = this.props;
-    const isOE = type === 'oe';
+    const { xmindFile, data, show, operate, bizIds } = this.state;
     const { getFieldDecorator } = this.props.form;
     const props = {
       accept: '.xmind',
@@ -279,7 +273,6 @@ class CaseModal extends React.Component {
       default:
         break;
     }
-
     // let newRequirementArr =
     //   requirementArr &&
     //   requirementArr.map(item => {
@@ -309,79 +302,39 @@ class CaseModal extends React.Component {
               : '',
           })(<Input placeholder="请填写用例集名称" />)}
         </Form.Item>
-        {(!isOE && (
-          <Form.Item {...formItemLayout} label="所属项目">
-            {getFieldDecorator('iteration', {
-              rules: [{ required: true, message: '请选择所属项目' }],
-              initialValue: project && operate != 'copy' ? project.id : '',
-            })(
-              <Select
-                style={{ width: '100%' }}
-                placeholder="所属项目"
-                showSearch
-                optionFilterProp="children"
-                filterOption={(input, option) => {
-                  return (
-                    option.props.children
-                      .toLowerCase()
-                      .indexOf(input.toLowerCase()) >= 0
-                  );
-                }}
-                onChange={value => {
-                  let project = _.find(options.projectLs, function(item) {
-                    return item.id == value;
-                  });
-                  this.props.form.setFieldsValue({ requirementId: '' });
-                  this.setState({
-                    currProjectId: value,
-                    project: project,
-                    requirement: null,
-                  });
-                }}
-              >
-                {options &&
-                  options.projectLs &&
-                  options.projectLs.map((item, index) => {
-                    return (
-                      <Option key={item.id} value={item.id}>
-                        {item.name}
-                      </Option>
-                    );
-                  })}
-              </Select>,
-            )}
-          </Form.Item>
-        )) ||
-          null}
-
-        {(!isOE && (
-          <Form.Item {...formItemLayout} label="所属需求：">
-            {getFieldDecorator('requirementId', {
-              rules: [{ required: true, message: '请选择所属需求' }],
-              initialValue:
-                requirement && requirement.status != '关闭' && operate != 'copy'
-                  ? requirement.id
-                  : '',
-            })(<Input style={{ Width: '100%' }} placeholder="所属需求" />)}
-          </Form.Item>
-        )) || (
-          <Form.Item {...formItemLayout} label="关联需求：">
-            {getFieldDecorator('requirementId', {
-              initialValue: data ? data.requirementId : undefined,
-              // (this.state.operate !== 'copy' &&
-              //   newRequirementArr.join(',')) ||
-              // '',
-            })(<Input placeholder="关联需求" style={{ width: '100%' }} />)}
-          </Form.Item>
-        )}
-        {(isOE && (
-          <Form.Item {...formItemLayout} label="描述：">
-            {getFieldDecorator('description', {
-              initialValue: data ? data.description : '',
-            })(<TextArea autoSize={{ minRows: 4 }} maxLength="1024" />)}
-          </Form.Item>
-        )) ||
-          null}
+        <Form.Item {...formItemLayout} label="关联需求：">
+          {getFieldDecorator('requirementId', {
+            initialValue: data ? data.requirementId : undefined,
+          })(<Input placeholder="关联需求" style={{ width: '100%' }} />)}
+        </Form.Item>
+        <Form.Item {...formItemLayout} label="用例集分类：">
+          {getFieldDecorator('bizId', {
+            rules: [{ required: true, message: '请选择用例集分类' }],
+            initialValue:
+              this.state.operate === 'add'
+                ? this.props.caseIds.length === 1 &&
+                  this.props.caseIds[0] === 'root'
+                  ? [-1]
+                  : this.props.caseIds
+                : bizIds,
+          })(
+            <TreeSelect
+              style={{ width: '100%' }}
+              dropdownStyle={{ maxHeight: 400, overflow: 'auto' }}
+              placeholder="请选择用例"
+              allowClear
+              multiple
+              treeDefaultExpandAll
+            >
+              {this.renderTreeNodes(this.state.cardTree)}
+            </TreeSelect>,
+          )}
+        </Form.Item>
+        <Form.Item {...formItemLayout} label="描述：">
+          {getFieldDecorator('description', {
+            initialValue: data ? data.description : '',
+          })(<TextArea autoSize={{ minRows: 4 }} maxLength="1024" />)}
+        </Form.Item>
 
         {operate == 'add' && (
           <Row style={{ marginBottom: '20px' }}>
