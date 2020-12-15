@@ -26,6 +26,21 @@ public class DataObj {
      */
     private String id;
 
+    /**
+     * 备注
+     */
+    private String note;
+
+    /**
+     * 超链接
+     */
+    private String hyperLink;
+
+    /**
+     * 超链接文本提示
+     */
+    private String hyperLinkTitle;
+
     public String getProgressStr() {
         return String.valueOf(progress);
     }
