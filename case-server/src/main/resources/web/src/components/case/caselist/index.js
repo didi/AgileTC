@@ -99,7 +99,7 @@ class CaseLists extends React.Component {
             caseIds:
               this.state.treeSelect.length > 0
                 ? this.state.treeSelect.toString()
-                : -1,
+                : [-1],
           },
           () => {
             this.getCaseList(1, '', '', '', []);

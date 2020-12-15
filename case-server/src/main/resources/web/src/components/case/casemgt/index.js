@@ -380,6 +380,7 @@ export default class CaseMgt extends React.Component {
             tags={['前置条件', '执行步骤', '预期结果']}
             progressShow={progressShow}
             readOnly={readOnly}
+            mediaShow={!progressShow}
             editorStyle={{ height: 'calc(100vh - 100px)' }}
             toolbar={{
               image: false,
