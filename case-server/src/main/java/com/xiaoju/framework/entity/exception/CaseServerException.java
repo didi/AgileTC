@@ -1,6 +1,7 @@
 package com.xiaoju.framework.entity.exception;
 
-import org.springframework.ext.common.object.Status;
+
+import com.xiaoju.framework.entity.response.controller.Status;
 
 /**
  * 自定义异常类，用于封装程序内部可判断出来的Exception
