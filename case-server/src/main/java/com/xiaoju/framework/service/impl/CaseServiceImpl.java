@@ -240,11 +240,11 @@ public class CaseServiceImpl implements CaseService {
 
     @Override
     public void wsSave(WsSaveReq req) {
-        List<String> editors = WebSocket.getEditingUser(String.valueOf(req.getId()),
-                StringUtils.isEmpty(req.getRecordId())?"undefined":String.valueOf(req.getRecordId()));
-        if (editors.size() < 1) {
-            throw new CaseServerException("用例ws链接已经断开，当前保存可能丢失，请刷新页面重建ws链接。", StatusCode.WS_UNKNOWN_ERROR);
-        }
+//        List<String> editors = WebSocket.getEditingUser(String.valueOf(req.getId()),
+//                StringUtils.isEmpty(req.getRecordId())?"undefined":String.valueOf(req.getRecordId()));
+//        if (editors.size() < 1) {
+//            throw new CaseServerException("用例ws链接已经断开，当前保存可能丢失，请刷新页面重建ws链接。", StatusCode.WS_UNKNOWN_ERROR);
+//        }
 
         CaseBackup caseBackup = new CaseBackup();
         // 这里触发保存record
