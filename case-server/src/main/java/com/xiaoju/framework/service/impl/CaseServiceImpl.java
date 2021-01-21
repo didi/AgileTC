@@ -31,6 +31,7 @@ import com.xiaoju.framework.handler.WebSocket;
 import com.xiaoju.framework.mapper.BizMapper;
 import com.xiaoju.framework.mapper.ExecRecordMapper;
 import com.xiaoju.framework.mapper.TestCaseMapper;
+import com.xiaoju.framework.service.CaseBackupService;
 import com.xiaoju.framework.service.CaseService;
 import com.xiaoju.framework.service.DirService;
 import com.xiaoju.framework.service.RecordService;
@@ -73,7 +74,8 @@ public class CaseServiceImpl implements CaseService {
     @Resource
     private RecordService recordService;
 
-
+    @Resource
+    private CaseBackupService caseBackupService;
 
     @Override
     public PageModule<CaseListResp> getCaseList(CaseQueryReq request) {
@@ -243,6 +245,8 @@ public class CaseServiceImpl implements CaseService {
         if (editors.size() < 1) {
             throw new CaseServerException("用例ws链接已经断开，当前保存可能丢失，请刷新页面重建ws链接。", StatusCode.WS_UNKNOWN_ERROR);
         }
+
+        CaseBackup caseBackup = new CaseBackup();
         // 这里触发保存record
         if (!StringUtils.isEmpty(req.getRecordId())) {
             RecordWsDto dto = recordService.getWsRecord(req.getRecordId());
@@ -274,13 +278,23 @@ public class CaseServiceImpl implements CaseService {
             record.setSuccessCount(jsonObject.getInteger("successCount"));
             record.setExecutors(executors);
             recordService.modifyRecord(record);
+            caseBackup.setCaseId(req.getRecordId());
+            caseBackup.setRecordContent(req.getCaseContent());
+            caseBackup.setCaseContent("");
         } else {
             // 这里触发保存testcase
             TestCase testCase = caseMapper.selectOne(req.getId());
             testCase.setCaseContent(req.getCaseContent());
             testCase.setModifier(req.getModifier());
             caseMapper.update(testCase);
+            caseBackup.setCaseId(req.getId());
+            caseBackup.setCaseContent(req.getCaseContent());
+            caseBackup.setRecordContent("");
+
         }
+        caseBackup.setCreator(req.getModifier());
+        caseBackup.setExtra("");
+        caseBackupService.insertBackup(caseBackup);
     }
 
     /**
