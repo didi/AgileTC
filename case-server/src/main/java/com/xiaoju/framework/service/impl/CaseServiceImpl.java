@@ -11,6 +11,7 @@ import com.xiaoju.framework.entity.dto.RecordNumDto;
 import com.xiaoju.framework.entity.dto.RecordWsDto;
 import com.xiaoju.framework.entity.exception.CaseServerException;
 import com.xiaoju.framework.entity.persistent.Biz;
+import com.xiaoju.framework.entity.persistent.CaseBackup;
 import com.xiaoju.framework.entity.persistent.ExecRecord;
 import com.xiaoju.framework.entity.persistent.TestCase;
 import com.xiaoju.framework.entity.request.cases.CaseConditionReq;
@@ -26,6 +27,7 @@ import com.xiaoju.framework.entity.response.cases.CaseListResp;
 import com.xiaoju.framework.entity.response.controller.PageModule;
 import com.xiaoju.framework.entity.response.dir.BizListResp;
 import com.xiaoju.framework.entity.response.dir.DirTreeResp;
+import com.xiaoju.framework.handler.WebSocket;
 import com.xiaoju.framework.mapper.BizMapper;
 import com.xiaoju.framework.mapper.ExecRecordMapper;
 import com.xiaoju.framework.mapper.TestCaseMapper;
@@ -70,6 +72,8 @@ public class CaseServiceImpl implements CaseService {
 
     @Resource
     private RecordService recordService;
+
+
 
     @Override
     public PageModule<CaseListResp> getCaseList(CaseQueryReq request) {
@@ -234,6 +238,11 @@ public class CaseServiceImpl implements CaseService {
 
     @Override
     public void wsSave(WsSaveReq req) {
+        List<String> editors = WebSocket.getEditingUser(String.valueOf(req.getId()),
+                StringUtils.isEmpty(req.getRecordId())?"undefined":String.valueOf(req.getRecordId()));
+        if (editors.size() < 1) {
+            throw new CaseServerException("用例ws链接已经断开，当前保存可能丢失，请刷新页面重建ws链接。", StatusCode.WS_UNKNOWN_ERROR);
+        }
         // 这里触发保存record
         if (!StringUtils.isEmpty(req.getRecordId())) {
             RecordWsDto dto = recordService.getWsRecord(req.getRecordId());

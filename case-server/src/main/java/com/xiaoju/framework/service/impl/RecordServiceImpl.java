@@ -122,8 +122,8 @@ public class RecordServiceImpl implements RecordService {
         // 日期类转换,在request.validate()已经解决单边输入为null的不完整问题
         if (req.getExpectStartTime() != null) {
             // 就是说这里是有日期区间的
-            record.setExpectStartTime(new Date(req.getExpectStartTime()));
-            record.setExpectEndTime(new Date(req.getExpectEndTime()));
+            record.setExpectStartTime(new Date(req.getExpectStartTime()/1000*1000));
+            record.setExpectEndTime(new Date(req.getExpectEndTime()/1000*1000));
         } else {
             // 没有区间设置默认值 1970-01-01 00:00:00
             record.setExpectStartTime(new Date(31507200000L));
@@ -257,8 +257,8 @@ public class RecordServiceImpl implements RecordService {
 
         if (req.getExpectStartTime() != null) {
             // 就是说这里是有日期区间的
-            record.setExpectStartTime(new Date(req.getExpectStartTime()));
-            record.setExpectEndTime(new Date(req.getExpectEndTime()));
+            record.setExpectStartTime(new Date(req.getExpectStartTime()/1000*1000));
+            record.setExpectEndTime(new Date(req.getExpectEndTime()/1000*1000));
         } else {
             // 没有区间设置默认值
             record.setExpectStartTime(new Date(31507200000L));

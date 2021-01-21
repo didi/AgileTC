@@ -327,6 +327,8 @@ public class WebSocket {
         }
 
         if (StringUtils.isEmpty(keySave)) {
+
+            LOGGER.info("[Websocket case-save]当前没有需要保存的session。keysave: " + keySave);
             // 无需更新
             return;
         }
@@ -342,14 +344,16 @@ public class WebSocket {
                 WebSocket.webSocket.get(key).caseContent = testCase.getCaseContent();
                 WebSocket.webSocket.get(key).updateCaseTime = 0L;
             }
+            LOGGER.info("[Websocket case-save]数据库更新时间戳大于websocket中的更新时间，不保存");
             return;
         } else {
-            LOGGER.info("[Websocket case-save]当前内容没有保存上, 内容:{}, tcUpdateTime:{}, wsTcUpdateTime:{}",
-                    WebSocket.webSocket.get(keySave).caseContent, tcUpdateTime, wsTcUpdateTime);
+            LOGGER.info("[Websocket case-save]当前内容没有保存上, 内容:{}, tcUpdateTime:{}, wsTcUpdateTime:{}, keySave:{}",
+                    WebSocket.webSocket.get(keySave).caseContent, tcUpdateTime, wsTcUpdateTime, keySave);
         }
 
         // 过来的内容没有content就不要保存了
         if (!jsonObject.containsKey("content")) {
+            LOGGER.info("[Websocket case-save]当前内容没有content，未保存。json: " + jsonObject.toJSONString());
             return;
         }
 
@@ -361,7 +365,11 @@ public class WebSocket {
 
         testCase.setCaseContent(jsonContent.toJSONString());
         testCase.setGmtModified(new Date(wsTcUpdateTime));
-        caseMapper.update(testCase);
+        int ret = caseMapper.update(testCase);
+        LOGGER.info("[Websocket case-save]case update content is: " + testCase.getCaseContent());
+        if (ret != 1) {
+            LOGGER.error("[Websocket case-save]case update failed. ret: " + ret);
+        }
     }
 
     /**
