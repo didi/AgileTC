@@ -19,6 +19,7 @@ public enum StatusCode implements Status {
     FILE_FORMAT_ERROR(10007, "文件格式不对，请上传xmind文件"),
     FILE_IMPORT_ERROR(10008, "导入失败，请稍后再试"),
     FILE_EXPORT_ERROR(10009, "导出失败，请稍后再试"),
+    NODE_ALREADY_EXISTS(20001, "节点已存在"),
     WS_UNKNOWN_ERROR(100010, "websocket访问异常"),
 
     // 内部异常

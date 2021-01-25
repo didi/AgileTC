@@ -1,6 +1,7 @@
 package com.xiaoju.framework.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
+import com.xiaoju.framework.constants.BizConstant;
 import com.xiaoju.framework.constants.enums.StatusCode;
 import com.xiaoju.framework.entity.persistent.Biz;
 import com.xiaoju.framework.entity.dto.DirNodeDto;
@@ -41,6 +42,7 @@ public class DirServiceImpl implements DirService {
     @Transactional(rollbackFor = Exception.class)
     public DirNodeDto addDir(DirCreateReq request) {
         DirNodeDto root = getDirTree(request.getProductLineId(), request.getChannel());
+        checkNodeExists(request.getText(), request.getParentId(), root);
         DirNodeDto dir = getDir(request.getParentId(), root);
         if (dir == null) {
             throw new CaseServerException("目录节点获取为空", StatusCode.INTERNAL_ERROR);
@@ -60,6 +62,14 @@ public class DirServiceImpl implements DirService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public DirNodeDto renameDir(DirRenameReq request) {
+        DirNodeDto dirTree = getDirTree(request.getProductLineId(), request.getChannel());
+        if (!BizConstant.ROOT_BIZ_ID.equalsIgnoreCase(request.getId())) {
+            String parentId = getParentIdWithRecursion(request.getId(), dirTree);
+            if (null != parentId) {
+                checkNodeExists(request.getText(), parentId, dirTree);
+            }
+        }
+
         DirNodeDto root = getDirTree(request.getProductLineId(), request.getChannel());
         DirNodeDto dir = getDir(request.getId(), root);
         if (dir == null) {
@@ -70,6 +80,8 @@ public class DirServiceImpl implements DirService {
         bizMapper.updateContent(request.getProductLineId(), JSONObject.toJSONString(root), request.getChannel());
         return root;
     }
+
+
 
     @Override
     public DirNodeDto delDir(DirDeleteReq request) {
@@ -171,5 +183,43 @@ public class DirServiceImpl implements DirService {
             addChildrenCaseIds(child);
             root.getCaseIds().addAll(child.getCaseIds());
         }
+    }
+
+    /**
+     *  校验同级节点下是否存在相同名字的子节点
+     *
+     * @param text  节点名称
+     * @param parentId  父节点id
+     * @param dirNodeDto  节点内容
+     */
+    private void checkNodeExists(final String text, final String parentId, final DirNodeDto dirNodeDto) {
+        if (parentId.equalsIgnoreCase(dirNodeDto.getId())) {
+            List<DirNodeDto> childrenNodes = dirNodeDto.getChildren();
+            if (childrenNodes.stream().anyMatch(node -> text.equalsIgnoreCase(node.getText()))) {
+                throw new CaseServerException("目录节点获取为空", StatusCode.NODE_ALREADY_EXISTS);
+            }
+        }
+        List<DirNodeDto> childrenNodes = dirNodeDto.getChildren();
+        childrenNodes.forEach(node -> checkNodeExists(text, parentId, node));
+    }
+
+    /**
+     *  获取当前节点的父节点id
+     * @param nodeId ： 节点id
+     * @param dirTree： 节点内容
+     * @return 返回父节点id或者null
+     */
+    private String getParentIdWithRecursion(final String nodeId, final DirNodeDto dirTree) {
+        if (nodeId.equalsIgnoreCase(dirTree.getId())) {
+            return dirTree.getParentId();
+        }
+        List<DirNodeDto> children = dirTree.getChildren();
+        for (DirNodeDto node : children) {
+            String parentId = getParentIdWithRecursion(nodeId, node);
+            if (parentId != null) {
+                return parentId;
+            }
+        }
+        return null;
     }
 }
