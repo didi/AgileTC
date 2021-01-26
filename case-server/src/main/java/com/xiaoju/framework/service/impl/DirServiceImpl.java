@@ -196,7 +196,7 @@ public class DirServiceImpl implements DirService {
         if (parentId.equalsIgnoreCase(dirNodeDto.getId())) {
             List<DirNodeDto> childrenNodes = dirNodeDto.getChildren();
             if (childrenNodes.stream().anyMatch(node -> text.equalsIgnoreCase(node.getText()))) {
-                throw new CaseServerException("目录节点获取为空", StatusCode.NODE_ALREADY_EXISTS);
+                throw new CaseServerException("目标节点已存在", StatusCode.NODE_ALREADY_EXISTS);
             }
         }
         List<DirNodeDto> childrenNodes = dirNodeDto.getChildren();
