@@ -66,55 +66,42 @@ public class FileUtil {
     /**
      * 压缩文件
      * @param sourcePath 要压缩的文件夹
-     * @param destPath 压缩文件放的地方
+     * @param destPath 压缩文件
      * @return 压缩文件
      */
-    public static String compressZip(String sourcePath, String destPath) {
+    public static void compressZip(String sourcePath, String destPath) {
         File resourcesFile = new File(sourcePath);
-        File targetFile = new File(destPath);
-        //如果目的路径不存在，则新建
-        if(!targetFile.exists()){
-            targetFile.mkdirs();
-        }
-
-        String targetName = "mm"+".xmind";
         FileOutputStream outputStream = null;
         try {
-            outputStream = new FileOutputStream(destPath+"\\"+targetName);
+            outputStream = new FileOutputStream(destPath);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
         ZipOutputStream out = new ZipOutputStream(new BufferedOutputStream(outputStream));
-
         try {
             createCompressedFile(out, resourcesFile, "");
             out.close();
         } catch (Exception e) {
             e.printStackTrace();
-        }
 
-        return "";
+        }
     }
 
     public static void createCompressedFile(ZipOutputStream out,File file,String dir) throws Exception{
-        //如果当前的是文件夹，则进行进一步处理
         if(file.isDirectory()){
             //得到文件列表信息
             File[] files = file.listFiles();
             //将文件夹添加到下一级打包目录
             out.putNextEntry(new ZipEntry(dir+"/"));
-
             dir = dir.length() == 0 ? "" : dir +"/";
-
             //循环将文件夹中的文件打包
             for(int i = 0 ; i < files.length ; i++){
                 createCompressedFile(out, files[i], dir + files[i].getName());
             }
         }
-        else{   //当前的是文件，打包处理
+        else{
             //文件输入流
             FileInputStream fis = new FileInputStream(file);
-
             out.putNextEntry(new ZipEntry(dir));
             //进行写操作
             int j =  0;
@@ -170,5 +157,4 @@ public class FileUtil {
             return null;
         }
     }
-
 }

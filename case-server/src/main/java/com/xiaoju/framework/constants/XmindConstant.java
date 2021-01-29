@@ -38,16 +38,27 @@ public class XmindConstant {
 
     public static final String TEMP_FOLDER = "/temp/";
 
+    public static final String TEMP_FOLDER_EXPORT = "/temp/export/";
+
     public static final String CONTENT_JSON = "content.json";
 
     /**
      * xmind - zen 版本的xmind节点版本号
      */
-    public static final String ZEN_ROOT_VERSION = "1vr0lcte2og4t2sopiogvdmifc";
+    public static final String ZEN_ROOT_VERSION = "53ptgae5ptd1886rc7i8k40boa";
 
     /**
      * 导出时需要写入的xmind主题类型
      */
-    public static final String XMIND_THEME_VERSION = "xminddefaultthemeid2014";
+    public static final String XMIND_THEME_VERSION = "7473aupb6bv1i2bstr1sgj7bo9";
+
+
+
+    public static final String XMIND_CREATED_VERSION = "1611739849951";
+
+    public static final String XMIND_MODIFIED_VERSION = "didi";
+
+
+
 
 }

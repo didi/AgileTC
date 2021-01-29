@@ -31,12 +31,11 @@ AgileTC 是一套敏捷的线上测试用例管理平台，支持测试用例集
 
  - 准备
     - 若您使用master分支，若您在此分支上有过二次开发，请先拉子分支保存当前内容，再拉取远端master
-    - 创建依赖数据库，application-dev.properties中配置数据库名称为case_manager。create database case_manager
+    - 创建依赖数据库，application-dev.properties中配置数据库名称为case_manager    create database case_manager
     - 利用sql中的脚本配置对应表。创建脚本路径：case-server/sql/case-server.sql
         * 请注意，如果您是2020年12月15日之前就有使用本平台并且创建数据库的，请执行case-server.sql中create table Biz {}后面的所有语句
         * 如果您是新用户，还未使用过本平台，请将case-server.sql中的语句全部执行一次
     - 修改properties中spring.datasource的配置
-    - 安装xmind jar包。 mvn install:install-file -Dfile=org.xmind.core_3.5.2.201505201101.jar -DgroupId=com.xmind -DartifactId=sdk-Java -Dversion=201505201101 -Dpackaging=jar
 
  - 运行
     - mvn spring-boot:run 

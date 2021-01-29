@@ -133,12 +133,6 @@
 			<version>3.4.1</version>
 		</dependency>
 
-		<!-- X-mind读取与解析相关 -->
-		<dependency>
-			<groupId>com.xmind</groupId>
-			<artifactId>sdk-Java</artifactId>
-			<version>201505201101</version>
-		</dependency>
 		<dependency>
 			<groupId>dom4j</groupId>
 			<artifactId>dom4j</artifactId>
