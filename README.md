@@ -36,7 +36,6 @@ git clone https://github.com/didi/AgileTC.git 
 - 创建依赖数据库，application-dev.properties中配置数据库名称为case_manager create database case_manager 
 - 利用sql中的脚本配置对应表。创建脚本路径：case-server/sql/case-server.sql 
 - 修改application-dev.properties中spring.datasource的配置。默认数据库端口号为3306 
-- 安装xmind jar包（在case-server目录下）。 mvn install:install-file -Dfile=org.xmind.core_3.5.2.201505201101.jar -DgroupId=com.xmind -DartifactId=sdk-Java -Dversion=201505201101 -Dpackaging=jar
 
 ##### 运行
 - mvn spring-boot:run  （在case-server目录下执行）
