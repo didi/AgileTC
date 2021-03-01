@@ -102,7 +102,7 @@ public class FileServiceImpl implements FileService {
         ExportXmindResp resp = new ExportXmindResp();
 
         //将用例内容写内容入xml文件
-        Map<String,String> pathMap= createXml(id);
+        Map<String,String> pathMap= createFile(id);
 
         //压缩文件夹成xmind文件
         String filePath = pathMap.get("exportPath") + ".xmind";
@@ -140,18 +140,49 @@ public class FileServiceImpl implements FileService {
         return byteArrayOutputStream;
     }
 
-    //根据用例生成xml文件
-    private Map<String,String> createXml(Long id)
+    //复制文件内容
+     private void copyOtherFile(String path){
+
+         String fPath = "";
+         try{
+             fPath = new File("").getCanonicalPath();
+         }catch (Exception e){
+             e.printStackTrace();
+         }
+
+         String mainFestSourcePath = fPath + "/src/main/resources/exportTemplate/manifest.xml";
+         String metaSourcePath = fPath + "/src/main/resources/exportTemplate/meta.xml";
+         String mainFestDestPath = path + "/META-INF/manifest.xml";
+         String metaDestPath = path + "/meta.xml";
+         File mainFestSourceFile = new File(mainFestSourcePath);
+         File mainFestDestFile = new File(mainFestDestPath);
+         File metaSourceFile = new File(metaSourcePath);
+         File metaDestFile = new File(metaDestPath);
+         try {
+             FileUtil.copyFile(mainFestSourceFile, mainFestDestFile);
+             FileUtil.copyFile(metaSourceFile, metaDestFile);
+         }catch (IOException e){
+             throw new CaseServerException("导入失败，复制文件失败", StatusCode.FILE_IMPORT_ERROR);
+
+         }
+
+     }
+
+    //根据用例生成相应的文件
+    private Map<String,String> createFile(Long id)
     {
+        //createContentXml
         TestCase testCase = caseMapper.selectOne(id);
         if (testCase == null || StringUtils.isEmpty(testCase.getCaseContent())) {
             throw new CaseServerException("用例不存在或者content为空", StatusCode.FILE_EXPORT_ERROR);
         }
         //写入文件内容
         Document document = createDocument(testCase);
-
         //将内容写入xml
         String path = writeXml(document, testCase);
+        //写其他文件
+        copyOtherFile(path);
+
         Map<String,String> pathMap = new HashMap<>();
         pathMap.put("exportPath",path);
         pathMap.put("exportFileName",testCase.getTitle() + ".xmind");
