@@ -1,5 +1,7 @@
 package com.xiaoju.framework.util;
 
+import org.apache.commons.io.FileUtils;
+
 import java.io.*;
 import java.nio.charset.Charset;
 import java.util.Enumeration;
@@ -156,5 +158,12 @@ public class FileUtil {
             e.printStackTrace();
             return null;
         }
+    }
+
+
+    //source源文件  dest 目标新文件
+    public static void  copyFile(File source,File dest)
+          throws IOException {
+            FileUtils.copyFile(source, dest);
     }
 }
