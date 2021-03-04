@@ -52,6 +52,7 @@ class CaseLists extends React.Component {
       isReName: true,
       treeSelect: [],
       treeData: [],
+      expendKeys: [] // 控制用例列表中处于展开状态的行
     };
   }
   componentDidMount() {
@@ -332,6 +333,7 @@ class CaseLists extends React.Component {
               createrFilter={createrFilter}
               iterationFilter={iterationFilter}
               choiseDate={choiseDate}
+              expendKeys={this.state.expendKeys}
             ></List>
 
             {(this.props.type === 'oe' && filterVisble && (
@@ -362,9 +364,13 @@ class CaseLists extends React.Component {
               doneApiPrefix={this.props.doneApiPrefix}
               baseUrl={this.props.baseUrl}
               onUpdate={() => {
-                // this.getCaseList(this.state.current || 1, '', '', '', []);
-                this.getTreeList();
-                this.setState({ currCase: null, visible: false });
+                this.setState({ 
+                  currCase: null, 
+                  visible: false, 
+                  expendKeys: [] // 强制把处于展开状态的行变为无
+                });
+                // 更新完成后回到原页面
+                this.getCaseList(this.state.current || 1, '', '', '', []);
               }}
               type={this.props.type}
               caseIds={caseIds}

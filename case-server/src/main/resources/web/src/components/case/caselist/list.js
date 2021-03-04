@@ -46,7 +46,7 @@ class Lists extends React.Component {
       taskVisible: false,
       record: null,
       extRecord: null,
-      expendKeys: [],
+      expendKeys: this.props.expendKeys,
       titleModeTask: '',
       loading: this.props.loading,
       extendLoading: new Map(),
@@ -71,6 +71,7 @@ class Lists extends React.Component {
           iterationFilter: this.props.iterationFilter,
           createrFilter: this.props.createrFilter,
           nameFilter: this.props.nameFilter,
+          expendKeys: nextProps.expendKeys,
         });
       });
     }
