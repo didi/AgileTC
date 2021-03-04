@@ -152,12 +152,18 @@ public class FileServiceImpl implements FileService {
 
          String mainFestSourcePath = fPath + "/src/main/resources/exportTemplate/manifest.xml";
          String metaSourcePath = fPath + "/src/main/resources/exportTemplate/meta.xml";
-         String mainFestDestPath = path + "/META-INF/manifest.xml";
+         String mainFestPath = path + "/META-INF";
+         String mainFestDestPath = mainFestPath + "/manifest.xml";
          String metaDestPath = path + "/meta.xml";
          File mainFestSourceFile = new File(mainFestSourcePath);
          File mainFestDestFile = new File(mainFestDestPath);
          File metaSourceFile = new File(metaSourcePath);
          File metaDestFile = new File(metaDestPath);
+
+         File mainFolder = new File(mainFestPath);
+         if(!mainFolder.exists()) {
+             mainFolder.mkdirs();
+         }
          try {
              FileUtil.copyFile(mainFestSourceFile, mainFestDestFile);
              FileUtil.copyFile(metaSourceFile, metaDestFile);

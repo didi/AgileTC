@@ -1,6 +1,5 @@
 package com.xiaoju.framework.util;
 
-import org.apache.commons.io.FileUtils;
 
 import java.io.*;
 import java.nio.charset.Charset;
@@ -164,6 +163,19 @@ public class FileUtil {
     //source源文件  dest 目标新文件
     public static void  copyFile(File source,File dest)
           throws IOException {
-            FileUtils.copyFile(source, dest);
+            InputStream input = null;
+            OutputStream output = null;
+            try {
+                input = new FileInputStream(source);
+                output = new FileOutputStream(dest);
+                byte[] buf = new byte[1024];
+                int bytesRead;
+                while ((bytesRead = input.read(buf)) > 0) {
+                    output.write(buf, 0, bytesRead);
+                }
+            } finally {
+                input.close();
+                output.close();
+            }
     }
 }
