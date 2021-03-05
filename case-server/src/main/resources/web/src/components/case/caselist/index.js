@@ -44,7 +44,7 @@ class CaseLists extends React.Component {
       searchValue: '',
       autoExpandParent: true,
       dataList: [],
-      caseIds: [-1],
+      caseIds: ['root'],
       isSelect: true,
       isSibling: true,
       isAdd: true,
@@ -131,7 +131,7 @@ class CaseLists extends React.Component {
         requirementId: iterationFilter || '',
         beginTime: choiseDate.length > 0 ? `${choiseDate[0]} 00:00:00` : '',
         endTime: choiseDate.length > 0 ? `${choiseDate[1]}  23:59:59` : '',
-        bizId: caseIds ? caseIds : -1,
+        bizId: caseIds ? caseIds : 'root',
       },
     }).then(res => {
       if (res.code === 200) {
