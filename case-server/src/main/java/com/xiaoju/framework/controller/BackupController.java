@@ -1,51 +1,76 @@
 package com.xiaoju.framework.controller;
 
-import com.xiaoju.framework.entity.CaseBackup;
+import com.xiaoju.framework.constants.enums.StatusCode;
+import com.xiaoju.framework.entity.exception.CaseServerException;
+import com.xiaoju.framework.entity.persistent.CaseBackup;
+import com.xiaoju.framework.entity.response.controller.Response;
 import com.xiaoju.framework.service.CaseBackupService;
-import com.xiaoju.framework.util.Response;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.Resource;
+import javax.validation.constraints.NotNull;
 import java.util.List;
 
-@Api(description = "case backup接口")
+/**
+ * 备份controller
+ *
+ * @author didi
+ * @date 2020/11/5
+ */
 @RestController
 @RequestMapping(value = "/api/backup")
 public class BackupController {
-    @Autowired
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(BackupController.class);
+
+    @Resource
     CaseBackupService caseBackupService;
 
-    @ApiOperation("获取用例历史记录")
-    @ApiImplicitParam(name = "caseId", value = "caseId", required = true,paramType = "query",dataType = "long")
-    @RequestMapping(value = "/getBackupByCaseId", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public Response<List<CaseBackup>> getBackupByCaseId(@RequestParam(value = "caseId") Long caseId,
-                                                        @RequestParam(value = "beginTime",required = false) String beginTime,
-                                                        @RequestParam(value = "endTime",required = false) String endTime) {
-        List<CaseBackup> backupList =caseBackupService.getBackupByCaseId(caseId,beginTime,endTime);
-        return Response.success(backupList);
+    /**
+     * 删除某个用例所有的备份记录
+     *
+     * @param caseId 用例id
+     * @param beginTime 开始时间
+     * @param endTime 结束时间
+     * @return 响应体
+     */
+    @GetMapping(value = "/getBackupByCaseId")
+    public Response<List<CaseBackup>> getBackupByCaseId(@RequestParam @NotNull(message = "用例id为空") Long caseId,
+                                                        @RequestParam(required = false) String beginTime,
+                                                        @RequestParam(required = false) String endTime) {
+        return Response.success(caseBackupService.getBackupByCaseId(caseId, beginTime, endTime));
     }
 
-    @ApiOperation("删除用例历史记录")
-    @ApiImplicitParam(name = "caseId", value = "caseId", required = true,paramType = "query",dataType = "long")
-    @RequestMapping(value = "/deleteByCaseId", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public Response<Integer> deleteByCaseId(@RequestParam(value = "caseId") Long caseId) {
-        Integer count =caseBackupService.deleteBackup(caseId);
-        return Response.success(count);
+    /**
+     * 删除某个用例所有的备份记录
+     *
+     * @param caseId 实体，本市上这里应该包装一层Request
+     * @return 响应体
+     */
+    @GetMapping(value = "/deleteByCaseId")
+    public Response<Integer> deleteByCaseId(@RequestParam Long caseId) {
+        return Response.success(caseBackupService.deleteBackup(caseId));
     }
 
-    @ApiOperation("添加用例历史记录")
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "caseId", value = "用例id", required = true,paramType = "query",dataType = "long")})
-    @RequestMapping(value = "/add", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    /**
+     * 创建备份
+     *
+     * @param caseBackup 实体，本市上这里应该包装一层Request
+     * @return 响应体
+     */
+    @PostMapping(value = "/add")
     public Response<CaseBackup> addBackup(@RequestBody CaseBackup caseBackup) {
-        CaseBackup caseBackup1 =caseBackupService.insertBackup(caseBackup);
-        return Response.success(caseBackup1);
+        try {
+            return Response.success(caseBackupService.insertBackup(caseBackup));
+        } catch (CaseServerException e) {
+            throw new CaseServerException(e.getLocalizedMessage(), e.getStatus());
+        } catch (Exception e) {
+            LOGGER.error("[Dir add]Add dir failed. params={} e={} ", caseBackup.toString(), e.getMessage());
+            e.printStackTrace();
+            return Response.build(StatusCode.SERVER_BUSY_ERROR);
+        }
+
     }
-
-
 }

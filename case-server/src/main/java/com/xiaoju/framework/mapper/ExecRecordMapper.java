@@ -1,43 +1,81 @@
 package com.xiaoju.framework.mapper;
 
-import com.xiaoju.framework.entity.ExecRecord;
-import com.xiaoju.framework.entity.RecordNum;
-import io.swagger.models.auth.In;
-import org.apache.ibatis.annotations.MapKey;
-import org.apache.ibatis.annotations.Param;
+import com.xiaoju.framework.entity.dto.RecordNumDto;
+import com.xiaoju.framework.entity.persistent.ExecRecord;
 import org.springframework.stereotype.Repository;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
- * Created by didi on 2019/9/29.
+ * 任务映射
+ *
+ * @author didi
+ * @date 2020/9/29
+ * @see ExecRecord
  */
 @Repository
 public interface ExecRecordMapper {
-    ExecRecord selectByPrimaryKey(Long id);
 
-    void deleteByCaseId(Long caseId);
-
+    /**
+     * 新增记录
+     *
+     * @param record 操作记录实体
+     * @return recordId
+     */
     Long insert(ExecRecord record);
 
-    void updateById(ExecRecord record);
-    void updateContentById(ExecRecord record);
-    List<ExecRecord> listRecordByCaseId(Long caseId);
+    /**
+     * id查询执行任务
+     *
+     * @param id 执行任务id
+     * @return 执行记录实体
+     */
+    ExecRecord selectOne(Long id);
 
-    List<ExecRecord> getEnvList(ExecRecord record);
+    /**
+     * 根据用例id获取所属的所有执行任务
+     *
+     * @param caseId 用例id
+     * @return 任务列表
+     */
+    List<ExecRecord> getRecordListByCaseId(Long caseId);
 
-    int deleteById(Long id);
 
-    int editRecord(ExecRecord record);
+    /**
+     * testcase的list接口需要展示每个case有多少任务
+     *
+     * @param caseIds 用例id列表
+     * @return 数量统计
+     */
+    List<RecordNumDto> getRecordNumByCaseIds(List<Long> caseIds);
 
-    List<ExecRecord> selectByRequirementId(@Param("requirementId") String requirementId,
-                                           @Param("offset") int offset,
-                                           @Param("pageSize") int pageSize,
-                                           @Param("channel") int channel);
-    int selectByRequirementTotal(@Param("requirementId") String requirementId,@Param("channel") int channel);
+    /**
+     * 脑图更新执行任务，与统计数据有关
+     *
+     * @param record 任务实体
+     */
+    void update(ExecRecord record);
 
-    List<RecordNum> getRecordNumByCaseIds(List<Long> caseIds);
+    /**
+     * 编辑任务的基本属性，和统计数据无关
+     *
+     * @param record 任务实体
+     * @return 任务id
+     */
+    Integer edit(ExecRecord record);
+
+    /**
+     * 删除任务
+     *
+     * @param recordId 执行任务id
+     */
+    void delete(Long recordId);
+
+    /**
+     * 批量删除执行任务
+     *
+     * @param recordIds 执行任务id列表
+     */
+    void batchDelete(List<Long> recordIds);
 }
 

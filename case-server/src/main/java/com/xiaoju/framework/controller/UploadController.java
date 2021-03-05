@@ -1,129 +1,97 @@
 package com.xiaoju.framework.controller;
 
-import com.xiaoju.framework.entity.TestCase;
-import com.xiaoju.framework.service.WebSocketService;
-import com.xiaoju.framework.util.ErrorCode;
-import com.xiaoju.framework.util.FileUtil;
-import com.xiaoju.framework.util.StatusCode;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
+import com.xiaoju.framework.constants.SystemConstant;
+import com.xiaoju.framework.constants.enums.StatusCode;
+import com.xiaoju.framework.entity.exception.CaseServerException;
+import com.xiaoju.framework.entity.request.cases.FileImportReq;
+import com.xiaoju.framework.entity.response.cases.ExportXmindResp;
+import com.xiaoju.framework.entity.response.controller.Response;
+import com.xiaoju.framework.service.FileService;
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.multipart.MultipartHttpServletRequest;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.*;
-import java.util.Date;
-import java.util.List;
-import com.xiaoju.framework.util.Response;
+import javax.validation.constraints.NotNull;
+import java.net.URLEncoder;
 
 /**
+ * 文件上传与导出
  *
+ * @author didi
+ * @date 2020/10/22
  */
-@Api(description = "文件导入导出接口")
 @RestController
 @CrossOrigin
 @RequestMapping(value = "/api/file")
 public class UploadController {
-    private static final Logger LOG = LoggerFactory.getLogger(UploadController.class);
-    @Autowired
-    WebSocketService webSocketService;
 
-    @ApiOperation("根据xmind文件，导入用例")
-    @RequestMapping(value = "/import", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public Response<Long> importXmindById(@RequestBody MultipartFile file,String creator,Long productLine,String requirementId,String caseTitle,String description,Integer channel,HttpServletRequest request) {
+    private static final Logger LOGGER = LoggerFactory.getLogger(UploadController.class);
 
-        if (request == null) {
-            ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-            request = requestAttributes.getRequest();
+    @Resource
+    FileService fileService;
+
+    /**
+     * 导入x-mind文件并且创建用例
+     *
+     * @param file 文件
+     * @param creator 创建人
+     * @param bizId 文件夹id
+     * @param productLineId 业务线id
+     * @param description 描述
+     * @param channel 频道
+     * @param requirementId 需求idStr
+     * @return 响应体
+     */
+    @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public Response<Long> importXmind(@RequestParam MultipartFile file, String creator, String bizId,
+                                      Long productLineId, String title, String description, Integer channel, String requirementId) {
+        FileImportReq req = new FileImportReq(file, creator, productLineId, title, description, channel, requirementId, bizId);
+        req.validate();
+        try {
+            return Response.success(fileService.importXmindFile(req));
+        } catch (CaseServerException e) {
+            throw new CaseServerException(e.getLocalizedMessage(), e.getStatus());
+        } catch (Exception e) {
+            LOGGER.error("[导入x-mind出错] 传参req={},错误原因={}", req.toString(), e.getMessage());
+            e.printStackTrace();
+            return Response.build(StatusCode.FILE_IMPORT_ERROR.getStatus(), StatusCode.FILE_IMPORT_ERROR.getMsg());
         }
-        String username = request.getHeader("oe-username");
-        if(username != null) {
-            creator = username;
-        }
-        if (request.getContentType().toLowerCase().startsWith("multipart/")) {
-            if (file.isEmpty()) {
-                return Response.build(StatusCode.FILE_EMPTY_ERROR.getStatus(), StatusCode.FILE_EMPTY_ERROR.getMsg());
-            }
-            String fileName = file.getOriginalFilename();
-            // 得到上传文件的扩展名
-            String fileExt = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
-            if (!fileExt.equals("xmind") && !fileExt.equals("zip")) {
-                return Response.build(StatusCode.FILE_FORMATE_ERROR.getStatus(), StatusCode.FILE_FORMATE_ERROR.getMsg());
-            }
-            File file1 = new File("");
-            String filePath = "";
-            try {
-                filePath = file1.getCanonicalPath();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            String desPath = filePath + "/temp/";
-
-            File pathFile = new File(desPath);
-            if(!pathFile.exists()){
-                pathFile.mkdirs();
-            }
-            desPath = desPath + fileName;
-            File dest = new File(desPath);
-            String name[] = fileName.split("\\.");
-            String title = name[0];
-            Long time= new Date().getTime();
-
-            String desc = filePath+"/temp/"+title+"_"+time.toString()+"/";
-
-            try {
-                file.transferTo(dest);
-                boolean isSuccess = FileUtil.decompressZip(desPath, desc);
-                if(isSuccess == false)
-                {
-                    return Response.build(StatusCode.FILE_IMPORT_ERROR.getStatus(), StatusCode.FILE_IMPORT_ERROR.getMsg());
-                }
-                LOG.info("文件上传成功，待解析");
-
-                String jsonFileName = "content.json";
-                String jsonFile = (desc+jsonFileName).replace("/", File.separator);
-                File f = new File(jsonFile);
-                TestCase testCaseResponse;
-                if(f.exists()) {
-                    testCaseResponse= webSocketService.getJsonByXmindJson(desc,creator,productLine,requirementId,caseTitle,description,channel);
-                } else {
-                    testCaseResponse = webSocketService.getJsonByXmind(desc, creator, productLine, requirementId, caseTitle, description,channel);
-                }
-                return Response.success(testCaseResponse.getId());
-
-//                TestCase testCaseResponse= webSocketService.getJsonByXmind(desc,creator,productLine,requirementId,caseTitle,description);
-//                if(testCaseResponse.getId()==1L)
-//                {
-//                   testCaseResponse= webSocketService.getJsonByXmindJson(desc,creator,productLine,requirementId,caseTitle,description);
-//                }
-//                return Response.success(testCaseResponse.getId());
-            } catch (IOException e) {
-                LOG.error(e.toString(), e);
-                return Response.build(StatusCode.FILE_IMPORT_ERROR.getStatus(), StatusCode.FILE_IMPORT_ERROR.getMsg());
-
-            }
-        }
-        return Response.build(StatusCode.FILE_IMPORT_ERROR.getStatus(),StatusCode.FILE_EMPTY_ERROR.getMsg());
     }
 
-    @ApiOperation("根据id，导出用例")
-    @RequestMapping(value = "/export", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public void exportXmindById(@RequestParam(value = "id") Long id) {
-        ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        HttpServletRequest request = requestAttributes.getRequest();
-        HttpServletResponse response = requestAttributes.getResponse();
-        response = webSocketService.getXmindById(id,response,request);
+    /**
+     * 根据caseId导出用例
+     * response 文件在http响应中输出
+     *
+     * @param id 用例id
+     */
+    @GetMapping(value = "/export")
+    public void exportXmind(@RequestParam @NotNull(message = "用例id为空") Long id, HttpServletRequest request, HttpServletResponse response) {
+        try {
+            ExportXmindResp resp = fileService.exportXmindFile(id, request.getHeader(SystemConstant.HTTP_USER_AGENT));
+            populateHttpResponse(response, resp.getData(), resp.getFileName());
+        } catch (CaseServerException e) {
+            throw new CaseServerException(e.getLocalizedMessage(), e.getStatus());
+        } catch (Exception e) {
+            LOGGER.error("[导出x-mind错误] caseId={}, 错误原因={}", id, e.getMessage());
+            e.printStackTrace();
+            response.setStatus(StatusCode.FILE_IMPORT_ERROR.getStatus());
+        }
+    }
+
+    /**
+     * DispatchServlet手动扔出响应
+     */
+    private void populateHttpResponse(HttpServletResponse response, byte[] data, String fileName) throws Exception {
+        response.setContentType("application/octet-stream; charset=UTF-8");
+        response.setHeader("Content-Disposition", "attachment; fileName=" + fileName + ";filename*=utf-8''" + URLEncoder.encode(fileName, "UTF-8"));
+        response.addHeader("Content-Length", "" + data.length);
         response.setStatus(StatusCode.SERVICE_RUN_SUCCESS.getStatus());
+        IOUtils.write(data, response.getOutputStream());
     }
 }

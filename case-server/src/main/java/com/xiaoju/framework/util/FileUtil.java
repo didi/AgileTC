@@ -1,5 +1,9 @@
 package com.xiaoju.framework.util;
 
+
+import com.xiaoju.framework.constants.enums.StatusCode;
+import com.xiaoju.framework.entity.exception.CaseServerException;
+
 import java.io.*;
 import java.nio.charset.Charset;
 import java.util.Enumeration;
@@ -26,10 +30,8 @@ public class FileUtil {
         if(!pathFile.exists()){
             pathFile.mkdirs();
         }
-        ZipFile zip = null;
         try {
-
-            zip = new ZipFile(zipFile, Charset.forName("gbk"));//防止中文目录，乱码
+            ZipFile zip = new ZipFile(zipFile, Charset.forName("gbk"));
             for(Enumeration entries = zip.entries(); entries.hasMoreElements();){
                 ZipEntry entry = (ZipEntry)entries.nextElement();
                 String zipEntryName = entry.getName();
@@ -60,7 +62,7 @@ public class FileUtil {
             //必须关闭，要不然这个zip文件一直被占用着，要删删不掉，改名也不可以，移动也不行，整多了，系统还崩了。
             zip.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new CaseServerException("解压文件失败：" + e.getMessage(), StatusCode.FILE_IMPORT_ERROR);
         }
         return flag;
     }
@@ -68,55 +70,42 @@ public class FileUtil {
     /**
      * 压缩文件
      * @param sourcePath 要压缩的文件夹
-     * @param destPath 压缩文件放的地方
+     * @param destPath 压缩文件
      * @return 压缩文件
      */
-    public static String compressZip(String sourcePath, String destPath) {
-        File resourcesFile = new File(sourcePath);     //源文件
-        File targetFile = new File(destPath);           //目的
-        //如果目的路径不存在，则新建
-        if(!targetFile.exists()){
-            targetFile.mkdirs();
-        }
-
-        String targetName = "mm"+".xmind";   //目的压缩文件名
+    public static void compressZip(String sourcePath, String destPath) {
+        File resourcesFile = new File(sourcePath);
         FileOutputStream outputStream = null;
         try {
-            outputStream = new FileOutputStream(destPath+"\\"+targetName);
+            outputStream = new FileOutputStream(destPath);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
         ZipOutputStream out = new ZipOutputStream(new BufferedOutputStream(outputStream));
-
         try {
             createCompressedFile(out, resourcesFile, "");
             out.close();
         } catch (Exception e) {
             e.printStackTrace();
+            throw new CaseServerException("压缩文件失败：" + e.getMessage(), StatusCode.FILE_EXPORT_ERROR);
         }
-
-        return "";
     }
 
     public static void createCompressedFile(ZipOutputStream out,File file,String dir) throws Exception{
-        //如果当前的是文件夹，则进行进一步处理
         if(file.isDirectory()){
             //得到文件列表信息
             File[] files = file.listFiles();
             //将文件夹添加到下一级打包目录
             out.putNextEntry(new ZipEntry(dir+"/"));
-
             dir = dir.length() == 0 ? "" : dir +"/";
-
             //循环将文件夹中的文件打包
             for(int i = 0 ; i < files.length ; i++){
-                createCompressedFile(out, files[i], dir + files[i].getName());         //递归处理
+                createCompressedFile(out, files[i], dir + files[i].getName());
             }
         }
-        else{   //当前的是文件，打包处理
+        else{
             //文件输入流
             FileInputStream fis = new FileInputStream(file);
-
             out.putNextEntry(new ZipEntry(dir));
             //进行写操作
             int j =  0;
@@ -126,26 +115,6 @@ public class FileUtil {
             }
             //关闭输入流
             fis.close();
-        }
-    }
-
-
-
-    /** 删除文件夹*/
-    public static void delete(File file) {
-
-        if(!file.exists()) return;
-
-        if(file.isFile() || file.list()==null) {
-            file.delete();
-            System.out.println("删除了"+file.getName());
-        }else {
-            File[] files = file.listFiles();
-            for(File a:files) {
-                delete(a);
-            }
-            file.delete();
-            System.out.println("删除了"+file.getName());
         }
     }
 
@@ -169,8 +138,7 @@ public class FileUtil {
             return jsonStr;
         } catch (IOException e) {
             e.printStackTrace();
-            return null;
+            throw new CaseServerException("读取json文件失败：" + e.getMessage(), StatusCode.FILE_IMPORT_ERROR);
         }
     }
-
 }

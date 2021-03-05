@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.xiaoju.framework.mapper.ExecRecordMapper">
-  <resultMap id="BaseResultMap" type="com.xiaoju.framework.entity.ExecRecord">
+  <resultMap id="BaseResultMap" type="com.xiaoju.framework.entity.persistent.ExecRecord">
     <id column="id" jdbcType="BIGINT" property="id" />
     <result column="case_id" jdbcType="BIGINT" property="caseId" />
     <result column="title" jdbcType="VARCHAR" property="title" />
@@ -10,6 +10,9 @@
     <result column="pass_count" jdbcType="INTEGER" property="passCount" />
     <result column="total_count" jdbcType="INTEGER" property="totalCount" />
     <result column="success_count" jdbcType="INTEGER" property="successCount" />
+    <result column="fail_count" jdbcType="INTEGER" property="failCount" />
+    <result column="block_count" jdbcType="INTEGER" property="blockCount" />
+    <result column="ignore_count" jdbcType="INTEGER" property="ignoreCount" />
     <result column="creator" jdbcType="VARCHAR" property="creator" />
     <result column="modifier" jdbcType="VARCHAR" property="modifier" />
     <result column="description" jdbcType="VARCHAR" property="description" />
@@ -21,39 +24,27 @@
     <result column="expect_end_time" jdbcType="TIMESTAMP" property="expectEndTime" />
     <result column="owner" jdbcType="VARCHAR" property="owner" />
   </resultMap>
-  <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="com.xiaoju.framework.entity.ExecRecord">
+  <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="com.xiaoju.framework.entity.persistent.ExecRecord">
     <result column="case_content" jdbcType="LONGVARCHAR" property="caseContent" />
   </resultMap>
 
   <sql id="Base_Column_List">
-    id, case_id, title, env, is_delete,pass_count, total_count,success_count,creator, modifier,description,executors,gmt_created,gmt_modified,choose_content,expect_start_time,expect_end_time,owner
+    id, case_id, title, env, is_delete, pass_count, total_count, success_count, fail_count, block_count, ignore_count,
+    creator, modifier, description, choose_content, executors, gmt_created, gmt_modified, expect_start_time, expect_end_time, owner
   </sql>
   <sql id="Blob_Column_List">
     case_content
   </sql>
-  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="ResultMapWithBLOBs">
-    select 
-    <include refid="Base_Column_List" />
-    ,
-    <include refid="Blob_Column_List" />
-    from exec_record
-    where id = #{id,jdbcType=BIGINT}
-  </select>
 
-  <delete id="deleteByCaseId" parameterType="java.lang.Long">
-    update exec_record set is_delete =1
-    where case_id = #{case_id,jdbcType=BIGINT}
-  </delete>
-
-  <insert id="insert" parameterType="com.xiaoju.framework.entity.ExecRecord">
+  <insert id="insert" parameterType="com.xiaoju.framework.entity.persistent.ExecRecord">
     <selectKey resultType="java.lang.Long" order="AFTER" keyProperty="id">
       SELECT LAST_INSERT_ID() AS id
     </selectKey>
     insert into exec_record
     <trim prefix="(" suffix=")" suffixOverrides=",">
-    <if test="id != null">
-      id,
-    </if>
+      <if test="id != null">
+        id,
+      </if>
       <if test="caseId != null">
         case_id,
       </if>
@@ -74,6 +65,15 @@
       </if>
       <if test="totalCount != null">
         total_count,
+      </if>
+      <if test="failCount != null">
+        fail_count,
+      </if>
+      <if test="blockCount != null">
+        block_count,
+      </if>
+      <if test="ignoreCount != null">
+        ignore_count,
       </if>
       <if test="creator != null">
         creator,
@@ -103,61 +103,80 @@
         owner
       </if>
     </trim>
-   <trim prefix="values (" suffix=")" suffixOverrides=",">
-    <if test="id != null">
-      #{id,jdbcType=BIGINT},
-    </if>
-     <if test="caseId != null">
-       #{caseId,jdbcType=BIGINT},
-     </if>
-     <if test="title != null">
-       #{title,jdbcType=VARCHAR},
-     </if>
-     <if test="env != null">
-       #{env,jdbcType=INTEGER},
-     </if>
-     <if test="caseContent != null">
-       #{caseContent,jdbcType=LONGVARCHAR},
-     </if>
-     <if test="isDelete != null">
-       #{isDelete,jdbcType=INTEGER},
-     </if>
-     <if test="passCount != null">
-       #{passCount,jdbcType=INTEGER},
-     </if>
-     <if test="totalCount != null">
-       #{totalCount,jdbcType=INTEGER},
-     </if>
-     <if test="creator != null">
-       #{creator,jdbcType=VARCHAR},
-     </if>
-     <if test="modifier != null">
-       #{modifier,jdbcType=VARCHAR},
-     </if>
-     <if test="description != null">
-       #{description,jdbcType=VARCHAR},
-     </if>
-     <if test="chooseContent != null">
-       #{chooseContent,jdbcType=VARCHAR},
-     </if>
-     <if test="gmtCreated != null">
-       #{gmtCreated,jdbcType=TIMESTAMP},
-     </if>
-     <if test="gmtModified != null">
-       #{gmtModified,jdbcType=TIMESTAMP},
-     </if>
-     <if test="expectStartTime != null">
-       #{expectStartTime,jdbcType=TIMESTAMP},
-     </if>
-     <if test="expectEndTime != null">
-       #{expectEndTime,jdbcType=TIMESTAMP},
-     </if>
-     <if test="owner != null">
-       #{owner,jdbcType=VARCHAR}
-     </if>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=BIGINT},
+      </if>
+      <if test="caseId != null">
+        #{caseId,jdbcType=BIGINT},
+      </if>
+      <if test="title != null">
+        #{title,jdbcType=VARCHAR},
+      </if>
+      <if test="env != null">
+        #{env,jdbcType=INTEGER},
+      </if>
+      <if test="caseContent != null">
+        #{caseContent,jdbcType=LONGVARCHAR},
+      </if>
+      <if test="isDelete != null">
+        #{isDelete,jdbcType=INTEGER},
+      </if>
+      <if test="passCount != null">
+        #{passCount,jdbcType=INTEGER},
+      </if>
+      <if test="totalCount != null">
+        #{totalCount,jdbcType=INTEGER},
+      </if>
+      <if test="failCount != null">
+        #{failCount,jdbcType=INTEGER},
+      </if>
+      <if test="blockCount != null">
+        #{blockCount,jdbcType=INTEGER},
+      </if>
+      <if test="ignoreCount != null">
+        #{ignoreCount,jdbcType=INTEGER},
+      </if>
+      <if test="creator != null">
+        #{creator,jdbcType=VARCHAR},
+      </if>
+      <if test="modifier != null">
+        #{modifier,jdbcType=VARCHAR},
+      </if>
+      <if test="description != null">
+        #{description,jdbcType=VARCHAR},
+      </if>
+      <if test="chooseContent != null">
+        #{chooseContent,jdbcType=VARCHAR},
+      </if>
+      <if test="gmtCreated != null">
+        #{gmtCreated,jdbcType=TIMESTAMP},
+      </if>
+      <if test="gmtModified != null">
+        #{gmtModified,jdbcType=TIMESTAMP},
+      </if>
+      <if test="expectStartTime != null">
+        #{expectStartTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="expectEndTime != null">
+        #{expectEndTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="owner != null">
+        #{owner,jdbcType=VARCHAR}
+      </if>
     </trim>
   </insert>
-  <update id="updateById" parameterType="com.xiaoju.framework.entity.ExecRecord">
+
+  <select id="selectOne" parameterType="java.lang.Long" resultMap="ResultMapWithBLOBs">
+    select
+    <include refid="Base_Column_List" />
+    ,
+    <include refid="Blob_Column_List" />
+    from exec_record
+    where id = #{id}
+  </select>
+
+  <update id="updateById" parameterType="com.xiaoju.framework.entity.persistent.ExecRecord">
     update exec_record
     <set>
       <if test="isDelete != null">
@@ -191,38 +210,70 @@
     where id = #{id,jdbcType=BIGINT}
   </update>
 
-  <update id="updateContentById" parameterType="com.xiaoju.framework.entity.ExecRecord">
+  <select id="getRecordListByCaseId" parameterType="java.lang.Long" resultMap="ResultMapWithBLOBs">
+    select
+    <include refid="Base_Column_List" />
+    ,
+    <include refid="Blob_Column_List" />
+    from exec_record
+    where case_id = #{caseId,jdbcType=BIGINT} and is_delete = 0
+    order by id desc
+  </select>
+
+  <select id="getRecordNumByCaseIds" parameterType="java.lang.Long" resultType="com.xiaoju.framework.entity.dto.RecordNumDto">
+    select case_id as caseId, count(*) as recordNum from exec_record
+    where case_id in
+    <foreach collection="list" item="caseId" open="(" separator="," close=")">
+      #{caseId}
+    </foreach>
+    and is_delete=0
+    group by case_id
+  </select>
+
+  <update id="update" parameterType="com.xiaoju.framework.entity.persistent.ExecRecord">
     update exec_record
     <set>
+      <if test="isDelete != null">
+        is_delete = #{isDelete,jdbcType=INTEGER},
+      </if>
+      <if test="passCount != null">
+        pass_count = #{passCount,jdbcType=INTEGER},
+      </if>
+      <if test="totalCount != null">
+        total_count = #{totalCount,jdbcType=INTEGER},
+      </if>
+      <if test="successCount != null">
+        success_count = #{successCount,jdbcType=INTEGER},
+      </if>
+      <if test="failCount != null">
+        fail_count = #{failCount,jdbcType=INTEGER},
+      </if>
+      <if test="blockCount != null">
+        block_count = #{blockCount,jdbcType=INTEGER},
+      </if>
+      <if test="ignoreCount != null">
+        ignore_count = #{ignoreCount,jdbcType=INTEGER},
+      </if>
+      <if test="modifier != null">
+        modifier = #{modifier,jdbcType=VARCHAR},
+      </if>
+      <if test="executors != null">
+        executors = #{executors,jdbcType=VARCHAR},
+      </if>
+      <if test="title != null" >
+        title = #{title,jdbcType=VARCHAR},
+      </if>
+      <if test="gmtModified != null">
+        gmt_modified = #{gmtModified,jdbcType=TIMESTAMP},
+      </if>
       <if test="caseContent != null">
-        case_content = concat(case_content, #{caseContent,jdbcType=VARCHAR}),
+        case_content = #{caseContent,jdbcType=VARCHAR},
       </if>
     </set>
     where id = #{id,jdbcType=BIGINT}
   </update>
 
-  <select id="listRecordByCaseId" parameterType="java.lang.Long" resultMap="ResultMapWithBLOBs">
-    select
-    <include refid="Base_Column_List" />
-    ,
-    <include refid="Blob_Column_List" />
-     from exec_record
-      where case_id = #{caseId,jdbcType=BIGINT} and is_delete = 0
-    order by id desc
-  </select>
-
-
-  <select id="getEnvList"  parameterType="com.xiaoju.framework.entity.ExecRecord" resultMap="BaseResultMap" >
-    select <include refid="Base_Column_List" /> from exec_record
-      where case_id = #{caseId,jdbcType=BIGINT} and is_delete = 0 and env = #{env,jdbcType=INTEGER}
-  </select>
-
-  <delete id="deleteById" parameterType="java.lang.Long">
-    update exec_record set is_delete =1
-    where id = #{id,jdbcType=BIGINT}
-  </delete>
-
-  <update id="editRecord" parameterType="com.xiaoju.framework.entity.ExecRecord">
+  <update id="edit" parameterType="com.xiaoju.framework.entity.persistent.ExecRecord">
     update exec_record
     <set>
       <if test="modifier != null">
@@ -259,43 +310,16 @@
     where id = #{id,jdbcType=BIGINT}
   </update>
 
-  <select id="selectByRequirementId" parameterType="java.lang.String" resultMap="ResultMapWithBLOBs">
-    select
-    <include refid="Base_Column_List" />
-    ,
-    <include refid="Blob_Column_List" />
-    from exec_record
-    where case_id in (
-    select id from test_case where FIND_IN_SET(#{requirementId,jdbcType=VARCHAR},requirement_id) and is_delete=0
-    <if test="channel!= null ">
-      and channel = #{channel,jdbcType=INTEGER}
-    </if>
-    ) and is_delete=0 order by id desc
-    limit ${offset},${pageSize}
-  </select>
+  <delete id="delete" parameterType="java.lang.Long">
+    update exec_record set is_delete =1
+    where id = #{recordId,jdbcType=BIGINT}
+  </delete>
 
-  <select id="selectByRequirementTotal" parameterType="java.lang.String" resultType="java.lang.Integer">
-    select
-    count(*)
-    from exec_record
-    where case_id in (
-    select id from test_case where FIND_IN_SET(#{requirementId,jdbcType=VARCHAR},requirement_id) and is_delete=0
-    <if test="channel!= null ">
-      and channel = #{channel,jdbcType=INTEGER}
-    </if>
-    ) and is_delete=0 order by id desc
-  </select>
-
-  <select id="getRecordNumByCaseIds" parameterType="java.lang.Long" resultType="com.xiaoju.framework.entity.RecordNum">
-    select
-    case_id as caseId, count(*) as recordNum
-    from exec_record
-    where case_id in
-    <foreach collection="list" item="caseId" open="(" separator="," close=")">
-      #{caseId}
+  <update id="batchDelete">
+    update exec_record set is_delete = 1 where id in
+    <foreach collection="list" item="id" separator="," open="(" close=")">
+      #{id}
     </foreach>
-    and is_delete=0
-    group by case_id
-  </select>
+  </update>
 
 </mapper>

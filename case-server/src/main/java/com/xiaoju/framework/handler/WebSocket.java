@@ -3,38 +3,80 @@ package com.xiaoju.framework.handler;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.xiaoju.framework.entity.EnvEnum;
-import com.xiaoju.framework.entity.ExecRecord;
-import com.xiaoju.framework.entity.PriorityEnv;
-import com.xiaoju.framework.entity.TestCase;
-import com.xiaoju.framework.service.ExecRecordService;
-import com.xiaoju.framework.service.WebSocketService;
-import com.xiaoju.framework.util.*;
-import lombok.extern.slf4j.Slf4j;
+import com.xiaoju.framework.config.ApplicationConfig;
+import com.xiaoju.framework.constants.SystemConstant;
+import com.xiaoju.framework.constants.enums.StatusCode;
+import com.xiaoju.framework.entity.dto.RecordWsDto;
+import com.xiaoju.framework.entity.exception.CaseServerException;
+import com.xiaoju.framework.entity.persistent.ExecRecord;
+import com.xiaoju.framework.entity.persistent.TestCase;
+import com.xiaoju.framework.entity.xmind.IntCount;
+import com.xiaoju.framework.mapper.TestCaseMapper;
+import com.xiaoju.framework.service.RecordService;
+import com.xiaoju.framework.util.TreeUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import javax.websocket.*;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
-import java.math.BigDecimal;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.regex.*;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 
 /**
- * Created by didi on 2019/9/23.
+ * 协同类
+ *
+ * @author didi
+ * @date 2020/9/23
  */
-@Slf4j
 @Component
 @ServerEndpoint(value = "/api/case/{caseId}/{recordId}/{isCore}/{user}")
 public class WebSocket {
 
-    public static WebSocketService webSocketService;
-    public static ExecRecordService execRecordService;
-    public static ConcurrentHashMap<String, Integer> userInfo = new ConcurrentHashMap<>();
-    private static ConcurrentHashMap<String, WebSocket> webSocket = new ConcurrentHashMap<>();
-    private static List<String> keys = new ArrayList<>();
+    /**
+     * 常量
+     */
+    private static final Logger LOGGER = LoggerFactory.getLogger(WebSocket.class);
 
+    private static final String PING_MESSAGE = "ping ping ping";
+
+    private static final String PONG_MESSAGE = "pongpongpong";
+
+    private static final String UNDEFINED = "undefined";
+
+    /**
+     * 依赖
+     * @see ApplicationConfig#setWebsocketService(com.xiaoju.framework.service.RecordService, com.xiaoju.framework.mapper.TestCaseMapper)
+     */
+    public static RecordService recordService;
+    public static TestCaseMapper caseMapper;
+
+    /**
+     * 在Websocket.class粒度下，存储所有的websocket信息
+     * { buildSerial(caseId, recordId, sessionId), new Websocket() }
+     */
+    public static ConcurrentHashMap<String, WebSocket> webSocket = new ConcurrentHashMap<>();
+
+    /**
+     * 在Websocket.class粒度下，存储所有的websocket.key,主要用户方便获取用户信息
+     * [buildSerial(caseId, recordId, sessionId)]
+     */
+    public static CopyOnWriteArrayList<String> keys = new CopyOnWriteArrayList<>();
+
+    /**
+     * 单机模式下可以使用公平锁, 对数据的访问和获取都做一次顺序拦截
+     */
+    private static ReentrantLock lock = new ReentrantLock(true);
+
+    /**
+     * 每个websocket所持有的基本信息
+     */
     private String caseId;
     private Session session;
     private String caseContent;
@@ -43,298 +85,299 @@ public class WebSocket {
     private String recordId;
     private String isCore;
     private String user;
-    private EnvEnum envEnum;
-    private long pingTimeStamp;
     private long pongTimeStamp;
 
+    @Override
     public String toString() {
-        return "caseId: " + caseId + ", session: " + session.getId() + ", recordId: " + recordId + ", isCore: " + isCore;
+        return String.format("[Websocket Info][%s]caseId=%s, sessionId=%s, recordId=%s, isCoreCase=%s",
+                recordId == null || UNDEFINED.equals(recordId) ? "测试用例" : "执行任务", caseId, session.getId(), recordId, isCore
+        );
     }
 
+    public String currentSession() {
+        return buildSerial(caseId, recordId, session.getId());
+    }
+
+
     static {
-        log.info("ping pong thread start.");
-        ThreadPoolExecutor THREADPOOL = new ThreadPoolExecutor(1, 2, 3,
+        // 线程池，每过5s向所有session发送ping，如果6s内没有收到响应，会执行session.close()去关闭session
+        LOGGER.info("[线程池执行ping-pong] time = {}", System.currentTimeMillis());
+        ThreadPoolExecutor executor = new ThreadPoolExecutor(1, 2, 3,
                 TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(3),
                 new ThreadPoolExecutor.DiscardOldestPolicy());
-        THREADPOOL.execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    while (true) {
-                        for (Map.Entry<String, WebSocket> entry : webSocket.entrySet()) {
-                            if (!entry.getValue().caseId.equals("undefined")) {
-                                entry.getValue().sendMessage("ping ping ping");
-                                if (System.currentTimeMillis() - entry.getValue().pongTimeStamp > 6000) {
-                                    log.error("ping pong failed. prepare to close" + entry.getValue().toString());
-                                    entry.getValue().onClose();
-                                }
+        executor.execute(() -> {
+            try {
+                // 看看是不是链接关闭了，如果没有收到就关闭
+                while (true) {
+                    for (Map.Entry<String, WebSocket> entry : WebSocket.webSocket.entrySet()) {
+                        if (!UNDEFINED.equals(entry.getValue().caseId)) {
+                            // 其实这里可以把方法变成static
+                            entry.getValue().singleSendMessage(entry.getValue().session, PING_MESSAGE);
+                            // 看看是不是过时的内容，超过10秒无响应认为掉线
+                            if (System.currentTimeMillis() - entry.getValue().pongTimeStamp > 10000) {
+                                LOGGER.error("[线程池执行ping-pong出错]准备关闭当前websocket={}", entry.getValue().toString());
+                                entry.getValue().onClose();
                             }
                         }
-                        Thread.sleep(5000);
                     }
-                } catch (Exception e) {
-                    log.error("ping pong error. ", e);
+                    Thread.sleep(5000);
                 }
+            } catch (Exception e) {
+                LOGGER.error("[线程池执行ping-pong出错]错误原因e={}", e.getMessage());
+                e.printStackTrace();
             }
         });
     }
 
+    private static String buildSerial(String ... ids) {
+        StringBuilder builder = new StringBuilder();
+        for (String id : ids) {
+            builder.append(fill(id));
+        }
+        return builder.toString();
+    }
+
     @OnOpen
-    public synchronized void onOpen(@PathParam(value = "caseId") String caseId,
+    public void onOpen(@PathParam(value = "caseId") String caseId,
                                     @PathParam(value = "recordId") String recordId,
                                     @PathParam(value = "isCore") String isCore,
                                     @PathParam(value = "user") String user,
-                                    Session session) {
+                                    Session session) throws IOException {
+        this.session = session;
+        this.caseId = caseId;
+        this.recordId = recordId;
+        this.isCore = isCore;
+        this.user = user;
+        this.updateCaseTime = 0;
+        this.updateRecordTime = 0;
+        this.pongTimeStamp = System.currentTimeMillis();
+        LOGGER.info("[websocket-onOpen 开启新的session][{}]", toString());
+
+        // 连基本的任务都不是，直接报错
+        if (UNDEFINED.equals(caseId)) {
+            throw new CaseServerException("用例id为空", StatusCode.WS_UNKNOWN_ERROR);
+        }
+
+        // 查看当前是否有其他用户一齐正在编辑此用例/任务
+        // 如果有，那么打开的时候先保存一下
+        if (getAllSessionInfo(caseId, recordId).size() >= 1) {
+            saveCaseOrRecord(caseId, recordId, user);
+        }
+
+        // 然后再把当前用户信息装入
+        lock.lock();
         try {
-            log.info("open channel params: " + caseId + " " + recordId + " " + isCore);
-            this.session = session;
-            this.caseId = stringFill(caseId, 8, '0', true);
-            this.recordId = stringFill(recordId, 8, '0', true);
-            this.isCore = isCore;
-            this.user = user;
-            this.updateCaseTime = 0;
-            this.updateRecordTime = 0;
-            this.pongTimeStamp = System.currentTimeMillis();
-            log.info("link success, " + toString());
-            //冒烟用例只需查看，无需更改，同步
-            if (!isCore.equals("2") && !this.caseId.equals("undefined")) {
-                keys.add(this.caseId + this.recordId + stringFill(session.getId(), 8, '0', true));
-                webSocket.put(this.caseId + this.recordId + stringFill(session.getId(), 8, '0', true), this);
-            }
-            long count = webSocket.size();
-            log.info("open case " + this.caseId + ", current local-total users: " + count);
-
-            /* 打开当前主用例的用户数大于1后，会先更新case */
-            if (getKeysByCaseId(this.caseId, this.recordId).size() > 1) {
-                log.info("current users is more than 2, need to save first.");
-                save(this.caseId, this.recordId, isCore, user);
-            }
-
-            open(this.caseId, this.recordId, isCore);
-        } catch (Exception e) {
-            log.info("open channel failed. \n" + toString());
-            log.error("open channel failed. " + e);
-            // TODO: 需要考虑回滚
+            // 这么做是因为使用了.startsWith，这里给与对齐，防止例如1+11和111是一样的情况
+            String serial = currentSession();
+            WebSocket.keys.add(serial);
+            WebSocket.webSocket.put(serial, this);
+        } finally {
+            lock.unlock();
         }
-    }
 
-    /**
-     * 保存之前未保存的最新case/记录
-     */
-    public void updateLatestCase(String caseId, String recordId, String isCore, String user) {
-        /* 多服务：打开当前主用例的用户数大于0，会先更新case */
-        List<String> keyRet = getKeysByCaseId(caseId, recordId);
-        if (keyRet.size() > 2) {
-            log.info("openCase, save first." + caseId + ",recordId:" + recordId + ",isCore:" + isCore + ",user:" + user);
-            save(caseId, recordId, isCore, user);
-        }
+        open(caseId, recordId, isCore);
     }
 
     @OnClose
-    public synchronized void onClose() {
+    public void onClose() {
+        LOGGER.info("[websocket-onClose 关闭当前session成功]当前session={}", currentSession());
+        if (UNDEFINED.equals(caseId)) {
+            throw new CaseServerException("用例id为空", StatusCode.WS_UNKNOWN_ERROR);
+        }
+
+        saveCaseOrRecord(caseId, recordId, user);
+        lock.lock();
         try {
-            log.info("onclose :" + this.caseId + this.recordId + stringFill(session.getId(), 8, '0', true));
-
-            if (!this.caseId.equals("undefined")) {
-                save(this.caseId, this.recordId, this.isCore, this.user);
-            }
-            webSocket.remove(this.caseId + this.recordId + stringFill(session.getId(), 8, '0', true), this);
-            WebSocket.keys.remove(this.caseId + this.recordId + stringFill(session.getId(), 8, '0', true));
-            int users = WebSocket.keys.size();
-            log.info("debug--- current case total users: " + users);
-
-        } catch (Exception e) {
-            log.error("close channel failed. " + e);
+            String serial = currentSession();
+            WebSocket.webSocket.remove(serial, this);
+            WebSocket.keys.remove(serial);
+        } finally {
+            lock.unlock();
         }
     }
 
     @OnMessage(maxMessageSize = 1048576)
-    public synchronized void onMessage(String message, Session session) {
-        if (message.contains("pongpongpong")) {
+    public void onMessage(String message, Session session) throws IOException {
+        // 线程池通信内容忽略
+        if (message.contains(PONG_MESSAGE)) {
             pongTimeStamp = System.currentTimeMillis();
             return;
         }
 
-        if (null == webSocket.get(this.caseId + this.recordId + stringFill(session.getId(), 8, '0', true))) {
-            sendMessage(session, StatusCode.HTTP_ACESS_ERROR.getCode());
-            log.error("websocket already closed. caseid: " + this.caseId + ", recordid: " + this.recordId);
+        // 如果内容体为空，发送错误消息并且忽略
+        if (null == WebSocket.webSocket.get(buildSerial(caseId, recordId, session.getId()))) {
+            singleSendMessage(session, StatusCode.WS_UNKNOWN_ERROR.getCode());
             return;
         }
 
-        log.info("receive message: " + message);
-        try {
-            JSONObject request = JSON.parseObject(message);
+        JSONObject request = JSON.parseObject(message);
 
-            if (null == request.getString("patch")) {
-                log.info("open case first");
-                // TODO: 内容落库
-                return;
-            } else {
-                JSONArray patch = (JSONArray) request.get("patch");
-                long currentVersion = ((JSONObject) request.get("case")).getLong("base");
-                String msg2Other = patch.toJSONString().replace("[[{", "[[{\"op\":\"replace\",\"path\":\"/base\",\"value\":" + String.valueOf(currentVersion + 1) + "},{");
-                String msg2Own = "[[{\"op\":\"replace\",\"path\":\"/base\",\"value\":" + String.valueOf(currentVersion + 1) + "}]]";
-                if (patch.toJSONString().contains("/progress")) {
-                    log.info("current user is modifing record, send to others who open the same record");
-                    sendMessage(getKeysByCaseId(this.caseId, this.recordId, stringFill(session.getId(), 8, '0', true)), msg2Other);
-                    this.updateRecordTime = System.currentTimeMillis();
-                } else {
-                    log.info("current user is modifing case content, send to others who open this case.");
-                    if (this.envEnum.equals(EnvEnum.TestQaEnv) || this.envEnum.equals(EnvEnum.TestRdEnv)) {
-                        // do nothing
-                    } else {
-                        sendMessage(getKeysByCaseId(this.caseId, this.recordId, stringFill(session.getId(), 8, '0', true)), msg2Other);
-                        this.updateCaseTime = System.currentTimeMillis();
-                        log.info("current session: " + this.session + ". update time: " + this.updateCaseTime);
-                    }
-                }
-
-                sendMessage(session, msg2Own);
-                log.info("message to others: " + msg2Other);
-                log.info("message to own: " + msg2Own);
-                this.caseContent = ((JSONObject) request.get("case")).toJSONString().replace("\"base\":" + currentVersion, "\"base\":" + (currentVersion + 1));
-                log.info("current case: " + this.caseContent.substring(0, 20));
-
-            }
-        } catch (Exception e) {
-            log.error("receive exception. " + e);
+        // 没有patch就不要触发保存
+        if (StringUtils.isEmpty(request.getString("patch"))) {
+            return;
         }
 
-    }
+        JSONArray patch = (JSONArray) request.get("patch");
+        long currentVersion = ((JSONObject) request.get("case")).getLong("base");
+        String msg2Other = patch.toJSONString().replace("[[{", "[[{\"op\":\"replace\",\"path\":\"/base\",\"value\":" + (currentVersion + 1) + "},{");
+        String msg2Own = "[[{\"op\":\"replace\",\"path\":\"/base\",\"value\":" + (currentVersion + 1) + "}]]";
+        // 发送给别人 也发送给自己
+        batchSendMessage(getOthersSessionInfo(caseId, recordId, session.getId()), msg2Other);
+        singleSendMessage(session, msg2Own);
+        caseContent = ((JSONObject) request.get("case")).toJSONString().replace("\"base\":" + currentVersion, "\"base\":" + (currentVersion + 1));
 
-    /**
-     * onmessage同步本地消息内容
-     *
-     * @param patch
-     * @param currentVersion
-     * @param caseId
-     * @param recordId
-     * @param sessionId
-     */
-    public void sendMessageToOthers(JSONArray patch, long currentVersion, String caseId, String recordId, String sessionId) {
-        log.info("receive diff, update message and send to others,caseId:" + caseId + ",recordId:" + recordId + ",sessionId" + sessionId);
-
-        String msg2Other = patch.toJSONString().replace("[[{", "[[{\"op\":\"replace\",\"path\":\"/base\",\"value\":" + String.valueOf(currentVersion + 1) + "},{");
-
-        sendMessage(getKeysByCaseId(caseId, recordId, stringFill(sessionId, 8, '0', true)), msg2Other);
-
-        log.info("message to others: " + msg2Other);
+        // 判断是用例还是任务
+        if (patch.toJSONString().contains("/progress")) {
+            // 如果是任务的修改，那么更新任务时间
+            updateRecordTime = System.currentTimeMillis();
+        } else {
+            // 用例修改更新用例时间
+            updateCaseTime = System.currentTimeMillis();
+        }
     }
 
     @OnError
-    public synchronized void onError(Session session, Throwable e) {
-        log.error("onerror. " + e.getMessage());
+    public void onError(Session session, Throwable e) throws IOException {
+        LOGGER.info("[websocket-onError 会话出现异常]当前session={}, 原因={}", currentSession(), e.getMessage());
+        e.printStackTrace();
+
+        // 给一个机会去触发当前内容的保存, 如果不是最新的，也不会触发保存，会被pass掉
+        saveCaseOrRecord(caseId, recordId, user);
+        lock.lock();
         try {
-            save(this.caseId, this.recordId, this.isCore, this.user);
-            webSocket.remove(this.caseId + this.recordId + stringFill(session.getId(), 8, '0', true), this);
-            long count = WebSocket.webSocket.size();
-            log.info("error happend. close case:" + this.caseId + ", current local-total users: " + count);
-
-            WebSocket.keys.remove(this.caseId + this.recordId + stringFill(session.getId(), 8, '0', true));
-            int users = WebSocket.keys.size();
-
-            log.info("error happend. current case total users: " + users);
-        } catch (Exception excep) {
-            log.error("error close channel failed. " + excep.getMessage());
+            String serial = currentSession();
+            WebSocket.webSocket.remove(serial, this);
+            WebSocket.keys.remove(serial);
+        } finally {
+            lock.unlock();
         }
-    }
 
-
-    private void sendMessage(String message) {
-        try {
-            this.session.getBasicRemote().sendText(message);
-            if (!message.contains("ping ping ping")) {
-                log.info("=> message to session [" + session + "] with msg: " + message);
-            }
-        } catch (Exception e) {
-            log.error("send message to[" + this.caseId + "] with [" + message + "] failed.", e);
-        }
-    }
-
-    private void sendMessage(Session s, String message) {
-        try {
-            s.getBasicRemote().sendText(message);
-        } catch (Exception e) {
-            log.error("send message to session[" + session + "] with [" + message + "] failed.", e);
-        }
-    }
-
-    /* 给指定用户发送消息 */
-    private void sendMessage(String key, String message) {
-        if (webSocket.get(key) != null) {
-            sendMessage(webSocket.get(key).session, message);
-        }
-    }
-
-    /* 批量发送消息 */
-    private void sendMessage(List<String> keys, String message) {
-        for (String key : keys) {
-            sendMessage(key, message);
-        }
-    }
-
-
-    //获取本地机器的
-    /* 根据caseId获取当前打开该用例的所有用户或打开记录的用户 */
-    private List<String> getKeysByCaseId(String caseId, String recordId) {
-        List<String> keysRet = new ArrayList<>();
-
-        for (String key : keys) {
-            if (key.startsWith(caseId + recordId)) {// todo: 补齐位数
-                keysRet.add(key);
-            }
-        }
-        log.info("open local-current case's user. current keys1:" + keysRet.toString());
-        return keysRet;
-    }
-
-    /* 根据caseId和session id获取当前打开该case的其他用户(非冒烟) */
-//    private List<String> getKeysByCaseId(String caseId, String sid) {
-//        List<String> keysRet = new ArrayList<>();
-//
-//        for (String key: keys) {
-//            if (key.startsWith(caseId) && !key.endsWith(sid)
-//                    && !(webSocket.get(key).envEnum.equals(EnvEnum.TestQaEnv) || webSocket.get(key).envEnum.equals(EnvEnum.TestRdEnv))) {
-//                keysRet.add(key);
-//            }
-//        }
-//        log.info("open current case's other user. current keys2:" + keysRet.toString());
-//        return keysRet;
-//    }
-
-    /* 根据caseId和recordId, session id获取当前打开该case和recordid的其他用户，执行记录等信息需要同步过去 */
-    private List<String> getKeysByCaseId(String caseId, String recordId, String sid) {
-        List<String> keysRet = new ArrayList<>();
-
-        for (String key : keys) {
-            if (key.startsWith(caseId + recordId) && !key.equals(caseId + recordId + sid)) {
-                keysRet.add(key);
-            }
-        }
-        log.info("open current case and record's other user. current keys3:" + keysRet.toString());
-        return keysRet;
+        singleSendMessage(session, StatusCode.WS_UNKNOWN_ERROR.getCode());
     }
 
     /**
-     * caseId: 用例ID
-     * recordId: 执行记录ID
-     * isCore: 是否冒烟用例
+     * 给指定session发送消息
      */
-    private void save(String caseId, String recordId, String isCore, String user) {
-        //冒烟case不涉及保存
-        if (isCore.equals("2"))
-            return;
-        if (!recordId.equals("undefined")) {//保存记录时，不保存用例内容
-            saveRecord(caseId, recordId, user);
-            return;
+    private void singleSendMessage(Session s, String message) throws IOException {
+        if (s != null && s.isOpen()) {
+            s.getBasicRemote().sendText(message);
         }
-        saveCase(caseId);
     }
 
-    /*执行记录需要保留多份*/
+    /**
+     * 批量发送消息
+     */
+    private void batchSendMessage(List<String> keys, String message) throws IOException {
+        for (String key : keys) {
+            singleSendMessage(WebSocket.webSocket.get(key).session, message);
+        }
+    }
 
+    /**
+     * 获取当前case/record下的所有用户
+     */
+    private List<String> getAllSessionInfo(String caseId, String recordId) {
+        return WebSocket.keys.stream().filter(key -> key.startsWith(buildSerial(caseId, recordId))).collect(Collectors.toList());
+    }
+
+    /**
+     * 获取当前case/record下的其他用户
+     */
+    private List<String> getOthersSessionInfo(String caseId, String recordId, String sessionId) {
+        List<String> keysRet = getAllSessionInfo(caseId, recordId);
+        return keysRet.stream().filter(key -> !key.equals(buildSerial(caseId, recordId, sessionId))).collect(Collectors.toList());
+    }
+
+    /**
+     * 根据recordId是否为undefined判断为更新任务还是用例
+     * @see #onOpen(String, String, String, String, Session)
+     * @see #onClose()
+     * @see #onError(Session, Throwable)
+     */
+    private void saveCaseOrRecord(String caseId, String recordId, String user) {
+        if (UNDEFINED.equals(recordId)) {
+            saveCase(caseId);
+        } else {
+            saveRecord(caseId, recordId, user);
+        }
+    }
+
+    /**
+     * 保存用例
+     * @see #saveCaseOrRecord(String, String, String)
+     */
+    private void saveCase(String caseId) {
+        TestCase testCase = new TestCase();
+        testCase.setId(Long.valueOf(caseId));
+        // 获取当前用力下，所有的session串
+        List<String> keys = getAllSessionInfo(caseId, UNDEFINED);
+        long maxTime = 0;
+        String keySave = "";
+        JSONObject jsonObject = new JSONObject();
+        JSONObject jsonContent = new JSONObject();
+
+        // 将用例内容更新为最新
+        for (String key : keys) {
+            if (WebSocket.webSocket.get(key).updateCaseTime > maxTime) {
+                maxTime = WebSocket.webSocket.get(key).updateCaseTime;
+                jsonObject = TreeUtil.parse(WebSocket.webSocket.get(key).caseContent);
+                jsonContent = jsonObject.getJSONObject("content");
+                keySave = key;
+            }
+        }
+
+        if (StringUtils.isEmpty(keySave)) {
+
+            LOGGER.info("[Websocket case-save]当前没有需要保存的session。keysave: " + keySave);
+            // 无需更新
+            return;
+        }
+
+        //对比用例http更新时间和socket更新时间
+        TestCase dbCase = caseMapper.selectOne(Long.valueOf(caseId));
+        long tcUpdateTime = dbCase.getGmtModified().getTime();
+        long wsTcUpdateTime = WebSocket.webSocket.get(keySave).updateCaseTime;
+
+        //数据库更新时间大于socket最大更新时间则不需要保存
+        if (tcUpdateTime >= wsTcUpdateTime) {
+            for (String key : keys) {
+                WebSocket.webSocket.get(key).caseContent = testCase.getCaseContent();
+                WebSocket.webSocket.get(key).updateCaseTime = 0L;
+            }
+            LOGGER.info("[Websocket case-save]数据库更新时间戳大于websocket中的更新时间，不保存");
+            return;
+        } else {
+            LOGGER.info("[Websocket case-save]当前内容没有保存上, 内容:{}, tcUpdateTime:{}, wsTcUpdateTime:{}, keySave:{}",
+                    WebSocket.webSocket.get(keySave).caseContent, tcUpdateTime, wsTcUpdateTime, keySave);
+        }
+
+        // 过来的内容没有content就不要保存了
+        if (!jsonObject.containsKey("content")) {
+            LOGGER.info("[Websocket case-save]当前内容没有content，未保存。json: " + jsonObject.toJSONString());
+            return;
+        }
+
+        // 更新所有的用户的caseContent
+        for (String key : keys) {
+            WebSocket.webSocket.get(key).caseContent = WebSocket.webSocket.get(keySave).caseContent;
+            WebSocket.webSocket.get(key).updateCaseTime = 0L;
+        }
+
+        testCase.setCaseContent(jsonContent.toJSONString());
+        testCase.setGmtModified(new Date(wsTcUpdateTime));
+        int ret = caseMapper.update(testCase);
+        LOGGER.info("[Websocket case-save]case update content is: " + testCase.getCaseContent());
+        if (ret != 1) {
+            LOGGER.error("[Websocket case-save]case update failed. ret: " + ret);
+        }
+    }
+
+    /**
+     * 保存任务
+     * @see #saveCaseOrRecord(String, String, String)
+     */
     private void saveRecord(String caseId, String recordId, String user) {
-        List<String> keys = getKeysByCaseId(caseId, recordId);
+        List<String> keys = getAllSessionInfo(caseId, recordId);
         long maxTime = 0;
         String keySave = "";
         JSONObject jsonObject = new JSONObject();
@@ -342,202 +385,122 @@ public class WebSocket {
         int totalCount = 0;
         int passCount = 0;
         int successCount = 0;
+        int failCount = 0;
+        int blockCount = 0;
+        int ignoreCount = 0;
         // 将用例内容更新为最新
         for (String key : keys) {
-            if (webSocket.get(key).updateRecordTime > maxTime) {
-                maxTime = webSocket.get(key).updateRecordTime;
-                jsonObject = TreeUtil.parse(webSocket.get(key).caseContent);
+            if (WebSocket.webSocket.get(key).updateRecordTime > maxTime) {
+                maxTime = WebSocket.webSocket.get(key).updateRecordTime;
+                jsonObject = TreeUtil.parse(WebSocket.webSocket.get(key).caseContent);
                 jsonProgress = jsonObject.getJSONObject("progress");
                 totalCount = jsonObject.getInteger("totalCount");
                 passCount = jsonObject.getInteger("passCount");
+                failCount = jsonObject.getInteger("failCount");
+                blockCount = jsonObject.getInteger("blockCount");
                 successCount = jsonObject.getInteger("successCount");
+                ignoreCount = jsonObject.getInteger("ignoreCount");
                 keySave = key;
             }
         }
 
-        log.info("caseId:" + caseId + ",recordId:" + recordId + ",user:" + user + ",sava record progress:" + jsonProgress);
-
-        if (keySave.equals("")) {//无需更新
+        if (StringUtils.isEmpty(keySave)) {
             return;
         }
 
         //获取数据库更新时间
-        ExecRecord orgRecord = execRecordService.getRecordById(Long.parseLong(recordId));
-        Long recordUpdateTime = orgRecord.getGmtModified().getTime();
-        Long wsUpdateTime = webSocket.get(keySave).updateRecordTime;
+        RecordWsDto dto = recordService.getWsRecord(Long.parseLong(recordId));
+        long recordUpdateTime = dto.getUpdateTime().getTime();
+        long wsUpdateTime = WebSocket.webSocket.get(keySave).updateRecordTime;
+
+        // 同样的，如果晚了，不保存
         if (recordUpdateTime < wsUpdateTime) {
             if (!jsonObject.containsKey("progress")) {
-                log.info("current no record to save.");
+                LOGGER.info("current no record to save.");
                 return;
-            } else {
-                log.info("save record content . " + webSocket.get(keySave).caseContent);
             }
             for (String key : keys) {
-                webSocket.get(key).caseContent = webSocket.get(keySave).caseContent;
-                webSocket.get(key).updateRecordTime = 0L;
+                WebSocket.webSocket.get(key).caseContent = WebSocket.webSocket.get(keySave).caseContent;
+                WebSocket.webSocket.get(key).updateRecordTime = 0L;
             }
 
-            StringBuilder executors = new StringBuilder();
-
-            if (orgRecord.getExecutors() == null || orgRecord.getExecutors().equals("")) {
+            StringBuilder executors;
+            if (StringUtils.isEmpty(dto.getExecutors())) {
                 executors = new StringBuilder(user);
             } else {
-                String executor = orgRecord.getExecutors();
+                String executor = dto.getExecutors();
                 executors = new StringBuilder(executor);
-                String[] list = executor.split(",");
+                String[] list = executor.split(SystemConstant.COMMA);
                 if (!Arrays.asList(list).contains(user)) {
                     //无重复则添加，又重复不添加
                     if (list.length == 0) {
                         executors.append(user);
                     } else {
-                        executors.append("," + user);
+                        executors.append(SystemConstant.COMMA).append(user);
                     }
                 }
             }
-            ExecRecord execRecord = new ExecRecord();
-            execRecord.setId(Long.valueOf(recordId));
-            execRecord.setCaseContent(jsonProgress.toJSONString());
-            execRecord.setPassCount(passCount);
-            execRecord.setTotalCount(totalCount);
-            execRecord.setSuccessCount(successCount);
-            //execRecord.setProgressRate(passCount*100/totalCount);
-            execRecord.setExecutors(executors.toString());
-            log.info("save " + keySave + " record. " + execRecord.toString() + "\nexecutor:" + executors.toString());
-            execRecordService.modifyTestRecord(execRecord);
-
+            ExecRecord recordUpdate = new ExecRecord();
+            recordUpdate.setId(Long.valueOf(recordId));
+            recordUpdate.setExecutors(executors.toString());
+            recordUpdate.setModifier(user);
+            recordUpdate.setGmtModified(new Date(System.currentTimeMillis()));
+            recordUpdate.setCaseContent(jsonProgress.toJSONString());
+            recordUpdate.setFailCount(failCount);
+            recordUpdate.setBlockCount(blockCount);
+            recordUpdate.setIgnoreCount(ignoreCount);
+            recordUpdate.setPassCount(passCount);
+            recordUpdate.setTotalCount(totalCount);
+            recordUpdate.setSuccessCount(successCount);
+            LOGGER.info("[Case Update]Save record exec recordId={}, content={}", recordId, recordUpdate.toString());
+            recordService.modifyRecord(recordUpdate);
         } else {
             for (String key : keys) {
-                webSocket.get(key).updateRecordTime = 0L;
+                WebSocket.webSocket.get(key).updateRecordTime = 0L;
             }
         }
     }
 
-
-    /*case世纪只保留一份，非smk的其他case*/
-    private void saveCase(String caseId) {
-        TestCase testCase = new TestCase();
-        testCase.setId(Long.valueOf(caseId));
-        List<String> keys = getKeysByCaseId(caseId, "undefined");
-        long maxTime = 0;
-        String keySave = "";
-        JSONObject jsonObject = new JSONObject();
-        JSONObject jsonContent = new JSONObject();
-
-
-        // 将用例内容更新为最新
-        for (String key : keys) {
-            //log.info("current case session: " + webSocket.get(key).session + ", content: " + webSocket.get(key).caseContent);
-            if (webSocket.get(key).updateCaseTime > maxTime) {
-                maxTime = webSocket.get(key).updateCaseTime;
-                jsonObject = TreeUtil.parse(webSocket.get(key).caseContent);
-                jsonContent = jsonObject.getJSONObject("content");
-                keySave = key;
-            }
-        }
-
-        if (keySave.equals("")) {//无需更新
-            return;
-        }
-
-        //对比用例http更新时间和socket更新时间
-        testCase = webSocketService.selectByPrimaryKey(Long.parseLong(caseId));
-        Long tcUpdateTime = testCase.getGmtModified().getTime();
-        Long wsTcUpdateTime = webSocket.get(keySave).updateCaseTime;
-        //数据库更新时间大于socket最大更新时间则不需要保存
-        if (tcUpdateTime >= wsTcUpdateTime) {
-            log.info("caseid:" + caseId + "数据已是最新，no content to save.");
-            for (String key : keys) {
-                webSocket.get(key).caseContent = testCase.getCaseContent();
-                webSocket.get(key).updateCaseTime = 0L;
-            }
-            return;
-        } else {
-            if (!jsonObject.containsKey("content")) {
-                log.info("caseid:" + caseId + "current not content to save.");
-                return;
-            } else {
-
-                /* 更新其他session的case content */
-                for (String key : keys) {
-                    webSocket.get(key).caseContent = webSocket.get(keySave).caseContent;
-                    webSocket.get(key).updateCaseTime = 0L;
-                }
-
-                testCase.setCaseContent(jsonContent.toJSONString());
-                Date now = new Date(wsTcUpdateTime);//更新时间为wsTcUpdateTime
-                testCase.setGmtModified(now);
-                log.info("caseid:" + caseId + " save content websocket. " + jsonContent.toJSONString());
-                int ret = webSocketService.update(testCase);
-                log.info("caseid:" + caseId + "save result: " + ret);
-            }
-        }
-    }
-
-    // 打开用例
-    private void open(String caseId, String recordId, String isCore) {
-        String res = webSocketService.selectCaseById(caseId);
-        if (null == res || res.equals("")) { //
-            log.error("database content is empty, need to see the reason.");
+    /**
+     * 打开用例/任务
+     * @see #onOpen(String, String, String, String, Session)
+     */
+    private void open(String caseId, String recordId, String isCore) throws IOException {
+        Long id = Long.valueOf(caseId);
+        TestCase testCase = caseMapper.selectOne(id);
+        String res = testCase.getCaseContent();
+        if (StringUtils.isEmpty(res)) {
+            throw new CaseServerException("用例内容为空", StatusCode.WS_UNKNOWN_ERROR);
         }
 
         switch (isCore) {
-            case "0": {// 原始用例打开场景
-                this.envEnum = EnvEnum.SourceEnv;
-                sendMessage(res); // 第一次发送内容，向当前客户端发送内容
+            case "0": {
+                // 这里是打开case的情况
+                singleSendMessage(session, res);
                 break;
             }
-            case "1": { // 核心用例
-                this.envEnum = EnvEnum.SourceEnv; // TODO: by xf
-                sendMessage(res);
-                break;
-            }
-            case "2": { // 冒烟用例
-                this.envEnum = EnvEnum.SmkEnv;
-                JSONObject caseContent = JSON.parseObject(res);
+            case "3": {
+                // 这里是打开record的情况
+                RecordWsDto dto = recordService.getWsRecord(Long.valueOf(recordId));
 
-                JSONObject caseRoot = caseContent.getJSONObject("root");
-                Stack<JSONObject> objCheck = new Stack<>();
-                Stack<IntCount> iCheck = new Stack<>();
-                objCheck.push(caseRoot);
-
-                List<String> list = new ArrayList<>();
-                list.add(PriorityEnv.Priority0.getValue().toString());
-                //获取priority=1（p0）的数据
-                TreeUtil.getPriority(objCheck, iCheck, caseRoot, list);
-
-                log.info("get smk case." + caseContent.toJSONString().substring(0, 20));
-                sendMessage(caseContent.toJSONString());
-                break;
-            }
-            case "3": { // 场景用例
-                ExecRecord execRecord = execRecordService.getRecordById(Long.valueOf(recordId));
-
-                this.envEnum = EnvEnum.transfer(execRecord.getEnv());
-                String record = execRecord.getCaseContent();
+                String recordContent = dto.getCaseContent();
                 JSONObject recordObj = new JSONObject();
-                if (record == null || record.equals("")) {
-                    log.info("first create record.");
-
-                } else if (record.startsWith("[{")) {
-                    JSONArray jsonArray = JSON.parseArray(record);
+                if (StringUtils.isEmpty(recordContent)) {
+                    // 其实当前任务还没有任何执行记录
+                    LOGGER.info("first create record.");
+                } else if (recordContent.startsWith("[{")) {
+                    JSONArray jsonArray = JSON.parseArray(recordContent);
                     for (Object o : jsonArray) {
                         recordObj.put(((JSONObject) o).getString("id"), ((JSONObject) o).getLong("progress"));
                     }
-                } else if (recordObj.containsKey("root")) {
-                    log.warn("current is old record, need to parse first.");
-                    recordObj = TreeUtil.parse(record).getJSONObject("progress");
-                    execRecord.setCaseContent(recordObj.toJSONString());
-                    execRecordService.modifyTestRecord(execRecord);
                 } else {
-                    log.info("normal record content.");
-                    recordObj = JSON.parseObject(record);
+                    recordObj = JSON.parseObject(recordContent);
                 }
 
                 IntCount ExecCount = new IntCount(recordObj.size());
-                //有圈选条件-根据圈选条件取用例(有具体圈选条件)条件)
-                if (execRecord.getChooseContent() != null && !execRecord.getChooseContent().equals("") && !execRecord.getChooseContent().contains("\"priority\":[\"0\"]")) {
-                    String choose_content = execRecord.getChooseContent();//转换
-                    Map<String, List<String>> chosen = JSON.parseObject(choose_content, Map.class);
+                // 如果当前record是圈选了部分的圈选用例
+                if (!StringUtils.isEmpty(dto.getChooseContent()) && !dto.getChooseContent().contains("\"priority\":[\"0\"]")) {
+                    Map<String, List<String>> chosen = JSON.parseObject(dto.getChooseContent(), Map.class);
 
                     JSONObject caseContent = JSON.parseObject(res);
                     JSONObject caseRoot = caseContent.getJSONObject("root");
@@ -549,84 +512,37 @@ public class WebSocket {
                     List<String> priority = chosen.get("priority");
                     List<String> resource = chosen.get("resource");
                     //获取对应级别用例
-                    if (priority != null && priority.size() > 0)
+                    if (!CollectionUtils.isEmpty(priority)) {
                         TreeUtil.getPriority(objCheck, iCheck, caseRoot, priority);
-                    if (resource != null && resource.size() > 0)
+                    }
+                    if (!CollectionUtils.isEmpty(resource)) {
                         TreeUtil.getChosenCase(caseRoot, new HashSet<>(resource), "resource");
-
-                    log.info("get priority " + priority.toString() + " case: " + caseContent.toJSONString());
-
-                    try {
-                        TreeUtil.mergeExecRecord(caseContent.getJSONObject("root"), recordObj, ExecCount);
-                        log.info("get record " + caseContent.toJSONString().substring(0, 20));
-                    } catch (Exception e) {
-                        log.warn("there is no record. " + record);
                     }
-                    log.info("未标优先级，但是根据优先级圈用例：" + caseContent.toJSONString());
-                    sendMessage(caseContent.toJSONString());
-                    break;
 
-                } else if (execRecord.getEnv() != null) {//有环境id时根据记录的环境表示取用例
-                    switch (execRecord.getEnv()) {
-                        case 0:
-                        case 1:
-                        case 2: {
-                            JSONObject caseContent = JSON.parseObject(res);
-                            try {
-                                TreeUtil.mergeExecRecord(caseContent.getJSONObject("root"), recordObj, ExecCount);
-                                log.info("get record. " + caseContent.toJSONString().substring(0, 20));
-                            } catch (Exception e) {
-                                log.error("there is no record." + record);
-                            }
-                            sendMessage(caseContent.toJSONString());
-                            break;
-                        }
-                        case 3:
-                        case 4: {
-                            JSONObject caseContent = JSON.parseObject(res);
-                            JSONObject caseRoot = caseContent.getJSONObject("root");
-                            Stack<JSONObject> objCheck = new Stack<>();
-
-                            Stack<IntCount> iCheck = new Stack<>();
-                            objCheck.push(caseRoot);
-
-                            List<String> list = new ArrayList<>();
-                            list.add(PriorityEnv.Priority0.getValue().toString());
-                            //获取p0用例
-                            TreeUtil.getPriority(objCheck, iCheck, caseRoot, list);
-
-                            log.info("get smk case: " + caseContent.toJSONString());
-                            try {
-                                TreeUtil.mergeExecRecord(caseContent.getJSONObject("root"), recordObj, ExecCount);
-                                log.info("get smk record " + caseContent.toJSONString().substring(0, 20));
-                            } catch (Exception e) {
-                                log.warn("there is no record. " + record);
-                            }
-                            sendMessage(caseContent.toJSONString());
-                            break;
-                        }
-                        default: {
-                            log.error("env param error.");
-                            break;
-                        }
-                    }
-                    break;
+                    TreeUtil.mergeExecRecord(caseContent.getJSONObject("root"), recordObj, ExecCount);
+                    singleSendMessage(session, caseContent.toJSONString());
                 } else {
-                    log.error("该记录无圈选条件、执行环境!请检查");
-                    break;
+                    // 如果是全部的，那么直接把testcase 给 merge过来
+                    JSONObject caseContent = JSON.parseObject(res);
+                    TreeUtil.mergeExecRecord(caseContent.getJSONObject("root"), recordObj, ExecCount);
+                    singleSendMessage(session, caseContent.toJSONString());
                 }
-
-            }
-            default: {
-                log.error("iscore param error.");
                 break;
             }
         }
-
     }
 
-    private static String stringFill(String source, int fillLength, char fillChar, boolean isLeftFill) {
-        if (source == null || source.length() >= fillLength) return source;
+    /**
+     * 封装对齐函数
+     */
+    public static String fill(String key) {
+        return stringFill(key, 8, '0', true);
+    }
+
+    public static String stringFill(String source, int fillLength, char fillChar, boolean isLeftFill) {
+        if (source == null || source.length() >= fillLength) {
+            return source;
+        }
 
         StringBuilder result = new StringBuilder(fillLength);
         int len = fillLength - source.length();
@@ -644,17 +560,32 @@ public class WebSocket {
         return result.toString();
     }
 
+    /**
+     * 获取当前websocket对应的用户
+     */
+    public String getUser() {
+        return user;
+    }
 
-    //http接口更新用例或记录时同时更新socket里的内容
-    public void updateSocketContent(String caseId, String recordId, String content) {
-        caseId = stringFill(caseId, 8, '0', true);
-        recordId = stringFill(recordId, 8, '0', true);
-        List<String> keys = getKeysByCaseId(caseId, recordId);
-        log.info("update socket content after update database data .caseId:" + caseId + "reocordId:" + recordId);
-        // 将用例内容更新为最新
-        for (String key : keys) {
-            webSocket.get(key).caseContent = content;
-            webSocket.get(key).updateCaseTime = 0L;
+    /**
+     * 获取一类用例/任务下的所有正在编辑的人
+     */
+    public static List<String> getEditingUser(String caseId, String recordId) {
+        lock.lock();
+        try {
+            // 从Websocket.keys中获取所有正在编辑的用户的前缀！
+            String prefix = buildSerial(caseId, recordId);
+            // 复制当前瞬间的拷贝，不受原本对象的干扰
+            Map<String, WebSocket> wsMap = new HashMap<>(WebSocket.webSocket);
+            List<String> names = new ArrayList<>();
+            for (Map.Entry<String, WebSocket> entry : wsMap.entrySet()) {
+                if (entry.getKey() != null && entry.getKey().startsWith(prefix)) {
+                    names.add(entry.getValue().getUser());
+                }
+            }
+            return names;
+        } finally {
+            lock.unlock();
         }
     }
 
