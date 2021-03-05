@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
+import javax.print.Doc;
 import java.io.*;
 import java.util.HashMap;
 import java.util.List;
@@ -140,39 +141,62 @@ public class FileServiceImpl implements FileService {
         return byteArrayOutputStream;
     }
 
-    //复制文件内容
-     private void copyOtherFile(String path){
+    private void writeMetaXml(String path)
+    {
+        // 1、创建document对象
+        Document document = DocumentHelper.createDocument();
+        // 2、创建根节点root
+        document.addElement("meta").addAttribute("xmlns",XMIND_META_XMLNS).addAttribute("version","2.0");
+        path = path + "/meta.xml";
+        writeXml(path,document);
+    }
 
-         String fPath = "";
-         try{
-             fPath = new File("").getCanonicalPath();
-         }catch (Exception e){
-             e.printStackTrace();
-         }
+    private void writeManifestXml(String path){
+        // 1、创建document对象
+        Document document = DocumentHelper.createDocument();
+        // 2、创建根节点root
+        Element root = document.addElement("manifest").addAttribute("xmlns",XMIND_MAINFEST_XMLNS);
+        // 3、生成子节点及子节点内容
+        root.addElement("file-entry")
+                .addAttribute("full-path","content.xml")
+                .addAttribute("media-type","text/xml");
+        root.addElement("file-entry")
+                .addAttribute("full-path","content.xml")
+                .addAttribute("media-type","text/xml");
+        root.addElement("file-entry")
+                .addAttribute("full-path","content.xml")
+                .addAttribute("media-type","text/xml");
+        root.addElement("file-entry")
+                .addAttribute("full-path","content.xml")
+                .addAttribute("media-type","text/xml");
 
-         String mainFestSourcePath = fPath + "/src/main/resources/exportTemplate/manifest.xml";
-         String metaSourcePath = fPath + "/src/main/resources/exportTemplate/meta.xml";
-         String mainFestPath = path + "/META-INF";
-         String mainFestDestPath = mainFestPath + "/manifest.xml";
-         String metaDestPath = path + "/meta.xml";
-         File mainFestSourceFile = new File(mainFestSourcePath);
-         File mainFestDestFile = new File(mainFestDestPath);
-         File metaSourceFile = new File(metaSourcePath);
-         File metaDestFile = new File(metaDestPath);
+        String targetPath = path + "/META-INF";
 
-         File mainFolder = new File(mainFestPath);
-         if(!mainFolder.exists()) {
-             mainFolder.mkdirs();
-         }
-         try {
-             FileUtil.copyFile(mainFestSourceFile, mainFestDestFile);
-             FileUtil.copyFile(metaSourceFile, metaDestFile);
-         }catch (IOException e){
-             throw new CaseServerException("导入失败，复制文件失败", StatusCode.FILE_IMPORT_ERROR);
+        File targetFolder = new File(targetPath);
+        if(!targetFolder.exists())
+             targetFolder.mkdirs();
+        path = targetPath + "/manifest.xml";
 
-         }
+        writeXml(path,document);
+    }
 
-     }
+    private void writeXml(String path, Document document)
+    {
+        OutputFormat format = OutputFormat.createPrettyPrint();
+        // 设置编码格式
+        format.setEncoding("UTF-8");
+        File xmlFile = new File(path);
+        try {
+            XMLWriter writer = new XMLWriter(new FileOutputStream(xmlFile), format);
+            // 设置是否转义，默认使用转义字符
+            writer.setEscapeText(false);
+            writer.write(document);
+            writer.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new CaseServerException("导入失败，写文件失败：" + e.getMessage(), StatusCode.FILE_IMPORT_ERROR);
+        }
+    }
 
     //根据用例生成相应的文件
     private Map<String,String> createFile(Long id)
@@ -182,12 +206,14 @@ public class FileServiceImpl implements FileService {
         if (testCase == null || StringUtils.isEmpty(testCase.getCaseContent())) {
             throw new CaseServerException("用例不存在或者content为空", StatusCode.FILE_EXPORT_ERROR);
         }
-        //写入文件内容
-        Document document = createDocument(testCase);
-        //将内容写入xml
-        String path = writeXml(document, testCase);
-        //写其他文件
-        copyOtherFile(path);
+
+        String path = creteFolder(testCase);
+        //写入content.xml内容
+        writeContentXml(testCase,path);
+        //写Meta文件
+        writeMetaXml(path);
+        //写MainFest文件
+        writeManifestXml(path);
 
         Map<String,String> pathMap = new HashMap<>();
         pathMap.put("exportPath",path);
@@ -196,7 +222,7 @@ public class FileServiceImpl implements FileService {
     }
 
     //拼接xml内容
-    private Document createDocument(TestCase testCase){
+    private void writeContentXml(TestCase testCase,String path){
         // 1、创建document对象
         Document document = DocumentHelper.createDocument();
         // 2、创建根节点root
@@ -220,7 +246,9 @@ public class FileServiceImpl implements FileService {
         text = text.replace(">","&gt;");
         title.setText(text);
         TreeUtil.exportDataToXml(rootObj.getJSONArray("children"), topic);
-        return document;
+        String targetPath = path  + "/content.xml";
+        //写入xml
+        writeXml(targetPath,document);
     }
 
     //创建要写入的文件夹
@@ -238,27 +266,6 @@ public class FileServiceImpl implements FileService {
             pathFile.mkdirs();
         }
         return  desPath;
-    }
-
-    private String writeXml(Document document, TestCase testCase){
-        String path = creteFolder(testCase);
-        // 设置生成xml的格式
-        OutputFormat format = OutputFormat.createPrettyPrint();
-        // 设置编码格式
-        format.setEncoding("UTF-8");
-        String targetPath = path  + "/content.xml";
-        File xmlFile = new File(targetPath);
-        try {
-            XMLWriter writer = new XMLWriter(new FileOutputStream(xmlFile), format);
-            // 设置是否转义，默认使用转义字符
-            writer.setEscapeText(false);
-            writer.write(document);
-            writer.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("生成文件夹和content.xml失败");
-        }
-        return path;
     }
 
     private CaseCreateReq buildCaseByJson(FileImportReq request, String fileName) {
