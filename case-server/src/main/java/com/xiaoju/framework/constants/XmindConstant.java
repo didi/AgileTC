@@ -58,7 +58,8 @@ public class XmindConstant {
 
     public static final String XMIND_MODIFIED_VERSION = "didi";
 
+    public static final String XMIND_MAINFEST_XMLNS = "urn:xmind:xmap:xmlns:manifest:1.0";
 
-
+    public static final String XMIND_META_XMLNS = "urn:xmind:xmap:xmlns:meta:2.0";
 
 }
