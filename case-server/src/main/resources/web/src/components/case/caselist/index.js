@@ -41,11 +41,10 @@ class CaseLists extends React.Component {
       treeData: [],
       levelId: '',
       levelText: '',
-      expandedKeys: ['1'], //搜索时查找到的城市key
       searchValue: '',
       autoExpandParent: true,
       dataList: [],
-      caseIds: [-1],
+      caseIds: ['root'],
       isSelect: true,
       isSibling: true,
       isAdd: true,
@@ -83,9 +82,9 @@ class CaseLists extends React.Component {
     }
   }
   getTreeList = () => {
-    const { productLineId } = this.state;
+    const { productLineId, caseIds } = this.state;
     const { doneApiPrefix } = this.props;
-    request(`${doneApiPrefix}/dir/list`, {
+    return request(`${doneApiPrefix}/dir/list`, {
       method: 'GET',
       params: {
         productLineId,
@@ -99,7 +98,7 @@ class CaseLists extends React.Component {
             caseIds:
               this.state.treeSelect.length > 0
                 ? this.state.treeSelect.toString()
-                : [-1],
+                : caseIds,
           },
           () => {
             this.getCaseList(1, '', '', '', []);
@@ -128,11 +127,11 @@ class CaseLists extends React.Component {
         caseType: 0,
         title: nameFilter || '',
         creator: createrFilter || '',
-        channel: this.props.type === 'oe' ? 1 : 0,
+        channel: 1,
         requirementId: iterationFilter || '',
         beginTime: choiseDate.length > 0 ? `${choiseDate[0]} 00:00:00` : '',
         endTime: choiseDate.length > 0 ? `${choiseDate[1]}  23:59:59` : '',
-        bizId: caseIds ? caseIds : -1,
+        bizId: caseIds ? caseIds : 'root',
       },
     }).then(res => {
       if (res.code === 200) {
@@ -164,11 +163,7 @@ class CaseLists extends React.Component {
     });
   };
   getProductMumber = () => {
-    let { type } = this.props;
-    let url = '/case/listCreators';
-    if (type === 'oe') {
-      url = `${this.props.doneApiPrefix}/case/listCreators`;
-    }
+    let url = `${this.props.doneApiPrefix}/case/listCreators`;
     request(url, {
       method: 'GET',
       params: { productLineId: this.state.productLineId, caseType: 0 },
@@ -234,7 +229,6 @@ class CaseLists extends React.Component {
     } = this.state;
     const { match, doneApiPrefix } = this.props;
     const { productLineId } = match.params;
-
     return (
       <div className="all-content">
         <FileTree
@@ -251,58 +245,32 @@ class CaseLists extends React.Component {
         <div className="min-hig-content">
           <div className="site-drawer-render-in-current-wrapper">
             <Row className="m-b-10">
-              <Col>
-                {(this.props.type !== 'oe' && (
-                  <Col span={18} className="text-left">
-                    <Button
-                      type="primary"
-                      className="m-l-10"
-                      onClick={this.onShowFilterBoxClick}
-                    >
-                      {(this.state.showFilterBox && (
-                        <span>
-                          <Icon type="minus" />
-                          收起
-                        </span>
-                      )) || (
-                        <span>
-                          <Icon type="filter" /> 筛选
-                        </span>
-                      )}
-                    </Button>
-                  </Col>
-                )) || (
-                  <Col span={18}>
-                    <Col span={18}>
-                      <div style={{ margin: '10px' }}>
-                        快速筛选：<a>全部({total})</a>
-                      </div>
-                    </Col>
-                  </Col>
-                )}
-                <Col xs={6} className="text-right">
-                  {(this.props.type === 'oe' && (
-                    <Button className="m-l-10" onClick={this.filterHandler}>
-                      <Icon type="filter" /> 筛选
-                    </Button>
-                  )) ||
-                    null}
-                  &nbsp;&nbsp;&nbsp;
-                  <Button
-                    type="primary"
-                    onClick={text => {
-                      this.handleTask('add');
-                      this.setState({
-                        currCase: null,
-                        visible: true,
-                        project: null,
-                        requirement: null,
-                      });
-                    }}
-                  >
-                    <Icon type="plus" /> 新建用例集
-                  </Button>
-                </Col>
+              <Col span={18}>
+                <div style={{ margin: '10px' }}>
+                  快速筛选：<a>全部({total})</a>
+                </div>
+              </Col>
+              <Col xs={6} className="text-right">
+                <Button
+                  style={{ marginRight: 16 }}
+                  onClick={this.filterHandler}
+                >
+                  <Icon type="filter" /> 筛选
+                </Button>
+                <Button
+                  type="primary"
+                  onClick={() => {
+                    this.handleTask('add');
+                    this.setState({
+                      currCase: null,
+                      visible: true,
+                      project: null,
+                      requirement: null,
+                    });
+                  }}
+                >
+                  <Icon type="plus" /> 新建用例集
+                </Button>
               </Col>
             </Row>
             <hr
@@ -334,7 +302,7 @@ class CaseLists extends React.Component {
               choiseDate={choiseDate}
             ></List>
 
-            {(this.props.type === 'oe' && filterVisble && (
+            {(filterVisble && (
               <OeFilter
                 onCancel={this.closeFilter}
                 getCaseList={this.getCaseList}
