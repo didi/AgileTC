@@ -26,13 +26,14 @@ class FileTree extends React.Component {
     treeData: PropTypes.array.isRequired,
   };
   expandedKeys = [];
+  dataList = [];
   constructor() {
     super();
     this.state = {
       treeData: [],
       levelId: '',
       levelText: '',
-      expandedKeys: ['1'], //搜索时查找到的城市key
+      expandedKeys: ['1'], //展开树节点
       searchValue: '',
       autoExpandParent: true,
       dataList: [],
@@ -45,18 +46,32 @@ class FileTree extends React.Component {
     };
   }
   componentDidMount() {
-    this.setState({ treeData: this.props.treeData });
+    this.setState({ treeData: this.props.treeData }, () => {
+      this.initTreeExpandedKeys(true);
+    });
   }
   componentWillReceiveProps(nextProps) {
     if (!_.isEqual(nextProps.treeData, this.props.treeData)) {
-      this.setState({ treeData: nextProps.treeData });
-      this.generateList(nextProps.treeData);
+      this.setState({ treeData: nextProps.treeData }, () => {
+        this.initTreeExpandedKeys(true);
+      });
     }
   }
-  handleClick = (e, item) => {
+  initTreeExpandedKeys = expandedAll => {
+    this.dataList = [];
+    const { expandedKeys, treeData } = this.state;
+    const dataList = this.generateList(treeData);
     this.setState({
-      isSelect: false,
+      expandedKeys: expandedAll
+        ? dataList
+          ? dataList.map(item => item.id)
+          : []
+        : expandedKeys,
     });
+  };
+  handleClick = (e, item) => {
+    this.setState({ isSelect: false });
+    this.originalTreeData = [...this.state.treeData];
     if (e.key == '0') {
       this.addSibling(item);
     } else if (e.key == '1') {
@@ -67,85 +82,50 @@ class FileTree extends React.Component {
       this.isDelete(item);
     }
   };
-
-  addSibling = item => {
-    this.addSiblingNode(item.id, this.state.treeData);
-  };
-
-  addSiblingNode = (key, data) => {
-    if (this.state.isSibling === false) {
-      return message.error('请完成当前新增');
-    }
-    let true_tree = data; //获取到当前的树结构
-    data.map(item => {
-      if (item.id === key) {
-        true_tree.push({
-          parentId: item.parentId,
+  addNode = (key, data) => {
+    const newTree = data.map(item => {
+      const node = { ...item };
+      if (key === item.id) {
+        const newNode = {
+          parentId: node.id,
           id: 1444,
           text: '',
           children: [],
           isEdit: true,
-        });
-        this.setState({ isSibling: false });
+        };
+        return { ...item, children: [...item.children, newNode] };
       }
-      if (item.children) {
-        this.addSiblingNode(key, item.children);
-      }
+      node.children = this.addNode(key, node.children);
+      return node;
     });
-    this.generateList(true_tree);
+    return newTree;
   };
 
-  addChild = items => {
-    this.addNode(items.id, this.state.treeData);
-    if (this.state.expandedKeys.indexOf(items.id) === -1) {
-      this.expandedKeys.push(items.id);
-    }
+  addSibling = item => {
+    const newTree = this.addNode(item.parentId, this.state.treeData);
     this.setState({
-      data: this.state.treeData,
-      expandedKeys: this.expandedKeys,
-    });
-  };
-  addNode = (key, data, value) => {
-    if (this.state.isSibling === false) {
-      return message.error('请完成当前新增');
-    }
-    data.map(item => {
-      if (item.id === key) {
-        this.setState({ isSibling: false });
-        if (item.children) {
-          item.children.push({
-            parentId: item.id,
-            isEdit: true,
-            id: 5555,
-            text: '',
-            children: [],
-          });
-        } else {
-          item.children = [];
-          item.children.push({
-            parentId: item.id,
-            isEdit: true,
-            id: 555566,
-            text: '',
-            children: [],
-          });
-        }
-        return;
-      }
-      if (item.children) {
-        this.addNode(key, item.children);
-      }
+      treeData: newTree,
     });
   };
 
+  addChild = item => {
+    const { expandedKeys, treeData } = this.state;
+    const newTree = this.addNode(item.id, treeData);
+    this.setState({
+      treeData: newTree,
+      expandedKeys: Array.from(new Set([...expandedKeys, item.id])),
+    });
+  };
   rename = item => {
     this.editNode(item.id, this.state.treeData);
     this.setState({
       treeData: this.state.treeData,
     });
   };
-
-  editNode = (key, data) =>
+  editNode = (key, data) => {
+    if (this.state.isSibling === false) {
+      return message.error('请完成当前新增');
+    }
     data.map(item => {
       if (item.id === key) {
         item.isEdit = true;
@@ -158,7 +138,11 @@ class FileTree extends React.Component {
         this.editNode(key, item.children);
       }
     });
+  };
   isDelete = item => {
+    if (this.state.isSibling === false) {
+      return message.error('请完成当前新增');
+    }
     Modal.confirm({
       title: '确认删除文件夹吗',
       content: (
@@ -179,14 +163,15 @@ class FileTree extends React.Component {
       icon: <Icon type="exclamation-circle" />,
       cancelText: '取消',
       okText: '删除',
+      getContainer:
+        document.getElementsByClassName('tc-content')[0] ||
+        document.getElementsByClassName('task_card')[0] ||
+        document.body,
     });
   };
   deleteFolder = item => {
-    let { type, getTreeList, productLineId } = this.props;
-    let url = `/dir/delete`;
-    if (type === 'oe') {
-      url = `/${this.props.doneApiPrefix}/dir/delete`;
-    }
+    let { getTreeList, productLineId, doneApiPrefix } = this.props;
+    let url = `${doneApiPrefix}/dir/delete`;
     request(url, {
       method: 'POST',
       body: {
@@ -195,11 +180,11 @@ class FileTree extends React.Component {
         delId: item.id,
         channel: 1,
       },
-    }).then(res => {
-      if (res.code == 200) {
+    }).then((res = {}) => {
+      if (res.code === 200) {
         this.setState(
           {
-            treeSelect: [-1],
+            treeSelect: ['root'],
           },
           () => {
             getTreeList();
@@ -215,29 +200,8 @@ class FileTree extends React.Component {
     });
   };
   οnblurInput = () => {
-    if (this.state.levelText === '') {
-      return message.error('文件夹名不能为空');
-    }
-
-    if (this.state.isAdd) {
-      this.setState({
-        isAdd: false,
-      });
-      setTimeout(() => {
-        this.setState({
-          isAdd: true,
-        });
-      }, 5000);
-    }
-    if (this.state.isAdd === false) {
-      return;
-    }
-
-    let { type, getTreeList, productLineId } = this.props;
-    let url = `/dir/add`;
-    if (type === 'oe') {
-      url = `/${this.props.doneApiPrefix}/dir/add`;
-    }
+    let { getTreeList, productLineId, doneApiPrefix } = this.props;
+    let url = `${doneApiPrefix}/dir/add`;
     request(url, {
       method: 'POST',
       body: {
@@ -246,8 +210,8 @@ class FileTree extends React.Component {
         text: this.state.levelText,
         channel: 1,
       },
-    }).then(res => {
-      if (res.code == 200) {
+    }).then((res = {}) => {
+      if (res.code === 200) {
         this.setState({
           levelText: '',
           isSibling: true,
@@ -277,11 +241,8 @@ class FileTree extends React.Component {
     if (this.state.isReName === false) {
       return;
     }
-    let { type, getTreeList, productLineId } = this.props;
-    let url = `/dir/rename`;
-    if (type === 'oe') {
-      url = `/${this.props.doneApiPrefix}/dir/rename`;
-    }
+    let { getTreeList, productLineId, doneApiPrefix } = this.props;
+    let url = `${doneApiPrefix}/dir/rename`;
     request(url, {
       method: 'POST',
       body: {
@@ -290,8 +251,8 @@ class FileTree extends React.Component {
         text: this.state.levelText,
         channel: 1,
       },
-    }).then(res => {
-      if (res.code == 200) {
+    }).then((res = {}) => {
+      if (res.code === 200) {
         this.setState({
           levelText: '',
         });
@@ -311,6 +272,7 @@ class FileTree extends React.Component {
             <span>
               <Input
                 size="small"
+                autoFocus
                 defaultValue={item.text}
                 style={{ width: '100%' }}
                 onChange={e => {
@@ -318,7 +280,11 @@ class FileTree extends React.Component {
                   e.stopPropagation();
                 }}
                 onBlur={e => {
-                  item.rename ? this.renameInput(item) : this.οnblurInput();
+                  if (e.target.value === '') {
+                    this.setState({ treeData: this.originalTreeData });
+                  } else {
+                    item.rename ? this.renameInput(item) : this.οnblurInput();
+                  }
                 }}
                 onPressEnter={e => {
                   item.rename ? this.renameInput(item) : this.οnblurInput();
@@ -417,21 +383,22 @@ class FileTree extends React.Component {
       return <TreeNode {...item} />;
     });
 
-  generateList = data => {
+  generateList = (data, excludeItem = {}) => {
     for (let i = 0; i < data.length; i++) {
       const node = data[i];
       const id = node.id;
-      this.setState({
-        dataList: [...this.state.dataList, { id, text: node.text }],
-      });
+      if (excludeItem.id !== node.id) {
+        this.dataList.push({ id, text: node.text });
+      }
       if (node.children) {
         this.generateList(node.children);
       }
     }
+    return this.dataList;
   };
   onChange = e => {
     const value = e.target.value;
-    const expandedKeys = this.state.dataList
+    const expandedKeys = this.dataList
       .map(item => {
         if (item.text.indexOf(value) > -1) {
           return this.getParentKey(item.text, this.state.treeData);
@@ -474,7 +441,6 @@ class FileTree extends React.Component {
   };
   render() {
     const { treeSelect, expandedKeys, autoExpandParent, treeData } = this.state;
-
     return (
       <ResizePanel direction="e" style={{ flexGrow: '1' }}>
         <div className="sidebar">

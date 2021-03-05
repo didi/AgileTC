@@ -107,16 +107,10 @@ class TaskModal extends React.Component {
     // params.owner = params.owner.join(',');
     params.owner = params.owner || '';
     delete params.cyclePlan;
-    let url =
-      this.props.type !== 'oe'
-        ? `/record/create`
-        : `${this.props.doneApiPrefix}/record/create`;
+    let url = `${this.props.doneApiPrefix}/record/create`;
 
     if (this.props.titleModeTask == '编辑测试任务') {
-      url =
-        this.props.type !== 'oe'
-          ? `/record/edit`
-          : `${this.props.doneApiPrefix}/record/edit`;
+      url = `${this.props.doneApiPrefix}/record/edit`;
 
       delete params.caseId;
       delete params.creator;

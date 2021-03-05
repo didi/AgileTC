@@ -94,7 +94,7 @@ class CaseModal extends React.Component {
         channel: 1,
       },
     }).then(res => {
-      this.setState({ cardTree: res.data.children });
+      this.setState({ cardTree: res.data ? res.data.children : [] });
     });
   };
   getDetailById = () => {
@@ -141,7 +141,7 @@ class CaseModal extends React.Component {
       caseType: 0,
       caseContent: initData,
       title: values.case,
-      channel: this.props.type === 'oe' ? 1 : 0,
+      channel: 1,
       bizId: values.bizId ? values.bizId.join(',') : '-1',
       id: this.state.operate != 'add' ? this.props.data.id : '',
       requirementId,
@@ -150,17 +150,10 @@ class CaseModal extends React.Component {
 
     // 判断是否上传了xmind文件
     let xmindFile = this.state.xmindFile;
-    let { type } = this.props;
 
-    let url =
-      type === 'oe'
-        ? `${this.props.doneApiPrefix}/case/create`
-        : '/case/create';
+    let url = `${this.props.doneApiPrefix}/case/create`;
     if (xmindFile) {
-      url =
-        type === 'oe'
-          ? `${this.props.doneApiPrefix}/file/import`
-          : '/file/import';
+      url = `${this.props.doneApiPrefix}/file/import`;
       params = new FormData();
       params.append('file', xmindFile);
       params.append('creator', getCookies('username'));
@@ -169,7 +162,7 @@ class CaseModal extends React.Component {
       params.append('requirementId', requirementId);
 
       params.append('description', values.description);
-      params.append('channel', this.props.type === 'oe' ? 1 : 0);
+      params.append('channel', 1);
       params.append('bizId', values.bizId ? values.bizId.join(',') : '-1');
     }
     request(url, { method: 'POST', body: params }).then(res => {
@@ -208,13 +201,12 @@ class CaseModal extends React.Component {
       description: values.description,
       modifier: getCookies('username'),
       bizId: values.bizId ? values.bizId.join(',') : '-1',
-      channel: this.props.type === 'oe' ? 1 : 0,
+      channel: 1,
     };
 
     let { type } = this.props;
 
-    let url =
-      type === 'oe' ? `${this.props.doneApiPrefix}/case/edit` : '/case/edit';
+    let url = `${this.props.doneApiPrefix}/case/edit`;
     request(url, { method: 'POST', body: params }).then(res => {
       if (res.code == 200) {
         this.props.onUpdate && this.props.onUpdate();
@@ -224,7 +216,7 @@ class CaseModal extends React.Component {
       }
     });
   };
-  renderTreeNodes = data =>
+  renderTreeNodes = (data = []) =>
     data.map(item => {
       item.title = <span>{item.text}</span>;
       if (item.children) {

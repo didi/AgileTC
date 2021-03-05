@@ -75,11 +75,7 @@ export default class CaseMgt extends React.Component {
   };
 
   getCaseById = () => {
-    let url = `/case/getCaseInfo`;
-
-    if (this.props.type === 'oe') {
-      url = `${this.props.doneApiPrefix}/case/getCaseInfo`;
-    }
+    let url = `${this.props.doneApiPrefix}/case/getCaseInfo`;
     request(url, {
       method: 'GET',
       params: { id: this.props.match.params.caseId },
@@ -102,11 +98,8 @@ export default class CaseMgt extends React.Component {
 
   ///record/getContentById
   getContentById = () => {
-    let url = `/record/getRecordInfo`;
+    let url = `${this.props.doneApiPrefix}/record/getRecordInfo`;
 
-    if (this.props.type === 'oe') {
-      url = `${this.props.doneApiPrefix}/record/getRecordInfo`;
-    }
     request(url, {
       method: 'GET',
       params: { id: this.props.match.params.itemid },
@@ -133,12 +126,7 @@ export default class CaseMgt extends React.Component {
       modifier: getCookies('username'),
       caseContent: JSON.stringify(this.editorNode.getAllData()),
     };
-    let url = `/case/update`;
-
-    if (this.props.type === 'oe') {
-      url = `${this.props.doneApiPrefix}/case/update`;
-    }
-
+    let url = `${this.props.doneApiPrefix}/case/update`;
     request(url, { method: 'POST', body: param }).then(res => {
       if (res.code == 200) {
         message.success('保存内容成功');
@@ -155,11 +143,7 @@ export default class CaseMgt extends React.Component {
       modifier: getCookies('username'),
     };
 
-    let url = `/record/clear`;
-
-    if (this.props.type === 'oe') {
-      url = `${this.props.doneApiPrefix}/record/clear`;
-    }
+    let url = `${this.props.doneApiPrefix}/record/clear`;
     request(url, { method: 'POST', body: params }).then(res => {
       if (res.code == 200) {
         message.success('清除执行记录成功');

@@ -8,7 +8,6 @@ import {
   Pagination,
   message,
   Modal,
-  Divider,
   Checkbox,
   Icon,
   Menu,
@@ -76,12 +75,8 @@ class Lists extends React.Component {
     }
   }
   delOk = record => {
-    let { type } = this.props;
-
-    let url = '/case/delete';
-    if (type === 'oe') {
-      url = `${this.props.doneApiPrefix}/case/delete`;
-    }
+    let { getTreeList } = this.props;
+    let url = `${this.props.doneApiPrefix}/case/delete`;
 
     let params = {
       id: record.id,
@@ -92,8 +87,8 @@ class Lists extends React.Component {
     }).then(res => {
       if (res.code === 200) {
         message.success('删除成功');
-        this.props.getCaseList(this.state.current, '', '', '', '');
-
+        // this.props.getCaseList(this.state.current, '', '', '', '');
+        getTreeList();
         this.setState({ checked: false });
       } else {
         message.error(res.msg);
@@ -145,10 +140,7 @@ class Lists extends React.Component {
         key: 'title',
         width: 200,
         render: (text, record) => {
-          let url = `/case/caseManager/${this.props.productId}/${record.id}/undefined/0`;
-          if (this.props.type == 'oe') {
-            url = `${this.props.baseUrl}/caseManager/${this.props.productId}/${record.id}/undefined/0`;
-          }
+          let url = `${this.props.baseUrl}/caseManager/${this.props.productId}/${record.id}/undefined/0`;
           return <Link to={url}>{text}</Link>;
         },
       },
@@ -318,18 +310,6 @@ class Lists extends React.Component {
                   <Icon type="ellipsis" />
                 </a>
               </Dropdown>
-
-              {(type !== 'oe' && <Divider type="vertical" />) || null}
-              {(type !== 'oe' && (
-                <a
-                  onClick={text => {
-                    this.seeSmkCase(record);
-                  }}
-                >
-                  查看冒烟case
-                </a>
-              )) ||
-                null}
             </span>
           );
         },
@@ -363,7 +343,6 @@ class Lists extends React.Component {
     this.getRecordList(record.caseId || record.id);
     this.setState({
       taskVisible: false,
-
       expendKeys: [record.caseId || record.id],
     });
   };
@@ -394,10 +373,8 @@ class Lists extends React.Component {
   // 获取case信息
   getCaseInfo = (priority, resource) => {
     const { record, titleModeTask } = this.state;
-    let url = '/case/countByCondition';
-    if (this.props.type === 'oe') {
-      url = `${this.props.doneApiPrefix}/case/countByCondition`;
-    }
+    let url = `${this.props.doneApiPrefix}/case/countByCondition`;
+
     request(url, {
       method: 'GET',
       params: {
@@ -508,10 +485,7 @@ class Lists extends React.Component {
           let recordCreator = record.creator.match(/\(([^)]*)\)/)
             ? record.creator.match(/\(([^)]*)\)/)[1]
             : record.creator;
-          let url = `/case/caseManager/${this.props.productId}/${record.caseId}/${record.id}/3`;
-          if (this.props.type == 'oe') {
-            url = `${this.props.baseUrl}/caseManager/${this.props.productId}/${record.caseId}/${record.id}/3`;
-          }
+          let url = `${this.props.baseUrl}/caseManager/${this.props.productId}/${record.caseId}/${record.id}/3`;
 
           return (
             <span>
@@ -657,12 +631,8 @@ class Lists extends React.Component {
     }
   };
   getRecordList = id => {
-    let { type } = this.props;
+    let url = `${this.props.doneApiPrefix}/record/list`;
 
-    let url = `/record/list`;
-    if (type === 'oe') {
-      url = `${this.props.doneApiPrefix}/record/list`;
-    }
     request(url, { method: 'GET', params: { caseId: id } }).then(res => {
       if (res.code == 200) {
         let { list } = this.state;
@@ -691,12 +661,8 @@ class Lists extends React.Component {
 
   // /record/delete
   deleteRecordList = record => {
-    let { type } = this.props;
+    let url = `${this.props.doneApiPrefix}/record/delete`;
 
-    let url = `/record/delete`;
-    if (type === 'oe') {
-      url = `${this.props.doneApiPrefix}/record/delete`;
-    }
     request(url, { method: 'POST', body: { id: record.id } }).then(res => {
       if (res.code == 200) {
         this.getRecordList(record.caseId);
