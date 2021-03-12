@@ -18,7 +18,7 @@
     "rc-scroll-anim": "^2.7.4",
     "rc-texty": "^0.2.0",
     "react": "^16.8.6",
-    "react-agiletc-editor": "^0.1.9",
+    "react-agiletc-editor": "^0.1.10",
     "react-dom": "^16.8.6",
     "react-resize-panel": "^0.3.5"
   },
