@@ -425,12 +425,17 @@ public class TreeUtil {
         priority = jsonObject.getInteger("priority");
         String topicPriority = "";
         if(priority != null && priority != 0){
-            Map<String, Integer> priorityIds = getAllPriority();
-            for (Map.Entry<String, Integer> entry : priorityIds.entrySet()) {
-                //如果value和key对应的value相同 并且 key不在list中
-                if(priority.equals(entry.getValue())){
-                    topicPriority=entry.getKey();
-                    break;
+            if(priority.equals(3)){
+                topicPriority = "priority-3";
+            }else
+            {
+                Map<String, Integer> priorityIds = getAllPriority();
+                for (Map.Entry<String, Integer> entry : priorityIds.entrySet()) {
+                    //如果value和key对应的value相同 并且 key不在list中
+                    if(priority.equals(entry.getValue())){
+                        topicPriority=entry.getKey();
+                        break;
+                    }
                 }
             }
         }
