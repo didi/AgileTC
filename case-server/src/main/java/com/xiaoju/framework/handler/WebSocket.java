@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.xiaoju.framework.config.ApplicationConfig;
 import com.xiaoju.framework.constants.SystemConstant;
+import com.xiaoju.framework.constants.enums.EnvEnum;
 import com.xiaoju.framework.constants.enums.StatusCode;
 import com.xiaoju.framework.entity.dto.RecordWsDto;
 import com.xiaoju.framework.entity.exception.CaseServerException;
@@ -46,9 +47,12 @@ public class WebSocket {
 
     private static final String PING_MESSAGE = "ping ping ping";
 
-    private static final String PONG_MESSAGE = "pongpongpong";
+    private static final String PONG_MESSAGE = "pong pong pong";
 
     private static final String UNDEFINED = "undefined";
+
+    private static final String ERROR = "websocket on error";
+
 
     /**
      * 依赖
@@ -85,7 +89,12 @@ public class WebSocket {
     private String recordId;
     private String isCore;
     private String user;
-    private long pongTimeStamp;
+    private EnvEnum envEnum;
+
+    // 判断是否可用
+    private long lastHeartBeatTime;
+    private boolean available;
+
 
     @Override
     public String toString() {
@@ -100,33 +109,42 @@ public class WebSocket {
 
 
     static {
-        // 线程池，每过5s向所有session发送ping，如果6s内没有收到响应，会执行session.close()去关闭session
         LOGGER.info("[线程池执行ping-pong] time = {}", System.currentTimeMillis());
         ThreadPoolExecutor executor = new ThreadPoolExecutor(1, 2, 3,
                 TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(3),
-                new ThreadPoolExecutor.DiscardOldestPolicy());
+                new ThreadPoolExecutor.CallerRunsPolicy());
         executor.execute(() -> {
-            try {
-                // 看看是不是链接关闭了，如果没有收到就关闭
-                while (true) {
-                    for (Map.Entry<String, WebSocket> entry : WebSocket.webSocket.entrySet()) {
-                        if (!UNDEFINED.equals(entry.getValue().caseId)) {
-                            // 其实这里可以把方法变成static
-                            entry.getValue().singleSendMessage(entry.getValue().session, PING_MESSAGE);
-                            // 看看是不是过时的内容，超过10秒无响应认为掉线
-                            if (System.currentTimeMillis() - entry.getValue().pongTimeStamp > 10000) {
-                                LOGGER.error("[线程池执行ping-pong出错]准备关闭当前websocket={}", entry.getValue().toString());
-                                entry.getValue().onClose();
+                    // 看看是不是链接关闭了
+                    while (true) {
+                        try {
+                            for (Map.Entry<String, WebSocket> entry : webSocket.entrySet()) {
+                                WebSocket socket = entry.getValue();
+                                if (!UNDEFINED.equals(socket.getCaseId())) {
+                                    // 超过30秒为响应默认视为session不可信，直接断掉
+                                    long currTime = System.currentTimeMillis();
+                                    if (!socket.isAvailable() || currTime - entry.getValue().lastHeartBeatTime > 30000) {
+                                        LOGGER.error("[static-pool]准备关闭当前websocket={}", entry.getValue().toString());
+                                        // 第一步，直接移除websocket
+                                        try {
+                                            socket.onError(socket.session, new Exception("Server关闭"));
+                                        } finally {
+                                            // help gc
+                                            socket.session = null;
+                                            webSocket.remove(entry.getKey());
+                                            keys.remove(entry.getKey());
+                                        }
+                                    }
+                                }
                             }
+                            Thread.sleep(5000);
+                        }
+                        catch (Exception e) {
+                            LOGGER.error("[线程池执行ping-pong出错]错误原因e={}", e.getMessage());
+                            e.printStackTrace();
                         }
                     }
-                    Thread.sleep(5000);
                 }
-            } catch (Exception e) {
-                LOGGER.error("[线程池执行ping-pong出错]错误原因e={}", e.getMessage());
-                e.printStackTrace();
-            }
-        });
+        );
     }
 
     private static String buildSerial(String ... ids) {
@@ -150,7 +168,8 @@ public class WebSocket {
         this.user = user;
         this.updateCaseTime = 0;
         this.updateRecordTime = 0;
-        this.pongTimeStamp = System.currentTimeMillis();
+        this.lastHeartBeatTime = System.currentTimeMillis();
+        this.available = true;
         LOGGER.info("[websocket-onOpen 开启新的session][{}]", toString());
 
         // 连基本的任务都不是，直接报错
@@ -180,6 +199,7 @@ public class WebSocket {
 
     @OnClose
     public void onClose() {
+        this.available = false;
         LOGGER.info("[websocket-onClose 关闭当前session成功]当前session={}", currentSession());
         if (UNDEFINED.equals(caseId)) {
             throw new CaseServerException("用例id为空", StatusCode.WS_UNKNOWN_ERROR);
@@ -198,9 +218,9 @@ public class WebSocket {
 
     @OnMessage(maxMessageSize = 1048576)
     public void onMessage(String message, Session session) throws IOException {
-        // 线程池通信内容忽略
-        if (message.contains(PONG_MESSAGE)) {
-            pongTimeStamp = System.currentTimeMillis();
+        this.lastHeartBeatTime = System.currentTimeMillis();
+        if (PING_MESSAGE.equals(message)) {
+            session.getAsyncRemote().sendText(PONG_MESSAGE);
             return;
         }
 
@@ -239,8 +259,9 @@ public class WebSocket {
     @OnError
     public void onError(Session session, Throwable e) throws IOException {
         LOGGER.info("[websocket-onError 会话出现异常]当前session={}, 原因={}", currentSession(), e.getMessage());
-        e.printStackTrace();
-
+        this.available = false;
+        LOGGER.error("onerror. " + e.getMessage());
+        session.getAsyncRemote().sendText(ERROR);
         // 给一个机会去触发当前内容的保存, 如果不是最新的，也不会触发保存，会被pass掉
         saveCaseOrRecord(caseId, recordId, user);
         lock.lock();
@@ -589,5 +610,88 @@ public class WebSocket {
         }
     }
 
+    public String getCaseId() {
+        return caseId;
+    }
+
+    public void setCaseId(String caseId) {
+        this.caseId = caseId;
+    }
+
+    public Session getSession() {
+        return session;
+    }
+
+    public void setSession(Session session) {
+        this.session = session;
+    }
+
+    public String getCaseContent() {
+        return caseContent;
+    }
+
+    public void setCaseContent(String caseContent) {
+        this.caseContent = caseContent;
+    }
+
+    public long getUpdateCaseTime() {
+        return updateCaseTime;
+    }
+
+    public void setUpdateCaseTime(long updateCaseTime) {
+        this.updateCaseTime = updateCaseTime;
+    }
+
+    public long getUpdateRecordTime() {
+        return updateRecordTime;
+    }
+
+    public void setUpdateRecordTime(long updateRecordTime) {
+        this.updateRecordTime = updateRecordTime;
+    }
+
+    public String getRecordId() {
+        return recordId;
+    }
+
+    public void setRecordId(String recordId) {
+        this.recordId = recordId;
+    }
+
+    public String getIsCore() {
+        return isCore;
+    }
+
+    public void setIsCore(String isCore) {
+        this.isCore = isCore;
+    }
+
+    public void setUser(String user) {
+        this.user = user;
+    }
+
+    public EnvEnum getEnvEnum() {
+        return envEnum;
+    }
+
+    public void setEnvEnum(EnvEnum envEnum) {
+        this.envEnum = envEnum;
+    }
+
+    public long getLastHeartBeatTime() {
+        return lastHeartBeatTime;
+    }
+
+    public void setLastHeartBeatTime(long lastHeartBeatTime) {
+        this.lastHeartBeatTime = lastHeartBeatTime;
+    }
+
+    public boolean isAvailable() {
+        return available;
+    }
+
+    public void setAvailable(boolean available) {
+        this.available = available;
+    }
 }
 
