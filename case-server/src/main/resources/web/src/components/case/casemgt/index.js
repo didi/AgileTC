@@ -57,7 +57,11 @@ export default class CaseMgt extends React.Component {
     const minderData = this.editorNode
       ? this.editorNode.getAllData()
       : { base: 0 };
-    if (Number(iscore) !== 2 && minderData) {
+    // 是否有ws链接断开弹窗
+    const hasBreak =
+      document.getElementsByClassName('ws-warning') &&
+      document.getElementsByClassName('ws-warning').length > 0;
+    if (Number(iscore) !== 2 && minderData && !hasBreak) {
       // 非冒烟case才可保存
       if (Number(minderData.base) > 1) {
         message.warn('即将离开页面，自动保存当前用例。');
@@ -370,6 +374,7 @@ export default class CaseMgt extends React.Component {
               image: false,
               theme: ['classic-compact', 'fresh-blue', 'fresh-green-compat'],
               template: ['default', 'right', 'fish-bone'],
+              noteTemplate: '# test',
             }}
             baseUrl="/"
             uploadUrl="/api/projmgr/common/uploadAttachment"

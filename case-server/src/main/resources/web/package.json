@@ -18,7 +18,7 @@
     "rc-scroll-anim": "^2.7.4",
     "rc-texty": "^0.2.0",
     "react": "^16.8.6",
-    "react-agiletc-editor": "^0.1.11",
+    "react-agiletc-editor": "^0.1.16",
     "react-dom": "^16.8.6",
     "react-resize-panel": "^0.3.5"
   },
@@ -42,7 +42,7 @@
     "prettier": "^1.18.2",
     "react-test-renderer": "^16.7.0",
     "sass-loader": "^7.3.1",
-    "umi": "^2.7.7",
+    "umi": "2.13.15",
     "umi-plugin-react": "^1.8.4"
   },
   "husky": {
