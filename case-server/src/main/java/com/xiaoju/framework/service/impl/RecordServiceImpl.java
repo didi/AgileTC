@@ -16,6 +16,7 @@ import com.xiaoju.framework.entity.request.ws.RecordWsClearReq;
 import com.xiaoju.framework.entity.response.records.RecordGeneralInfoResp;
 import com.xiaoju.framework.entity.response.records.RecordListResp;
 import com.xiaoju.framework.entity.xmind.IntCount;
+import com.xiaoju.framework.handler.Room;
 import com.xiaoju.framework.handler.WebSocket;
 import com.xiaoju.framework.mapper.ExecRecordMapper;
 import com.xiaoju.framework.mapper.TestCaseMapper;
@@ -113,11 +114,11 @@ public class RecordServiceImpl implements RecordService {
         }
         // 如果修改圈选用例时，有人在协同修改任务或者用例，那么就不让改
         if (!record.getChooseContent().equals(req.getChooseContent())) {
-            List<String> editors = getWsEditingCount(record);
-            if (editors.size() > 0) {
-                throw new CaseServerException("当前" + Collections.singletonList(editors) + "正在修改，不允许修改圈选用例", StatusCode.INTERNAL_ERROR);
+            Room room = getWsEditingCount(record);
+            if (room.players.size() > 0) {
+                throw new CaseServerException("当前" + room.getRoomPlayersName() + "正在修改，不允许修改圈选用例", StatusCode.INTERNAL_ERROR);
             }
-            LOGGER.info("[异步编辑任务属性]入参={}, 这些人正在编辑={}", req.toString(), Collections.singletonList(editors));
+            LOGGER.info("[异步编辑任务属性]入参={}, 这些人正在编辑={}", req.toString(), room.getRoomPlayersName());
         }
         // 日期类转换,在request.validate()已经解决单边输入为null的不完整问题
         if (req.getExpectStartTime() != null) {
@@ -308,13 +309,13 @@ public class RecordServiceImpl implements RecordService {
      * @param record 执行任务实体
      * @return 响应体
      */
-    public List<String> getWsEditingCount(ExecRecord record) {
+    public Room getWsEditingCount(ExecRecord record) {
         TestCase testCase = caseMapper.selectOne(record.getCaseId());
         if (testCase == null) {
             throw new CaseServerException("当前用例不存在", StatusCode.INTERNAL_ERROR);
         }
 
-        return WebSocket.getEditingUser(String.valueOf(record.getCaseId()), String.valueOf(record.getId()));
+        return WebSocket.getRoom(false, record.getId() << 32 | record.getCaseId());
     }
 
     /**
