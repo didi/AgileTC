@@ -115,10 +115,10 @@ public class RecordServiceImpl implements RecordService {
         // 如果修改圈选用例时，有人在协同修改任务或者用例，那么就不让改
         if (!record.getChooseContent().equals(req.getChooseContent())) {
             Room room = getWsEditingCount(record);
-            if (room.players.size() > 0) {
+            if (room != null && room.players.size() > 0) {
+                LOGGER.info("[异步编辑任务属性]入参={}, 这些人正在编辑={}", req.toString(), room.getRoomPlayersName());
                 throw new CaseServerException("当前" + room.getRoomPlayersName() + "正在修改，不允许修改圈选用例", StatusCode.INTERNAL_ERROR);
             }
-            LOGGER.info("[异步编辑任务属性]入参={}, 这些人正在编辑={}", req.toString(), room.getRoomPlayersName());
         }
         // 日期类转换,在request.validate()已经解决单边输入为null的不完整问题
         if (req.getExpectStartTime() != null) {
