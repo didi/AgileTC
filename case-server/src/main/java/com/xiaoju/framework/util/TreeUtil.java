@@ -130,7 +130,9 @@ public class TreeUtil {
 
             JSONObject obj = (JSONObject) children.get(i.get());
             i.add();
-            if (obj.getJSONObject("data").containsKey("priority") && isPriorityIn(obj.getJSONObject("data").getInteger("priority"), priorities)) {
+            if (obj.getJSONObject("data").containsKey("priority") &&
+                    obj.getJSONObject("data").getInteger("priority") != null &&
+                    isPriorityIn(obj.getJSONObject("data").getInteger("priority"), priorities)) {
                 continue;
             } else {
                 if (obj.getJSONArray("children").size() == 0) { // 当前是叶子结点
