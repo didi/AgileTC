@@ -41,6 +41,6 @@ public class CaseRoom extends Room {
         }
 
         // 广播有用户离开
-        broadcastRoomMessage("用例编辑者离开：" + p.getClient().getSession().getId());
+        broadcastRoomMessage("当前用户数:" + players.size() + "。用例编辑者 " + p.getClient().getClientName() + " 离开");
     }
 }

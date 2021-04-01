@@ -86,7 +86,7 @@ public abstract class Room {
         LOGGER.info(Thread.currentThread().getName() + ": 有新的用户加入。session id: " + client.getSession().getId());
         Player p = new Player(this, client);
 
-        broadcastRoomMessage("新增用户 " + client.toString());
+        broadcastRoomMessage("当前用户数： " + (players.size()+1) + "。新用户是：" + client.getClientName());
 
         players.add(p);
         cs.put(client.getSession(), client);
@@ -169,6 +169,7 @@ public abstract class Room {
                     JSONObject request = JSON.parseObject(msg.substring(seperateIndex+1));
                     JSONArray patch = (JSONArray) request.get("patch");
                     long currentVersion = ((JSONObject) request.get("case")).getLong("base");
+
                     String msgToClient;
                     if (msg.substring(0,seperateIndex).equals(p.getClient().getSession().getId())) {
                         msgToClient = "[[{\"op\":\"replace\",\"path\":\"/base\",\"value\":" + (currentVersion + 1) + "}]]";
@@ -190,9 +191,9 @@ public abstract class Room {
                 caseMessages.clear();
 
                 p.sendRoomMessage(sb.toString());
-
             }
         }
+
     }
 
     private List<Runnable> cachedRunnables = null;
