@@ -22,4 +22,6 @@ public class MergeCaseDto {
     private String recordContent;
 
     private Integer env;
+
+    private Long recordId;
 }

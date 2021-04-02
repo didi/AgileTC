@@ -78,6 +78,10 @@ public abstract class Room {
         };
     }
 
+    public String getTestCaseContent() {
+        return testCaseContent;
+    }
+
     public Player createAndAddPlayer(Client client) {
         if (players.size() >= MAX_PLAYER_COUNT) {
             throw new IllegalStateException("Maximum player count ("
