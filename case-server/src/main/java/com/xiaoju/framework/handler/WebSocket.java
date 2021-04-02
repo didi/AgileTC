@@ -4,6 +4,7 @@ package com.xiaoju.framework.handler;
 import com.xiaoju.framework.constants.enums.StatusCode;
 import com.xiaoju.framework.entity.exception.CaseServerException;
 
+import com.xiaoju.framework.util.BitBaseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -58,7 +59,6 @@ public class WebSocket {
     private static final Object roomLock = new Object();
 
     public static Room getRoom(boolean create, long id) {
-//        Long cid = Long.valueOf(caseId);
         if (create) {
             // todo: 清除的逻辑放到线程定时任务中
             if (rooms.get(id) == null) {
@@ -69,7 +69,7 @@ public class WebSocket {
                         } else {
                             rooms.put(id, new CaseRoom(id));
                         }
-                        LOGGER.info(Thread.currentThread().getName() + ": 新建Room成功，caseid=" + (id&0xffffffffl) + ", record id: " + (id>>32));
+                        LOGGER.info(Thread.currentThread().getName() + ": 新建Room成功，caseid=" + BitBaseUtil.getLow32(id) + ", record id: " + BitBaseUtil.getHigh32(id));
                     }
                 }
             }
@@ -97,7 +97,7 @@ public class WebSocket {
         LOGGER.info(Thread.currentThread().getName() + ": [websocket-onOpen 开启新的session][{}]", toString());
         final Client client = new Client(session, recordId, user);
         long record = recordId.equals(CaseWsMessages.UNDEFINED.getMsg()) ? 0l : Long.valueOf(recordId);
-        final Room room = getRoom(true, record << 32 | Integer.valueOf(caseId));
+        final Room room = getRoom(true, BitBaseUtil.mergeLong(record, Long.valueOf(caseId)));
 
         room.invokeAndWait(new Runnable() {
             @Override
@@ -123,7 +123,8 @@ public class WebSocket {
             throw new CaseServerException("用例id为空", StatusCode.WS_UNKNOWN_ERROR);
         }
         long record = recordId.equals(CaseWsMessages.UNDEFINED.getMsg()) ? 0l : Long.valueOf(recordId);
-        long id = record << 32 | Integer.valueOf(caseId);
+//        long id = record << 32 | Integer.valueOf(caseId);
+        long id = BitBaseUtil.mergeLong(record, Long.valueOf(caseId));
         final Room room = getRoom(false, id);
         if (room.players.size() == 1) {
             synchronized (roomLock) {
@@ -150,8 +151,7 @@ public class WebSocket {
     public void onMessage(@PathParam(value = "caseId") String caseId, @PathParam(value = "recordId") String recordId,
                           String message, Session session) throws IOException {
         long record = recordId.equals(CaseWsMessages.UNDEFINED.getMsg()) ? 0l : Long.valueOf(recordId);
-        final Room room = getRoom(false, record << 32 | Integer.valueOf(caseId));
-//        final Room room = getRoom(false, Long.valueOf(recordId) << 32 | Integer.valueOf(caseId));
+        final Room room = getRoom(false, BitBaseUtil.mergeLong(record, Long.valueOf(caseId)));
         room.invokeAndWait(new Runnable() {
             @Override
             public void run() {

@@ -7,6 +7,7 @@ import com.xiaoju.framework.constants.SystemConstant;
 import com.xiaoju.framework.entity.dto.RecordWsDto;
 import com.xiaoju.framework.entity.persistent.ExecRecord;
 import com.xiaoju.framework.entity.xmind.IntCount;
+import com.xiaoju.framework.util.BitBaseUtil;
 import com.xiaoju.framework.util.TreeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +26,7 @@ public class RecordRoom extends Room {
     private String executors;
     public RecordRoom(Long id) {
         super(id);
-        recordId = (id >> 32);
+        recordId = BitBaseUtil.getHigh32(id);
     }
 
     @Override

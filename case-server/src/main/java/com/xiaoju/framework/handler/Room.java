@@ -8,6 +8,7 @@ import com.xiaoju.framework.entity.persistent.TestCase;
 import com.xiaoju.framework.entity.xmind.IntCount;
 import com.xiaoju.framework.mapper.TestCaseMapper;
 import com.xiaoju.framework.service.RecordService;
+import com.xiaoju.framework.util.BitBaseUtil;
 import com.xiaoju.framework.util.TreeUtil;
 import org.apache.poi.util.StringUtil;
 import org.slf4j.Logger;
@@ -53,7 +54,7 @@ public abstract class Room {
 
     // id 前面部分是case id；后面部分是record id
     public Room(Long id) {
-        long caseId = (id & 0xffffffffL);
+        long caseId = BitBaseUtil.getLow32(id);
         if (testCase != null) {
             return;
         }

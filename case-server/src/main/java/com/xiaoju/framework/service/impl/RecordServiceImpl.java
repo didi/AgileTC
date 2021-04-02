@@ -21,6 +21,7 @@ import com.xiaoju.framework.handler.WebSocket;
 import com.xiaoju.framework.mapper.ExecRecordMapper;
 import com.xiaoju.framework.mapper.TestCaseMapper;
 import com.xiaoju.framework.service.RecordService;
+import com.xiaoju.framework.util.BitBaseUtil;
 import com.xiaoju.framework.util.TreeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -315,7 +316,7 @@ public class RecordServiceImpl implements RecordService {
             throw new CaseServerException("当前用例不存在", StatusCode.INTERNAL_ERROR);
         }
 
-        return WebSocket.getRoom(false, record.getId() << 32 | record.getCaseId());
+        return WebSocket.getRoom(false, BitBaseUtil.mergeLong(record.getId(), record.getCaseId()));
     }
 
     /**
@@ -324,7 +325,7 @@ public class RecordServiceImpl implements RecordService {
     public JSONObject getData(MergeCaseDto dto) {
         String websocketCaseContent = null;
         if (dto.getRecordId() > 0L) {
-            websocketCaseContent = WebSocket.getRoom(false, dto.getRecordId() << 32 | dto.getCaseId()).getTestCaseContent();
+            websocketCaseContent = WebSocket.getRoom(false, BitBaseUtil.mergeLong(dto.getRecordId(), dto.getCaseId())).getTestCaseContent();
         }
 
         String caseContent = caseMapper.selectOne(dto.getCaseId()).getCaseContent();
