@@ -85,13 +85,14 @@ public class RecordRoom extends Room {
                 recordUpdate.setTotalCount(totalCount);
                 recordUpdate.setSuccessCount(successCount);
                 recordService.modifyRecord(recordUpdate);
-                LOGGER.info(Thread.currentThread().getName() + ": 数据库用例内容更新。");
+                LOGGER.info(Thread.currentThread().getName() + ": 数据库用例记录更新。");
             }
             LOGGER.info(Thread.currentThread().getName() + ": 最后一名用户 " + p.getClient().getClientName() + " 离开，关闭。");
         }
 
         // 广播有用户离开
-        broadcastRoomMessage("当前用户数:" + players.size() + "。用例编辑者 " + p.getClient().getClientName() + " 离开");
+        broadcastRoomMessage( "当前用户数:" + players.size() + "。用例执行者 " + p.getClient().getClientName() + " 离开");
+
     }
 
     public void mergeRecoed(Long recordId, String caseContentStr) {

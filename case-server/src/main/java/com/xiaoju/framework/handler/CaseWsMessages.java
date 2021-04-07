@@ -7,7 +7,9 @@ public enum CaseWsMessages {
     CLIENT_CLOSE(0, "agiletc is closing"),
     PONG(1, "pong pong pong"),
     PING(2, "ping ping ping"),
-    UNDEFINED(3, "undefined");
+    UNDEFINED(3, "undefined"),
+    LOCK(4, "lock"),
+    UNLOCK(5, "unlock");
 
     private Integer value;
     private String msg;

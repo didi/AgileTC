@@ -105,6 +105,9 @@ public class WebSocket {
                 try {
                     try {
                         player = room.createAndAddPlayer(client);
+                        if (room.getLock()) {
+                            player.sendRoomMessageAsync("2lock");
+                        }
                         LOGGER.info(Thread.currentThread().getName() + ": player " + client.getClientName() + " 加入: " + player);
                     } catch (IllegalStateException e) {
                         client.sendMessage(new String("0" + e.getMessage()));
@@ -123,13 +126,12 @@ public class WebSocket {
             throw new CaseServerException("用例id为空", StatusCode.WS_UNKNOWN_ERROR);
         }
         long record = recordId.equals(CaseWsMessages.UNDEFINED.getMsg()) ? 0l : Long.valueOf(recordId);
-//        long id = record << 32 | Integer.valueOf(caseId);
         long id = BitBaseUtil.mergeLong(record, Long.valueOf(caseId));
         final Room room = getRoom(false, id);
         if (room.players.size() == 1) {
             synchronized (roomLock) {
                 rooms.remove(Long.valueOf(id));
-                LOGGER.info(Thread.currentThread().getName() + ": [websocket-onClose 关闭当前session成功]当前sessionid:" + room.players.get(0).getClient().getSession().getId());
+                LOGGER.info(Thread.currentThread().getName() + ": [websocket-onClose 关闭当前Room成功]当前sessionid:" + room.players.get(0).getClient().getSession().getId());
             }
         }
         room.invokeAndWait(new Runnable() {
@@ -137,7 +139,14 @@ public class WebSocket {
             public void run() {
                 try {
                     if (player != null) {
+                        // 锁住的人离开，则给其他人发送解锁消息
+                        if (player.getRoom().getLock() && player.getRoom().getLocker().equals(player.getClient().getSession().getId())) {
+                            player.getRoom().unlock();
+                            player.handleCtrlMessage("x" + "|" + "unlock");
+                        }
+
                         player.removeFromRoom();
+
                         player = null;
                     }
                 } catch (RuntimeException e) {
@@ -158,29 +167,68 @@ public class WebSocket {
                 try {
                     boolean dontSwallowException = false;
                     try {
-                        if (CaseWsMessages.PING.getMsg().equals(message)) {
-                            room.cs.get(session).sendMessage(CaseWsMessages.PONG.getMsg());
-                            return;
+                        char messageType = message.charAt(0);
+                        String messageContent = message.substring(1);
+                        switch (messageType) {
+                            case '0': // 处理ping/pong消息
+                                room.cs.get(session).sendMessage(CaseWsMessages.PONG.getMsg());
+                                break;
+
+                            case '1': // 处理编辑消息
+                                LOGGER.info(Thread.currentThread().getName() + ": 收到消息... onMessage: " + message.trim());
+                                if (player != null) {
+                                    //todo：此处分隔符待优化
+                                    LOGGER.info(Thread.currentThread().getName() + ": 消息内部处理中...");
+                                    // todo: 此处msgid写死，未运用，msgid用于前端的重传逻辑。后续补充能力
+                                    player.handleMessage(session.getId() + "|" + messageContent, 0);
+                                }
+                                break;
+
+                            case '2': // 处理控制消息
+                                LOGGER.info(Thread.currentThread().getName() + ": 收到控制消息... onMessage: " + message.trim());
+
+                                if (messageContent.equals("lock")) { // lock消息
+                                    if (player.getRoom().getLock()) {
+                                        player.sendRoomMessageSync("2" + "failed" + "已经被人锁住了"); // 当前已经lock了,后续可以发送详细锁住人信息
+                                        return;
+                                    } else {
+                                        player.getRoom().lock();
+                                        player.getRoom().setLocker(session.getId());
+                                    }
+                                } else if(messageContent.equals("unlock")) {
+                                    if (!player.getRoom().getLock()) { // 当前已经unlock状态
+                                        player.sendRoomMessageSync("2" + "failed" + " 当前已经是解锁状态");
+                                        return;
+                                    } else {
+                                        if (player.getRoom().getLocker().equals(session.getId())) { // 自己锁的
+                                            player.getRoom().unlock();
+                                            player.getRoom().setLocker("");
+                                        } else {// 其他人锁的
+                                            player.sendRoomMessageSync("2" + "failed" + "当前被其他人锁住了");
+                                            return;
+                                        }
+                                    }
+                                }
+                                if (player != null) {
+                                    player.handleCtrlMessage(session.getId() + "|" + messageContent);
+                                }
+                                break;
+                            default:
+                                LOGGER.error(Thread.currentThread().getName() + ": 这个消息类型不符合预期：" + message.trim());
+                                break;
                         }
 
-                        LOGGER.info(Thread.currentThread().getName() + ": 收到消息... onMessage: " + message.trim());
-                        if (player != null) {
-                            //todo：此处分隔符待优化
-                            LOGGER.info(Thread.currentThread().getName() + ": 消息内部处理中...");
-                            // todo: 此处msgid写死，未运用。
-                            player.handleMessage(session.getId() + "|" + message, 2);
-                        }
                     } catch (RuntimeException e) {
-                        // Client sent invalid data.
-                        // Ignore, TODO: maybe close connection
-                        LOGGER.warn(Thread.currentThread().getName() + ": runtime exception: " + e.getMessage(), e);
+                        // 客户端发送的无效信息
+                        // TODO: 可能要关闭连接
+                        LOGGER.warn(Thread.currentThread().getName() + ": 运行异常: " + e.getMessage(), e);
                         if (dontSwallowException) {
                             throw e;
                         }
                     }
 
                 } catch (RuntimeException e) {
-                    LOGGER.error(Thread.currentThread().getName() + ": Unexpected exception: " + e.toString(), e);
+                    LOGGER.error(Thread.currentThread().getName() + ": 异常: " + e.toString(), e);
                 }
             }
         });

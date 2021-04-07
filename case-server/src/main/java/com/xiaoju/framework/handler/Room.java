@@ -38,7 +38,8 @@ public abstract class Room {
 
     private static final boolean BUFFER_MESSAGES = true;
     private final Timer messageBroadcastTimer = new Timer();
-
+    private volatile boolean locked = false;
+    private volatile String locker = "";
     private static final int TIMER_DELAY = 30;
     private TimerTask activeBroadcastTimerTask;
 
@@ -52,6 +53,23 @@ public abstract class Room {
     protected String testCaseContent;
     protected TestCase testCase;
 
+    public void lock() {
+        this.locked = true;
+    }
+
+    public void unlock() {
+        this.locked = false;
+    }
+
+    public boolean getLock() {
+        return this.locked;
+    }
+    public String getLocker() {
+        return this.locker;
+    }
+    public void setLocker(String locker) {
+        this.locker = locker;
+    }
     // id 前面部分是case id；后面部分是record id
     public Room(Long id) {
         long caseId = BitBaseUtil.getLow32(id);
@@ -91,7 +109,8 @@ public abstract class Room {
         LOGGER.info(Thread.currentThread().getName() + ": 有新的用户加入。session id: " + client.getSession().getId());
         Player p = new Player(this, client);
 
-        broadcastRoomMessage("当前用户数： " + (players.size()+1) + "。新用户是：" + client.getClientName());
+        // 通知消息
+        broadcastRoomMessage( "当前用户数： " + (players.size() + 1) + "。新用户是：" + client.getClientName());
 
         players.add(p);
         cs.put(client.getSession(), client);
@@ -105,7 +124,7 @@ public abstract class Room {
 
         // 发送当前用户数
         String content = String.valueOf(players.size());
-        p.sendRoomMessage("当前用户数：" + content);
+        p.sendRoomMessageSync("当前用户数：" + content);
 
         return p;
     }
@@ -114,6 +133,9 @@ public abstract class Room {
 
         boolean removed = players.remove(p);
         assert removed;
+        if (p.getClient().getLock()) {
+            p.getRoom().unlock();
+        }
         cs.remove(p.getClient().getSession());
         LOGGER.info(Thread.currentThread().getName() + ": 有用户 " + p.getClient().getClientName() + " 离开 session id:" + p.getClient().getSession().getId());
 
@@ -130,9 +152,10 @@ public abstract class Room {
 //        broadcastRoomMessage("用户离开：" + p.getClient().getSession().getId());
     }
 
+    // 直接广播发送内容，不经过buffer池。适用于所有消息都是一致的场景。
     protected void broadcastRoomMessage(String content) {
         for (Player p : players) {
-            p.sendRoomMessage(content);
+            p.sendRoomMessageSync(content);
         }
     }
 
@@ -145,6 +168,21 @@ public abstract class Room {
         broadcastMessage(msg);
     }
 
+    private void internalHandleCtrlMessage(String msg) {
+        int seperateIndex = msg.indexOf('|');
+        String sendSessionId = msg.substring(0, seperateIndex);
+
+        for (Player p : players) {
+            if (sendSessionId.equals(p.getClient().getSession().getId())) {
+                p.getBufferedMessages().add("2" + "success");
+//                p.sendRoomMessage("2" + "success");
+            } else {
+                p.getBufferedMessages().add("2" + msg.substring(seperateIndex + 1));
+//                p.sendRoomMessage("2" + "lock");
+            }
+        }
+    }
+
     private void broadcastMessage(String msg) {
         if (!BUFFER_MESSAGES) {
             String msgStr = msg.toString();
@@ -152,11 +190,23 @@ public abstract class Room {
             for (Player p : players) {
                 String s = String.valueOf(p.getLastReceivedMessageId())
                         + "," + msgStr;
-                p.sendRoomMessage(s);
+                p.sendRoomMessageSync(s); // 直接发送，不放到buffer
             }
         } else {
+            int seperateIndex = msg.indexOf('|');
+            String sendSessionId = msg.substring(0, seperateIndex);
+            JSONObject request = JSON.parseObject(msg.substring(seperateIndex + 1));
+            JSONArray patch = (JSONArray) request.get("patch");
+            long currentVersion = ((JSONObject) request.get("case")).getLong("base");
+            testCaseContent = ((JSONObject) request.get("case")).toJSONString().replace("\"base\":" + currentVersion, "\"base\":" + (currentVersion + 1));
             for (Player p : players) {
-                p.getBufferedMessages().add(msg);
+                if (sendSessionId.equals(p.getClient().getSession().getId())) { //ack消息
+                    String msgAck = "[[{\"op\":\"replace\",\"path\":\"/base\",\"value\":" + (currentVersion + 1) + "}]]";
+                    p.getBufferedMessages().add(msgAck);
+                } else { // notify消息
+                    String msgNotify = patch.toJSONString().replace("[[{", "[[{\"op\":\"replace\",\"path\":\"/base\",\"value\":" + (currentVersion + 1) + "},{");
+                    p.getBufferedMessages().add(msgNotify);
+                }
             }
         }
     }
@@ -170,32 +220,20 @@ public abstract class Room {
             if (caseMessages.size() > 0) {
                 for (int i = 0; i < caseMessages.size(); i++) {
                     String msg = caseMessages.get(i);
-                    int seperateIndex = msg.indexOf('|');
-                    JSONObject request = JSON.parseObject(msg.substring(seperateIndex+1));
-                    JSONArray patch = (JSONArray) request.get("patch");
-                    long currentVersion = ((JSONObject) request.get("case")).getLong("base");
 
-                    String msgToClient;
-                    if (msg.substring(0,seperateIndex).equals(p.getClient().getSession().getId())) {
-                        msgToClient = "[[{\"op\":\"replace\",\"path\":\"/base\",\"value\":" + (currentVersion + 1) + "}]]";
-                    } else {
-                        msgToClient = patch.toJSONString().replace("[[{", "[[{\"op\":\"replace\",\"path\":\"/base\",\"value\":" + (currentVersion + 1) + "},{");
-                    }
-
-                    String s = String.valueOf(p.getLastReceivedMessageId())
-                            + "," + msg.toString();
+//                    String s = String.valueOf(p.getLastReceivedMessageId())
+//                            + "," + msg.toString();
                     if (i > 0) {
                         sb.append("|");
-                        LOGGER.error(Thread.currentThread().getName() + ": client: " + p.getClient().getClientName() +" 此处可能会有问题，待处理 by肖锋. s: " + s);
+                        LOGGER.error(Thread.currentThread().getName() + ": client: " + p.getClient().getClientName() + " 此处可能会有问题，待处理 by肖锋. sb: " + sb);
                     }
 
-                    sb.append(msgToClient);
-
-                    testCaseContent = ((JSONObject) request.get("case")).toJSONString().replace("\"base\":" + currentVersion, "\"base\":" + (currentVersion + 1));
+                    sb.append(msg);
                 }
+
                 caseMessages.clear();
 
-                p.sendRoomMessage(sb.toString());
+                p.sendRoomMessageSync(sb.toString());
             }
         }
 
@@ -245,6 +283,7 @@ public abstract class Room {
         }
         return StringUtil.join(playerNames.toArray(), ",");
     }
+
     public static final class Player {
 
         /**
@@ -315,15 +354,24 @@ public abstract class Room {
             room.internalHandleMessage(this, msg, msgId);
         }
 
+        public void handleCtrlMessage(String msg) {
+            room.internalHandleCtrlMessage(msg);
+        }
 
         /**
          * 发送room的消息
          * @param content
          */
-        private void sendRoomMessage(String content) {
+        public void sendRoomMessageSync(String content) {
             Objects.requireNonNull(content);
 
-            client.sendMessage(new String(content));
+            client.sendMessage(content);
+        }
+
+        public void sendRoomMessageAsync(String content) {
+            Objects.requireNonNull(content);
+
+            this.getBufferedMessages().add(content);
         }
     }
 }
