@@ -133,9 +133,7 @@ public abstract class Room {
 
         boolean removed = players.remove(p);
         assert removed;
-        if (p.getClient().getLock()) {
-            p.getRoom().unlock();
-        }
+        
         cs.remove(p.getClient().getSession());
         LOGGER.info(Thread.currentThread().getName() + ": 有用户 " + p.getClient().getClientName() + " 离开 session id:" + p.getClient().getSession().getId());
 
