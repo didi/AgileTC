@@ -61,8 +61,6 @@ class Lists extends React.Component {
   componentWillReceiveProps(nextProps) {
     if (this.props.list != nextProps.list) {
       this.setState({ list: nextProps.list }, () => {
-        this.getRequirementsById(nextProps.list || []);
-
         this.setState({
           loading: nextProps.loading,
           current: this.props.current,
@@ -70,6 +68,7 @@ class Lists extends React.Component {
           iterationFilter: this.props.iterationFilter,
           createrFilter: this.props.createrFilter,
           nameFilter: this.props.nameFilter,
+          expendKeys: [],
         });
       });
     }
@@ -97,34 +96,10 @@ class Lists extends React.Component {
     });
   };
 
-  getRequirementsById = list => {
-    // let requirementIds = [];
-    // requirementIds = Array.from(
-    //   new Set(list.map(item => item.requirementId).filter(item => item)),
-    // );
-    // request(`${this.props.oeApiPrefix}/business-lines/requirements`, {
-    //   method: 'GET',
-    //   params: { requirementIds: requirementIds.join(',') || ' ' },
-    // }).then(res => {
-    //   this.setState({ requirementObj: res.data || [], loading: false });
-    // });
-  };
-
   onChangeCheckbox = e => {
     this.setState({ checked: e.target.checked });
   };
-  seeSmkCase = record => {
-    this.context.router.history.push(
-      `/case/caseManager/${this.props.productId}/${record.id}/undefined/2`,
-    );
-    message.info(record);
-  };
-  onDownloadCase = record => {
-    let a = document.createElement('a');
-    a.href = `${baseUrl}/file/export?id=${record.id}`;
-    a.target = '_blank';
-    a.click();
-  };
+
   setColumns = () => {
     const columns = [
       {
