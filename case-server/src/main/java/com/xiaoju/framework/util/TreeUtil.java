@@ -130,7 +130,9 @@ public class TreeUtil {
 
             JSONObject obj = (JSONObject) children.get(i.get());
             i.add();
-            if (obj.getJSONObject("data").containsKey("priority") && isPriorityIn(obj.getJSONObject("data").getInteger("priority"), priorities)) {
+            if (obj.getJSONObject("data").containsKey("priority") &&
+                    obj.getJSONObject("data").getInteger("priority") != null &&
+                    isPriorityIn(obj.getJSONObject("data").getInteger("priority"), priorities)) {
                 continue;
             } else {
                 if (obj.getJSONArray("children").size() == 0) { // 当前是叶子结点
@@ -425,12 +427,17 @@ public class TreeUtil {
         priority = jsonObject.getInteger("priority");
         String topicPriority = "";
         if(priority != null && priority != 0){
-            Map<String, Integer> priorityIds = getAllPriority();
-            for (Map.Entry<String, Integer> entry : priorityIds.entrySet()) {
-                //如果value和key对应的value相同 并且 key不在list中
-                if(priority.equals(entry.getValue())){
-                    topicPriority=entry.getKey();
-                    break;
+            if(priority.equals(3)){
+                topicPriority = "priority-3";
+            }else
+            {
+                Map<String, Integer> priorityIds = getAllPriority();
+                for (Map.Entry<String, Integer> entry : priorityIds.entrySet()) {
+                    //如果value和key对应的value相同 并且 key不在list中
+                    if(priority.equals(entry.getValue())){
+                        topicPriority=entry.getKey();
+                        break;
+                    }
                 }
             }
         }

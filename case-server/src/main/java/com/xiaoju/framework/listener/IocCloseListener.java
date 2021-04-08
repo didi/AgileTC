@@ -31,21 +31,21 @@ public class IocCloseListener implements ServletContextListener {
     @Override
     public void contextDestroyed(ServletContextEvent sce) {
         LOGGER.info("[监听到容器关闭..]" + IocCloseListener.class.getName());
-        for (Map.Entry<String, WebSocket> ws : WebSocket.webSocket.entrySet()) {
-            LOGGER.info("[Session Info]{}", SocketInfo.build(ws.getValue()).toString());
-        }
+//        for (Map.Entry<String, WebSocket> ws : WebSocket.webSocket.entrySet()) {
+//            LOGGER.info("[Session Info]{}", SocketInfo.build(ws.getValue()).toString());
+//        }
     }
 
-    @Data
-    static class SocketInfo {
-        private String serial;
-        private String user;
-
-        public static SocketInfo build(WebSocket webSocket) {
-            SocketInfo info = new SocketInfo();
-            info.setSerial(webSocket.currentSession());
-            info.setUser(webSocket.getUser());
-            return info;
-        }
-    }
+//    @Data
+//    static class SocketInfo {
+//        private String serial;
+//        private String user;
+//
+//        public static SocketInfo build(WebSocket webSocket) {
+//            SocketInfo info = new SocketInfo();
+//            info.setSerial(webSocket.currentSession());
+//            info.setUser(webSocket.getUser());
+//            return info;
+//        }
+//    }
 }

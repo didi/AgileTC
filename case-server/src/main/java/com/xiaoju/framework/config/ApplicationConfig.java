@@ -1,5 +1,6 @@
 package com.xiaoju.framework.config;
 
+import com.xiaoju.framework.handler.Room;
 import com.xiaoju.framework.handler.WebSocket;
 import com.xiaoju.framework.mapper.TestCaseMapper;
 import com.xiaoju.framework.service.RecordService;
@@ -109,7 +110,9 @@ public class ApplicationConfig {
      */
     @Autowired
     public void setWebsocketService(RecordService recordService, TestCaseMapper caseMapper) {
-        WebSocket.recordService = recordService;
-        WebSocket.caseMapper = caseMapper;
+//        WebSocket.recordService = recordService;
+//        WebSocket.caseMapper = caseMapper;
+        Room.caseMapper = caseMapper;
+        Room.recordService = recordService;
     }
 }
