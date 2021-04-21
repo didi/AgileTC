@@ -242,8 +242,7 @@ public class FileServiceImpl implements FileService {
 
         Element title = topic.addElement("title");
         String text = rootObj.getJSONObject(DATA).getString("text");
-        text = text.replace("<","&lt;");
-        text = text.replace(">","&gt;");
+        text = TreeUtil.repalceSpecialChar(text);
         title.setText(text);
         TreeUtil.exportDataToXml(rootObj.getJSONArray("children"), topic);
         String targetPath = path  + "/content.xml";
