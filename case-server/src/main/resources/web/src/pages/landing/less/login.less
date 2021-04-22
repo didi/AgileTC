@@ -1,0 +1,62 @@
+.login {
+  background: skyblue;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: url(../img//login.png) no-repeat;
+  background-size: cover;
+  background-attachment:fixed;
+  .card {
+    background: white;
+    margin-left: 40%;
+    min-width: 500px;
+    min-height: 300px;
+    border-radius: 10px;
+    box-shadow: 0 6px 13px 0 rgb(0 0 0 / 10%);
+    padding: 20px 50px 40px;
+    .title {
+      font-size: 22px;
+      font-weight: 500;
+      margin-bottom: 15px;
+      span {
+        font-size: 14px;
+        margin-left: 5px;
+        font-weight: 300;
+      }
+    }
+    .btn {
+      display: inline-block;
+      cursor: pointer;
+      width: 200px;
+      font-size: 14px;
+      text-align: center;
+      padding: 6px 0;
+      border: 1px solid rgba(227,231,237,1);
+    }
+    .btn:nth-of-type(1) {
+      border-radius: 4px 0 0 4px;
+    }
+    .btn:nth-of-type(2) {
+      border-radius: 0 4px 4px 0;
+    }
+    .btn_active {
+      border: 1px solid #40a9ff;
+      color: #40a9ff;
+    }
+    .input {
+      margin-top: 30px;
+      input {
+        height: 36px;
+      }
+    }
+  }
+  .onBtn {
+    width: 100%;
+    height: 36px;
+    margin-top: 10px;
+  }
+  .zIndex {
+    z-index: 1;
+  }
+}
