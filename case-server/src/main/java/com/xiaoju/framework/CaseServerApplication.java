@@ -2,6 +2,7 @@ package com.xiaoju.framework;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.web.servlet.ServletComponentScan;
 
 /**
  * 启动类
@@ -9,6 +10,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @author didi
  * @date 2020/11/26
  */
+@ServletComponentScan
 @SpringBootApplication
 public class CaseServerApplication {
 

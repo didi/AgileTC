@@ -1,0 +1,383 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xiaoju.framework.mapper.UserMapper">
+    <!--  单独实体映射  -->
+    <resultMap id="UserMap" type="com.xiaoju.framework.auth.entity.pojo.User">
+        <id column="id" jdbcType="BIGINT" property="id" />
+        <result column="username" jdbcType="VARCHAR" property="username" />
+        <result column="is_block" jdbcType="INTEGER" property="isBlock" />
+        <result column="is_delete" jdbcType="INTEGER" property="isDelete" />
+        <result column="line_id" jdbcType="BIGINT" property="lineId"/>
+        <result column="channel" jdbcType="INTEGER" property="channel"/>
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+        <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
+    </resultMap>
+
+    <resultMap extends="UserMap" id="UserWithPasswordMap" type="com.xiaoju.framework.auth.entity.pojo.User">
+        <result column="password" jdbcType="VARCHAR" property="password"/>
+        <result column="salt" jdbcType="VARCHAR" property="salt"/>
+    </resultMap>
+
+    <resultMap id="RoleMap" type="com.xiaoju.framework.auth.entity.pojo.Role">
+        <id column="id" jdbcType="BIGINT" property="id" />
+        <result column="role_name" jdbcType="VARCHAR" property="roleName" />
+        <result column="is_delete" jdbcType="INTEGER" property="isDelete" />
+        <result column="is_block" jdbcType="INTEGER" property="isBlock" />
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+        <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
+        <result column="line_id" jdbcType="BIGINT" property="lineId" />
+        <result column="channel" jdbcType="INTEGER" property="channel" />
+        <result column="type" jdbcType="INTEGER" property="type"/>
+        <result column="creator" jdbcType="VARCHAR" property="creator"/>
+        <result column="modifier" jdbcType="VARCHAR" property="modifier"/>
+    </resultMap>
+
+    <resultMap id="PermMap" type="com.xiaoju.framework.auth.entity.pojo.Permission">
+        <id column="id" property="id" />
+        <result column="perm_name" jdbcType="VARCHAR" property="permName" />
+        <result column="resource" jdbcType="VARCHAR" property="resource" />
+        <result column="is_delete" jdbcType="INTEGER" property="isDelete" />
+    </resultMap>
+
+    <!--  联合映射  -->
+    <resultMap id="UserRolePermMap" type="com.xiaoju.framework.auth.entity.pojo.User">
+        <result column="username" jdbcType="VARCHAR" property="username" />
+        <association property="role" resultMap="RoleMap" />
+        <collection property="permissions" ofType="com.xiaoju.framework.auth.entity.pojo.Permission">
+            <id column="perm_id" jdbcType="BIGINT" property="id" />
+            <result column="perm_name" jdbcType="VARCHAR" property="permName" />
+            <result column="resource" jdbcType="VARCHAR" property="resource" />
+        </collection>
+    </resultMap>
+
+    <resultMap id="RoleUserMap" extends="RoleMap" type="com.xiaoju.framework.auth.entity.pojo.Role">
+        <collection property="users" ofType="com.xiaoju.framework.auth.entity.pojo.User">
+            <id column="user_id" jdbcType="BIGINT" property="id" />
+            <result column="username" jdbcType="VARCHAR" property="username" />
+        </collection>
+    </resultMap>
+
+    <resultMap id="RolePermMap" extends="RoleMap" type="com.xiaoju.framework.auth.entity.pojo.Role">
+        <collection property="permissions" ofType="com.xiaoju.framework.auth.entity.pojo.Permission">
+            <id column="perm_id" jdbcType="BIGINT" property="id" />
+            <result column="perm_name" jdbcType="VARCHAR" property="permName" />
+            <result column="resource" jdbcType="VARCHAR" property="resource" />
+        </collection>
+    </resultMap>
+
+    <resultMap id="UserPermMap" type="com.xiaoju.framework.auth.entity.pojo.User">
+        <id column="id" jdbcType="BIGINT" property="id" />
+        <result column="username" jdbcType="VARCHAR" property="username" />
+        <result column="is_block" jdbcType="INTEGER" property="isBlock" />
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+        <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
+        <result column="is_delete" jdbcType="INTEGER" property="isDelete" />
+        <collection property="permissions" ofType="com.xiaoju.framework.auth.entity.pojo.Permission">
+            <id column="perm_id" jdbcType="BIGINT" property="id" />
+            <result column="perm_name" jdbcType="VARCHAR" property="permName" />
+            <result column="resource" jdbcType="VARCHAR" property="resource" />
+        </collection>
+    </resultMap>
+
+    <resultMap id="UserRoleRelMap" type="com.xiaoju.framework.auth.entity.pojo.UserRoleRel">
+        <id column="id" jdbcType="BIGINT" property="id" />
+        <result column="user_id" jdbcType="BIGINT" property="userId" />
+        <result column="role_id" jdbcType="BIGINT" property="roleId"/>
+        <result column="is_delete" jdbcType="INTEGER" property="isDelete" />
+        <result column="creator" jdbcType="VARCHAR" property="creator" />
+        <result column="modifier" jdbcType="VARCHAR" property="modifier" />
+        <result column="channel" jdbcType="INTEGER" property="channel" />
+        <result column="line_id" jdbcType="BIGINT" property="lineId" />
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+        <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
+    </resultMap>
+
+    <resultMap id="RolePermRelMap" type="com.xiaoju.framework.auth.entity.pojo.RolePermRel">
+        <id column="id" jdbcType="BIGINT" property="id" />
+        <result column="perm_id" jdbcType="BIGINT" property="permId" />
+        <result column="role_id" jdbcType="BIGINT" property="roleId"/>
+        <result column="is_delete" jdbcType="INTEGER" property="isDelete" />
+        <result column="creator" jdbcType="VARCHAR" property="creator" />
+        <result column="modifier" jdbcType="VARCHAR" property="modifier" />
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+        <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
+    </resultMap>
+
+
+    <!--  sql  -->
+    <select id="getUserWithPerms" resultMap="UserPermMap">
+        select u.*, p.id as perm_id, p.perm_name, p.resource
+        from user_info u
+                 left join user_role_rel ur
+                           on u.id = ur.user_id and ur.is_delete = 0
+                 right join roles r
+                            on ur.role_id = r.id and r.is_delete = 0
+                 left join role_perm_rel rp
+                           on rp.role_id = r.id and rp.is_delete = 0
+                 right join permissions p
+                            on rp.perm_id = p.id and p.is_delete = 0
+        where u.username = #{username}
+          and ((u.channel = #{channel} and u.line_id = #{lineId}) or (u.channel = -1 and u.line_id = 0))
+          and u.is_delete = 0
+    </select>
+
+    <select id="getUserWithRoleAndPerms" resultMap="UserRolePermMap">
+        select u.id, u.username, u.is_block, u.create_time, u.update_time, u.is_delete,
+               r.id, r.role_name, r.is_block, r.type, p.id as perm_id, p.perm_name, p.resource
+        from user_info u
+        left join user_role_rel ur
+            on ur.user_id = u.id and ur.is_delete = 0
+        left join roles r
+            on ur.role_id = r.id and r.is_delete = 0
+        left join role_perm_rel rpr
+            on r.id = rpr.role_id and rpr.is_delete = 0
+        left join permissions p
+            on p.id = rpr.perm_id and p.is_delete = 0
+        where u.username = #{username}
+            and ((u.channel = #{channel} and u.line_id = #{lineId}) or (u.channel = -1 and u.line_id = 0))
+            and u.is_delete = 0
+    </select>
+
+    <!--  有问题，待修复 TODO  -->
+    <select id="getUser" resultMap="UserMap">
+        select u.id, u.username, u.is_block, u.create_time, u.update_time, u.is_delete
+        from user_info u
+        where username = #{username}
+          and ((u.channel = #{channel} and u.line_id = #{lineId}) or (u.channel = -1 and u.line_id = 0))
+          and u.is_delete = 0
+    </select>
+
+    <select id="getDefaultRole" resultMap="RoleMap">
+        select *
+        from roles
+        where type = 1 and is_delete = 0 and is_block = 1
+    </select>
+
+    <select id="selectRole" resultMap="RoleMap">
+        select * from roles where id = #{roleId} and is_delete = 0
+    </select>
+
+    <insert id="insertUser" parameterType="com.xiaoju.framework.auth.entity.pojo.User" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        insert into user_info (username, is_block, update_time, is_delete, line_id, channel, create_time)
+        values (
+                #{username}, #{isBlock}, #{updateTime},
+                #{isDelete}, #{lineId}, #{channel}, #{createTime}
+        )
+    </insert>
+
+    <insert id="batchInsertUsers" parameterType="com.xiaoju.framework.auth.entity.pojo.User" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        insert into user_info (username, is_block, update_time, is_delete, line_id, channel, create_time)
+        values
+        <foreach collection="list" index="index" item="user" separator=",">
+            (
+            #{user.username}, #{user.isBlock}, #{user.updateTime},
+            #{user.isDelete}, #{user.lineId}, #{user.channel}, #{user.createTime}
+            )
+        </foreach>
+    </insert>
+
+    <insert id="insertUserRoleRel" parameterType="com.xiaoju.framework.auth.entity.pojo.UserRoleRel" useGeneratedKeys="true" keyProperty="id">
+        insert into user_role_rel (user_id, role_id, is_delete, create_time, update_time, creator, modifier, channel, line_id)
+        VALUES (
+                #{userId}, #{roleId}, #{isDelete}, #{createTime}, #{updateTime},
+                #{creator}, #{modifier}, #{channel}, #{lineId}
+        )
+    </insert>
+
+    <insert id="batchInsertUserRoleRel" parameterType="com.xiaoju.framework.auth.entity.pojo.UserRoleRel" useGeneratedKeys="true" keyProperty="id">
+        insert into user_role_rel (user_id, role_id, is_delete, create_time, update_time, creator, modifier, channel, line_id)
+        values
+        <foreach collection="list" index="index" item="rel" separator=",">
+            (
+            #{rel.userId}, #{rel.roleId}, #{rel.isDelete}, #{rel.createTime}, #{rel.updateTime},
+            #{rel.creator}, #{rel.modifier}, #{rel.channel},
+            #{rel.lineId}
+            )
+        </foreach>
+    </insert>
+
+    <insert id="batchInsertRolePermRel" parameterType="com.xiaoju.framework.auth.entity.pojo.RolePermRel" useGeneratedKeys="true" keyColumn="id">
+        insert into role_perm_rel (role_id, perm_id, is_delete, creator, modifier, create_time, update_time)
+        values
+        <foreach collection="list" index="index" item="rel" separator=",">
+            (
+             #{rel.roleId}, #{rel.permId}, #{rel.isDelete}, #{rel.creator}, #{rel.modifier},
+             #{rel.createTime}, #{rel.updateTime}
+            )
+        </foreach>
+    </insert>
+
+    <insert id="insertRole" parameterType="com.xiaoju.framework.auth.entity.pojo.Role" useGeneratedKeys="true" keyProperty="id">
+        insert into roles (role_name, is_delete, is_block, type, update_time, line_id, channel, create_time, creator, modifier)
+        values (
+                #{roleName}, #{isDelete}, #{isBlock}, #{type}, #{updateTime},
+                #{lineId}, #{channel}, #{createTime}, #{creator},#{modifier}
+               )
+    </insert>
+
+    <update id="updateRole" parameterType="com.xiaoju.framework.auth.entity.pojo.Role">
+        update roles set role_name=#{roleName}, is_delete=#{isDelete}, is_block=#{isBlock},
+                         type=#{type}, update_time=#{updateTime}, line_id=#{lineId},
+                         channel=#{channel}, create_time=#{createTime}, creator=#{creator},
+                         modifier=#{modifier}
+        where id = #{id}
+    </update>
+
+    <select id="getMinorUserCollection" resultMap="UserMap">
+        select * from user_info where username in
+        <foreach collection="usernames" index="index" item="username" open="(" close=")" separator=",">
+            #{username}
+        </foreach>
+        and is_delete = 0
+        and ((channel = #{channel} and line_id = #{lineId}) or (channel = -1 and line_id = 0))
+    </select>
+
+    <select id="getMinorAllUserCollection" resultMap="UserMap">
+        select * from user_info where is_delete = 0
+        and channel = #{channel} and line_id = #{lineId}
+    </select>
+
+    <select id="getRoleList" resultMap="RoleUserMap">
+        select r.*, u.id as user_id, u.username from roles r
+            left join user_role_rel urr on r.id = urr.role_id and urr.is_delete = 0
+            left join user_info u on u.id = urr.user_id and u.is_delete = 0
+            and u.channel = #{channel} and u.line_id = #{lineId}
+        where ((r.channel = #{channel} and r.line_id = #{lineId}) or (r.channel = -1 and r.line_id = 0))
+          and r.is_delete = 0;
+    </select>
+
+    <select id="getUsersByRoleId" resultMap="RoleUserMap">
+        select r.*, u.id as user_id, u.username from roles r
+        left join user_role_rel urr on r.id = urr.role_id and urr.is_delete = 0
+        left join user_info u on urr.user_id = u.id and u.is_delete = 0 and u.line_id = #{lineId} and u.channel = #{channel}
+        where r.id = #{roleId}
+          and r.is_delete = 0
+    </select>
+
+    <select id="getPermsByRoleId" resultMap="RolePermMap">
+        select r.*, p.id as perm_id, p.perm_name from roles r
+        left join role_perm_rel rpr on r.id = rpr.role_id and rpr.is_delete = 0
+        left join permissions p on p.id = rpr.perm_id and p.is_delete = 0
+        where r.id = #{roleId}
+          and r.is_delete = 0
+    </select>
+
+    <update id="deleteRole">
+        update roles
+        set is_delete = 1, modifier = #{name}
+        where id = #{roleId}
+    </update>
+
+    <update id="deleteUserRoleRel">
+        update user_role_rel
+        set is_delete = 1, modifier = #{name}
+        where role_id = #{roleId}
+    </update>
+
+    <update id="deleteRolePermRel" >
+        update role_perm_rel
+        set is_delete = 1, modifier = #{name}
+        where role_id = #{roleId}
+    </update>
+
+    <update id="batchDeleteUsers">
+        update user_info
+        set is_delete = 1
+        where id in
+        <foreach collection="list" index="index" item="user" open="(" close=")" separator=",">
+            #{user.id}
+        </foreach>
+    </update>
+
+    <update id="batchDeleteUsersRoleRel">
+        update user_role_rel
+        set is_delete = 1
+        where id in
+        <foreach collection="list" index="index" item="rel" open="(" close=")" separator=",">
+            #{rel.id}
+        </foreach>
+        and is_delete = 0
+    </update>
+
+    <update id="batchDeleteRolePermRel">
+        update role_perm_rel
+        set is_delete = 1
+        where id in
+        <foreach collection="list" index="index" item="rel" open="(" close=")" separator=",">
+            #{rel.id}
+        </foreach>
+        and is_delete = 0
+    </update>
+
+    <select id="getPermList" resultMap="PermMap">
+        select * from permissions where is_delete = 0
+    </select>
+
+    <select id="getUserRoleRelByUserIdIn" resultMap="UserRoleRelMap">
+        select * from user_role_rel where user_id in
+        <foreach collection="list" index="index" item="userId" open="(" close=")" separator=",">
+            #{userId}
+        </foreach>
+        and is_delete = 0
+    </select>
+
+    <select id="getRolePermRelByRoleId" resultMap="RolePermRelMap">
+        select * from role_perm_rel where role_id = #{roleId} and is_delete = 0
+    </select>
+
+    <select id="getUserByName" resultMap="UserWithPasswordMap">
+        select * from user_info where username = #{username,jdbcType=VARCHAR} and is_delete = 0
+    </select>
+
+    <insert id="insertUserWithPassword" parameterType="com.xiaoju.framework.auth.entity.pojo.User" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        insert into user_info (username, password, salt, is_block, update_time, is_delete, line_id, channel, create_time)
+        values (
+                #{username}, #{password}, #{salt}, #{isBlock}, #{updateTime},
+                #{isDelete}, #{lineId}, #{channel}, #{createTime}
+        )
+    </insert>
+
+    <select id="getUserListWithRole" resultMap="UserMap">
+        select u.* from user_info u
+        left join user_role_rel ur on u.id = ur.user_id and ur.is_delete = 0
+        left join roles r on r.id = ur.role_id and r.is_delete = 0
+        where u.is_delete = 0
+        <if test="username != null and username != ''">
+            and u.username = #{username,jdbcType=VARCHAR}
+        </if>
+        <if test="roleId != null">
+            and r.id = #{roleId,jdbcType=BIGINT}
+        </if>
+        <if test="beginTime != null">
+            and u.create_time &gt;= #{beginTime,jdbcType=TIMESTAMP}
+        </if>
+        <if test="endTime != null">
+            and u.create_time &lt;= #{endTime,jdbcType=TIMESTAMP}
+        </if>
+        order by u.id desc
+    </select>
+
+    <select id="getRoleByUserId" resultMap="RoleMap">
+        select r.* from roles r
+        left join user_role_rel ur on r.id = ur.role_id and ur.is_delete = 0
+        where r.is_delete = 0 and ur.user_id = #{userId,jdbcType=BIGINT}
+    </select>
+
+    <update id="deleteUser">
+        update user_info
+        set is_delete = 1
+        where id = #{userId,jdbcType=BIGINT} and is_delete = 0
+    </update>
+
+    <update id="deleteUserRoleRelByUserId">
+        update user_role_rel
+        set is_delete = 1
+        where user_id = #{userId,jdbcType=BIGINT} and is_delete = 0
+    </update>
+
+    <update id="updateUserRole">
+        update user_role_rel
+        set role_id = #{newRoleId,jdbcType=BIGINT}, modifier = #{modifier,jdbcType=VARCHAR}
+        where user_id = #{userId,jdbcType=BIGINT} and is_delete = 0
+    </update>
+</mapper>

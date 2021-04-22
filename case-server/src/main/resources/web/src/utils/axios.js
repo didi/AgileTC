@@ -1,5 +1,5 @@
-import axios from 'axios';
-import { notification } from 'antd';
+import axios from 'axios'
+import { notification } from 'antd'
 
 /**
  * 一、功能：
@@ -16,11 +16,11 @@ import { notification } from 'antd';
  * |-- store：dva中对象，使用里面的 dispatch 对象，用于触发路由跳转
  */
 // const { NODE_ENV } = process.env
-window.apiPrefix = '/api';
+window.apiPrefix = '/api'
 // 设置全局参数，如响应超时时间5min，请求前缀等。
-axios.defaults.timeout = 1000 * 60 * 5;
+axios.defaults.timeout = 1000 * 60 * 5
 // axios.defaults.baseURL = window.apiPrefix
-axios.defaults.withCredentials = true;
+axios.defaults.withCredentials = true
 // 状态码错误信息
 const codeMessage = {
   200: '服务器成功返回请求的数据。',
@@ -38,49 +38,48 @@ const codeMessage = {
   502: '网关错误。',
   503: '服务不可用，服务器暂时过载或维护。',
   504: '网关超时。',
-};
+}
 
 // 添加一个请求拦截器，用于设置请求过渡状态
 axios.interceptors.request.use(
   config => {
-    config.baseURL = window.apiPrefix;
-    return config;
+    config.baseURL = window.apiPrefix
+    return config
   },
   error => {
-    return Promise.reject(error);
+    return Promise.reject(error)
   },
-);
+)
 
 // 添加一个返回拦截器
 axios.interceptors.response.use(
   response => {
-    return response;
+    return response
   },
   error => {
     // 即使出现异常，也要调用关闭方法，否则一直处于加载状态很奇怪
-    return Promise.reject(error);
+    return Promise.reject(error)
   },
-);
+)
 
 export default function request(url, opt) {
   // 调用 axios api，统一拦截
-  const options = {};
-  options.method = opt !== undefined ? opt.method : 'get';
+  const options = {}
+  options.method = opt !== undefined ? opt.method : 'get'
   if (opt) {
     if (opt.body) {
-      options.data =
-        typeof opt.body === 'string' ? JSON.parse(opt.body) : opt.body;
+      options.data = typeof opt.body === 'string' ? JSON.parse(opt.body) : opt.body
     }
 
     // if (opt.headers) options.headers = { 'Content-Type': 'application/x-www-form-urlencoded' }
     if (opt.params !== undefined) {
-      url += '?';
+      url += '?'
       for (let key in opt.params) {
         if (opt.params[key] !== undefined && opt.params[key] !== '') {
-          url = url + key + '=' + opt.params[key] + '&';
+          url = url + key + '=' + opt.params[key] + '&'
         }
       }
-      url = url.substring(0, url.length - 1);
+      url = url.substring(0, url.length - 1)
     }
   }
   return axios({
@@ -97,13 +96,19 @@ export default function request(url, opt) {
       // }
       // eslint-disable-next-line
       if (response.data.code === 401 || response.code === 401) {
-        let loginPath = `${response.data.data.login_url}?app_id=${response.data.data.app_id}`;
-        let pagePath = encodeURIComponent(window.location.href);
-        const redirectURL = `${loginPath}&version=1.0&jumpto=${pagePath}`;
-        window.location.href = redirectURL;
-        return Promise.reject(new Error('服务不可用，请联系管理员'));
+        let loginPath = `${response.data.data.login_url}?app_id=${response.data.data.app_id}`
+        let pagePath = encodeURIComponent(window.location.href)
+        const redirectURL = `${loginPath}&version=1.0&jumpto=${pagePath}`
+        window.location.href = redirectURL
+        return Promise.reject(new Error('服务不可用，请联系管理员'))
       }
-      return { ...response.data };
+      // >>>>>>>>>>>>>> 当前未登录 <<<<<<<<<<<<<<
+      if (response.data.code === 99993 || response.code === 99993) {
+        const redirectURL = `/login`
+        window.location.href = redirectURL
+        return Promise.reject(new Error('服务不可用，请联系管理员'))
+      }
+      return { ...response.data }
     })
     .catch(error => {
       // >>>>>>>>>>>>>> 请求失败 <<<<<<<<<<<<<<
@@ -114,14 +119,14 @@ export default function request(url, opt) {
       }
 
       // 响应时状态码处理
-      const status = error.response.status;
-      const errortext = codeMessage[status] || error.response.statusText;
+      const status = error.response.status
+      const errortext = codeMessage[status] || error.response.statusText
 
       notification.error({
         message: `请求错误 ${status}`,
         description: errortext,
-      });
+      })
 
-      return { code: status, message: errortext };
-    });
+      return { code: status, message: errortext }
+    })
 }

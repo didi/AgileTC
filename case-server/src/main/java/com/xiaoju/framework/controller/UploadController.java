@@ -8,6 +8,7 @@ import com.xiaoju.framework.entity.response.cases.ExportXmindResp;
 import com.xiaoju.framework.entity.response.controller.Response;
 import com.xiaoju.framework.service.FileService;
 import org.apache.commons.io.IOUtils;
+import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
@@ -49,6 +50,7 @@ public class UploadController {
      * @return 响应体
      */
     @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @RequiresPermissions("case:create")
     public Response<Long> importXmind(@RequestParam MultipartFile file, String creator, String bizId,
                                       Long productLineId, String title, String description, Integer channel, String requirementId) {
         FileImportReq req = new FileImportReq(file, creator, productLineId, title, description, channel, requirementId, bizId);
@@ -71,6 +73,7 @@ public class UploadController {
      * @param id 用例id
      */
     @GetMapping(value = "/export")
+    @RequiresPermissions("case:export")
     public void exportXmind(@RequestParam @NotNull(message = "用例id为空") Long id, HttpServletRequest request, HttpServletResponse response) {
         try {
             ExportXmindResp resp = fileService.exportXmindFile(id, request.getHeader(SystemConstant.HTTP_USER_AGENT));

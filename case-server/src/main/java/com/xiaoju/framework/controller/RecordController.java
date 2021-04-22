@@ -8,6 +8,7 @@ import com.xiaoju.framework.entity.request.record.RecordUpdateReq;
 import com.xiaoju.framework.entity.request.ws.RecordWsClearReq;
 import com.xiaoju.framework.entity.response.controller.Response;
 import com.xiaoju.framework.service.RecordService;
+import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
@@ -37,6 +38,7 @@ public class RecordController {
      * @return 响应体
      */
     @GetMapping(value = "/list")
+    @RequiresPermissions("record:list")
     public Response<?> getRecordList(@RequestParam @NotNull(message = "用例id为空") Long caseId) {
         return Response.success(recordService.getListByCaseId(caseId));
     }
@@ -48,6 +50,7 @@ public class RecordController {
      * @return 响应体
      */
     @PostMapping(value = "/create")
+    @RequiresPermissions("record:create")
     public Response<Long> createRecord(@RequestBody RecordAddReq req) {
         req.validate();
         try {
@@ -68,6 +71,7 @@ public class RecordController {
      * @return 响应体
      */
     @PostMapping(value = "/edit")
+    @RequiresPermissions("record:edit")
     public Response<?> editRecord(@RequestBody RecordUpdateReq req) {
         req.validate();
         try {
@@ -89,6 +93,7 @@ public class RecordController {
      * @return 响应体
      */
     @PostMapping(value = "/delete")
+    @RequiresPermissions("record:delete")
     public Response<?> deleteRecord(@RequestBody RecordDeleteReq req) {
         req.validate();
         try {
@@ -110,6 +115,7 @@ public class RecordController {
      * @return 响应体
      */
     @PostMapping(value = "/clear")
+    @RequiresPermissions("record:detail")
     public Response<?> clearRecord(@RequestBody RecordWsClearReq req) {
         req.validate();
         try {
@@ -130,6 +136,7 @@ public class RecordController {
      * @return 响应体
      */
     @GetMapping(value = "/getRecordInfo")
+    @RequiresPermissions("record:detail")
     public Response<?> getRecordGeneralInfo(@RequestParam @NotNull(message = "任务id为空") Long id) {
         return Response.success(recordService.getGeneralInfo(id));
     }

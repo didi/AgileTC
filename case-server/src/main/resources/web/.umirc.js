@@ -184,6 +184,10 @@ export default {
           component: './testTask/index.js',
         },
         {
+          path: '/login',
+          component: './landing/login.jsx',
+        },
+        {
           path: '*',
           redirect: '/',
         },
