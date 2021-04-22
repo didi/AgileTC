@@ -224,51 +224,45 @@ class Lists extends React.Component {
               <Dropdown
                 overlay={
                   <Menu>
-                    <Menu.Item disabled={creator !== recordCreator}>
-                      {(creator !== recordCreator && (
-                        <Tooltip title={`只允许创建者：${creator} 删除`}>
-                          <span>删除</span>
-                        </Tooltip>
-                      )) || (
-                        <a
-                          onClick={() => {
-                            Modal.confirm({
-                              title: '确认删除用例集吗',
-                              content: (
-                                <span>
-                                  当前正在删除&nbsp;&nbsp;
-                                  <span style={{ color: 'red' }}>
-                                    {record.title}
-                                  </span>
-                                  &nbsp;&nbsp;用例集，并且删除用例集包含的{' '}
-                                  <span style={{ color: 'red' }}>
-                                    {record.recordNum}
-                                  </span>{' '}
-                                  个测试任务与测试结果等信息，此操作不可撤销
-                                  <br />
-                                  <br />
-                                  <Checkbox onChange={this.onChangeCheckbox}>
-                                    我明白以上操作
-                                  </Checkbox>
+                    <Menu.Item>
+                      <a
+                        onClick={() => {
+                          Modal.confirm({
+                            title: '确认删除用例集吗',
+                            content: (
+                              <span>
+                                当前正在删除&nbsp;&nbsp;
+                                <span style={{ color: 'red' }}>
+                                  {record.title}
                                 </span>
-                              ),
-                              onOk: e => {
-                                if (this.state.checked) {
-                                  this.delOk(record);
-                                  Modal.destroyAll();
-                                } else {
-                                  message.info('请先勾选我已明白以上操作');
-                                }
-                              },
-                              icon: <Icon type="exclamation-circle" />,
-                              cancelText: '取消',
-                              okText: '删除',
-                            });
-                          }}
-                        >
-                          删除
-                        </a>
-                      )}
+                                &nbsp;&nbsp;用例集，并且删除用例集包含的{' '}
+                                <span style={{ color: 'red' }}>
+                                  {record.recordNum}
+                                </span>{' '}
+                                个测试任务与测试结果等信息，此操作不可撤销
+                                <br />
+                                <br />
+                                <Checkbox onChange={this.onChangeCheckbox}>
+                                  我明白以上操作
+                                </Checkbox>
+                              </span>
+                            ),
+                            onOk: e => {
+                              if (this.state.checked) {
+                                this.delOk(record);
+                                Modal.destroyAll();
+                              } else {
+                                message.info('请先勾选我已明白以上操作');
+                              }
+                            },
+                            icon: <Icon type="exclamation-circle" />,
+                            cancelText: '取消',
+                            okText: '删除',
+                          });
+                        }}
+                      >
+                        删除
+                      </a>
                     </Menu.Item>
                     <Menu.Item>
                       <a
@@ -483,50 +477,37 @@ class Lists extends React.Component {
                 </a>
               </Tooltip>
               <Tooltip title={`删除任务`}>
-                {(creator !== recordCreator && (
-                  <Tooltip title={`只允许创建者：${recordCreator}删除`}>
-                    <span>
-                      <a
-                        className="icon-bg border-a-redius-right margin-3-right"
-                        disabled={creator !== recordCreator}
-                      >
-                        <Icon type="delete" />
-                      </a>
-                    </span>
-                  </Tooltip>
-                )) || (
-                  <a
-                    onClick={() => {
-                      Modal.confirm({
-                        title: '确认删除测试任务吗',
-                        content: (
-                          <span>
-                            这将删除该测试任务下所有的测试与测试结果等信息，并且不可撤销。{' '}
-                            <br />
-                            <Checkbox onChange={this.onChangeCheckbox}>
-                              我明白以上操作
-                            </Checkbox>
-                          </span>
-                        ),
-                        onOk: e => {
-                          if (this.state.checked) {
-                            this.deleteRecordList(record);
+                <a
+                  onClick={() => {
+                    Modal.confirm({
+                      title: '确认删除测试任务吗',
+                      content: (
+                        <span>
+                          这将删除该测试任务下所有的测试与测试结果等信息，并且不可撤销。{' '}
+                          <br />
+                          <Checkbox onChange={this.onChangeCheckbox}>
+                            我明白以上操作
+                          </Checkbox>
+                        </span>
+                      ),
+                      onOk: e => {
+                        if (this.state.checked) {
+                          this.deleteRecordList(record);
 
-                            Modal.destroyAll();
-                          } else {
-                            message.info('请先勾选我已明白以上操作');
-                          }
-                        },
-                        icon: <Icon type="exclamation-circle" />,
-                        cancelText: '取消',
-                        okText: '删除',
-                      });
-                    }}
-                    className="icon-bg border-a-redius-right margin-3-right"
-                  >
-                    <Icon type="delete" />
-                  </a>
-                )}
+                          Modal.destroyAll();
+                        } else {
+                          message.info('请先勾选我已明白以上操作');
+                        }
+                      },
+                      icon: <Icon type="exclamation-circle" />,
+                      cancelText: '取消',
+                      okText: '删除',
+                    });
+                  }}
+                  className="icon-bg border-a-redius-right margin-3-right"
+                >
+                  <Icon type="delete" />
+                </a>
               </Tooltip>
             </span>
           );
