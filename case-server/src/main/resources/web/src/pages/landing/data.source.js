@@ -1,5 +1,7 @@
 import React from 'react'
 import logoImg from './img/atclogo4.png'
+import getQueryString from '@/utils/getCookies'
+const getCookies = getQueryString.getCookie
 export const Banner30DataSource = {
   wrapper: { className: 'banner3' },
   textWrapper: {
@@ -44,7 +46,7 @@ export const Banner30DataSource = {
             <p>开始使用</p>
           </span>
         ),
-        href: '/case/caseList/1',
+        href: getCookies('username') ? '/case/caseList/1' : '/login',
       },
     ],
   },
