@@ -26,7 +26,7 @@
 
         <!-- generate Model -->
         <javaModelGenerator targetPackage="com.xiaoju.framework.entity"
-                            targetProject="${entity.target.dir}">
+                            targetProject="src/main/java/">
             <property name="enableSubPackages" value="true"/>
             <property name="trimStrings" value="true"/>
         </javaModelGenerator>
@@ -34,18 +34,18 @@
 
         <!-- 自动生成xml（但是好像一直没有生成功，反正也不用xml）-->
         <sqlMapGenerator targetPackage="com.xiaoju.framework.mapper"
-                         targetProject="${dao.resources.dir}">
+                         targetProject="src/main/resources/">
             <property name="enableSubPackages" value="true"/>
         </sqlMapGenerator>
 
         <!-- 自动生成mapper接口, 可以是 ANNOTATEDMAPPER(注解), XMLMAPPER(xml), MIXEDMAPPER(不知道) -->
         <javaClientGenerator type="XMLMAPPER"
                              targetPackage="com.xiaoju.framework.mapper"
-                             targetProject="${entity.target.dir}">
+                             targetProject="src/main/java/">
             <property name="enableSubPackages" value="true"/>
         </javaClientGenerator>
 
-        <table tableName="test_case" domainObjectName="TestCase" enableCountByExample="false"
+        <table tableName="user" domainObjectName="User" enableCountByExample="false"
                enableUpdateByExample="false"
                enableDeleteByExample="false" enableSelectByExample="false" selectByExampleQueryId="false"/>
 

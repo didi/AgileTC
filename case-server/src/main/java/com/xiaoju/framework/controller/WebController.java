@@ -16,6 +16,11 @@ public class WebController {
         return "index";
     }
 
+    @RequestMapping("/login")
+    public String login(){
+        return "index";
+    }
+
     @RequestMapping("/case/caseList/1")
     public String index(){
         return "index";

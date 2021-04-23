@@ -83,3 +83,17 @@ alter table exec_record
     add column fail_count int(10) default 0 not null comment '失败个数' after success_count,
     add column block_count int(10) default 0 not null comment '阻塞个数' after success_count,
     add column ignore_count int(10) default 0 not null comment '不执行个数' after success_count;
+
+# 增加用户信息表
+CREATE TABLE `user` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键id',
+  `username` varchar(255) NOT NULL DEFAULT '' COMMENT '用户名',
+  `password` varchar(1023) NOT NULL DEFAULT '' COMMENT '密码',
+  `salt` varchar(1023) NOT NULL DEFAULT '' COMMENT '盐',
+  `is_delete` int(1) NOT NULL DEFAULT '0' COMMENT '是否删除',
+  `channel` int(1) NOT NULL DEFAULT '0' COMMENT '渠道',
+  `product_line_id` bigint(20) NOT NULL DEFAULT '0' COMMENT '业务线',
+  `gmt_created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '注册时间',
+  `gmt_updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=677 DEFAULT CHARSET=utf8 COMMENT='用户信息';
