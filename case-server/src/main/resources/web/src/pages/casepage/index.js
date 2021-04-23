@@ -9,6 +9,11 @@ const { Header } = Layout
 const getCookies = getQueryString.getCookie
 
 class casePage extends React.Component {
+  componentDidMount() {
+    if (!getCookies('username')) {
+      window.location.href = '/login'
+    }
+  }
   // 登出
   handleDropdownClick = () => {
     request(`/user/quit`, {
@@ -33,7 +38,7 @@ class casePage extends React.Component {
         </Menu.Item>
       </Menu>
     )
-    return (
+    return getCookies('username') ? (
       <section style={{ marginBottom: 30 }}>
         <Header style={{ zIndex: 9 }}>
           <a href="/" style={{ color: '#fff', fontSize: 24 }}>
@@ -66,7 +71,7 @@ class casePage extends React.Component {
           />
         </div>
       </section>
-    )
+    ) : null
   }
 }
 export default casePage
