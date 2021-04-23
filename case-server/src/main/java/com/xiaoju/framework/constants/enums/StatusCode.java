@@ -27,6 +27,14 @@ public enum StatusCode implements Status {
     VERSION_NOT_MATCH(10500,"暂不支持xmind zen版本，请上传xmind 8版本文件"),
     NOT_FOUND_ENTITY(10600, "没有该项数据"),
 
+    // 权限异常
+    AUTH_UNLOGIN(99993,"用户未登录"),
+    AUTH_PERMISSION(99994, "当前用户无权限进行此操作"),
+    AUTH_ERROR(99995, "认证发生异常"),
+    AUTH_BLOCKED(99996, "用户被拉入黑名单"),
+    AUTH_UNKNOWN(99997, "用户不存在"),
+    GATEWAY_ERROR(99998, "网关错误"),
+
     // 统一异常
     SERVER_BUSY_ERROR(99999, "服务器正忙，请稍后再试");
 

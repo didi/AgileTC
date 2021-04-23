@@ -2,6 +2,7 @@ package com.xiaoju.framework;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.xiaoju.framework.util.CodecUtils;
 import com.xiaoju.framework.util.TreeUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
@@ -26,6 +27,14 @@ public class CaseServerApplicationTests {
 		System.out.println(set);
 
 		System.out.println(TreeUtil.getCaseNum(jsonObject.getJSONObject("root"), new HashSet<>()));
+	}
+
+	@Test
+	public void getPassWordByRegister() {
+		String salt = CodecUtils.generateSalt();
+		String password = CodecUtils.md5Hex("123456",salt);
+		System.out.println(salt);
+		System.out.println(password);
 	}
 
 }

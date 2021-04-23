@@ -7,6 +7,7 @@ import com.xiaoju.framework.entity.request.dir.DirDeleteReq;
 import com.xiaoju.framework.entity.request.dir.DirRenameReq;
 import com.xiaoju.framework.entity.response.controller.Response;
 import com.xiaoju.framework.service.DirService;
+import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
@@ -37,6 +38,7 @@ public class DirController {
      * @return 响应体
      */
     @GetMapping(value = "/list")
+    @RequiresPermissions("biz:list")
     public Response<?> getDirTree(@RequestParam @NotNull(message = "业务线id为空") Long productLineId,
                                   @RequestParam @NotNull(message = "渠道为空") Integer channel) {
         return Response.success(dirService.getAllCaseDir(dirService.getDirTree(productLineId, channel)));
@@ -51,6 +53,7 @@ public class DirController {
      * @return 响应体
      */
     @PostMapping(value = "/add")
+    @RequiresPermissions("biz:create")
     public Response<?> addDir(@RequestBody DirCreateReq request) {
         request.validate();
         try {
@@ -71,6 +74,7 @@ public class DirController {
      * @return 响应体
      */
     @PostMapping(value = "/rename")
+    @RequiresPermissions("biz:edit")
     public Response<?> renameDir(@RequestBody DirRenameReq request) {
         request.validate();
         try {
@@ -91,6 +95,7 @@ public class DirController {
      * @return 响应体
      */
     @PostMapping(value = "/delete")
+    @RequiresPermissions("biz:delete")
     public Response<?> deleteDir(@RequestBody DirDeleteReq request) {
         request.validate();
         try {
@@ -113,6 +118,7 @@ public class DirController {
      * @return 响应体
      */
     @GetMapping(value = "/cardTree")
+    @RequiresPermissions("biz:list")
     public Response<?> getDirCardTree(@RequestParam @NotNull(message = "业务线id为空") Long productLineId,
                                       @RequestParam @NotNull(message = "渠道为空") Integer channel) {
         return Response.success(dirService.getDirTree(productLineId, channel));

@@ -6,6 +6,7 @@ import com.xiaoju.framework.entity.request.cases.*;
 import com.xiaoju.framework.entity.request.ws.WsSaveReq;
 import com.xiaoju.framework.entity.response.controller.Response;
 import com.xiaoju.framework.service.CaseService;
+import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
@@ -44,6 +45,7 @@ public class CaseController {
      * @return 分页接口
      */
     @GetMapping(value = "/list")
+    @RequiresPermissions("case:detail")
     public Response<?> getCaseList(@RequestParam @NotNull(message = "渠道为空")  Integer channel,
                                    @RequestParam @NotNull(message = "业务线id为空")  Long productLineId,
                                    @RequestParam @NotNull(message = "文件夹未选中")  String bizId,
@@ -66,6 +68,7 @@ public class CaseController {
      * @return 响应体
      */
     @PostMapping(value = "/create")
+    @RequiresPermissions("case:create")
     public Response<?> createOrCopyCase(@RequestBody CaseCreateReq request) {
         request.validate();
         try {
@@ -86,6 +89,7 @@ public class CaseController {
      * @return 响应体
      */
     @PostMapping(value = "/edit")
+    @RequiresPermissions("case:edit")
     public Response<?> editCase(@RequestBody CaseEditReq request) {
         request.validate();
         try {
@@ -106,6 +110,7 @@ public class CaseController {
      * @return 响应体
      */
     @PostMapping(value = "/delete")
+    @RequiresPermissions("case:delete")
     public Response<?> deleteCase(@RequestBody CaseDeleteReq request) {
         request.validate();
         try {
@@ -126,6 +131,7 @@ public class CaseController {
      * @return 响应体
      */
     @GetMapping(value = "/detail")
+    @RequiresPermissions("case:detail")
     public Response<?> getCaseDetail(@RequestParam @NotNull(message = "用例id为空") Long caseId) {
         try {
             return Response.success(caseService.getCaseDetail(caseId));
@@ -146,6 +152,7 @@ public class CaseController {
      * @return 响应体
      */
     @GetMapping(value = "/listCreators")
+    @RequiresPermissions("case:list")
     public Response<?> listCreators(@RequestParam @NotNull(message = "用例类型为空") Integer caseType,
                                     @RequestParam @NotNull(message = "业务线为空") Long productLineId) {
         return Response.success(caseService.listCreators(caseType, productLineId));
@@ -160,6 +167,7 @@ public class CaseController {
      * @return 响应体
      */
     @GetMapping(value = "/countByCondition")
+    @RequiresPermissions("case:list")
     public Response<?> getCountByCondition(@RequestParam @NotNull(message = "用例id为空") Long caseId,
                                            @RequestParam @NotNull(message = "圈选优先级为空") String[] priority,
                                            @RequestParam @NotNull(message = "圈选资源为空") String[] resource) {
@@ -175,6 +183,7 @@ public class CaseController {
      * @return 概览信息
      */
     @GetMapping(value = "/getCaseInfo")
+    @RequiresPermissions("case:detail")
     public Response<?> getCaseGeneralInfo(@RequestParam @NotNull(message = "用例id为空") Long id) {
         return Response.success(caseService.getCaseGeneralInfo(id));
     }
@@ -186,6 +195,7 @@ public class CaseController {
      * @return 响应体
      */
     @PostMapping(value = "/update")
+    @RequiresPermissions("case:detail")
     public Response<?> updateWsCase(@RequestBody WsSaveReq req) {
         try {
             caseService.wsSave(req);
