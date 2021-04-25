@@ -81,7 +81,7 @@ class CaseLists extends React.Component {
       );
     }
   }
-  getTreeList = () => {
+  getTreeList = isManual => {
     const { productLineId, caseIds } = this.state;
     const { doneApiPrefix } = this.props;
     return request(`${doneApiPrefix}/dir/list`, {
@@ -101,7 +101,7 @@ class CaseLists extends React.Component {
                 : caseIds,
           },
           () => {
-            this.getCaseList(1, '', '', '', []);
+            if (!isManual) this.getCaseList(1, '', '', '', []);
           },
         );
       } else {

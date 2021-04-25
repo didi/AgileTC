@@ -2,6 +2,7 @@ import React from 'react'
 import './less/login.less'
 import { Form, Input, Button, Icon, message } from 'antd'
 import request from '@/utils/axios'
+import utils from '@/utils'
 
 class LogIn extends React.PureComponent {
   constructor(props) {
@@ -30,7 +31,7 @@ class LogIn extends React.PureComponent {
         }).then(res => {
           if (res && res.code === 200) {
             message.success('登陆成功')
-            window.location.href = '/case/caseList/1'
+            window.location.href = utils.getQueryString('jumpto')
           } else {
             message.error(res.msg)
           }
@@ -44,7 +45,7 @@ class LogIn extends React.PureComponent {
         }).then(res => {
           if (res && res.code === 200) {
             message.success('注册成功')
-            window.location.href = '/case/caseList/1'
+            window.location.href = window.location.href.split('?')[1]
           } else {
             message.error(res.msg)
           }
