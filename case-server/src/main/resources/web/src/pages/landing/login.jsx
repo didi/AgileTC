@@ -30,7 +30,7 @@ class LogIn extends React.PureComponent {
         }).then(res => {
           if (res && res.code === 200) {
             message.success('登陆成功')
-            window.location.href = '/case/caseList/1'
+            window.location.href = window.location.href.split('?')[1]
           } else {
             message.error(res.msg)
           }
@@ -44,7 +44,7 @@ class LogIn extends React.PureComponent {
         }).then(res => {
           if (res && res.code === 200) {
             message.success('注册成功')
-            window.location.href = '/case/caseList/1'
+            window.location.href = window.location.href.split('?')[1]
           } else {
             message.error(res.msg)
           }

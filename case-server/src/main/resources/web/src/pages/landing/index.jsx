@@ -53,7 +53,7 @@ export default class Home extends React.Component {
       method: 'POST',
     }).then(res => {
       if (res && res.code === 200) {
-        window.location.href = '/login'
+        window.location.href = `/login?${window.location.pathname}`
       } else {
         message.error(res.msg)
       }
