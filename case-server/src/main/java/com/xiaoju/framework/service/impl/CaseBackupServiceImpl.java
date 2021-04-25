@@ -28,11 +28,12 @@ public class CaseBackupServiceImpl implements CaseBackupService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public CaseBackup insertBackup(CaseBackup caseBackup) {
+    public synchronized CaseBackup insertBackup(CaseBackup caseBackup) {
         // 此处可以与最新的内容比对，如果一致，则不更新backup表，减少版本数量
         List<CaseBackup> caseBackups = caseBackupMapper.selectByCaseId(caseBackup.getCaseId(), null, null);
 
         // 如果当前已有，则直接返回
+        // todo: 此处应该是比较json或者base字段信息，此处可能存在json字段位置不一致导致的字符串不一致问题。
         if (caseBackups.size() > 0 &&
                 caseBackups.get(0).getCaseContent().equals(caseBackup.getCaseContent()) &&
                 caseBackups.get(0).getRecordContent().equals(caseBackup.getRecordContent())) {
@@ -40,8 +41,12 @@ public class CaseBackupServiceImpl implements CaseBackupService {
             return caseBackups.get(0);
         }
 
-        int backupId = caseBackupMapper.insert(caseBackup);
-        caseBackup.setCaseId((long) backupId);
+        int ret = caseBackupMapper.insert(caseBackup);
+        if (ret < 1) {
+            LOGGER.error("用例备份落库失败. casebackup id: " + caseBackup.getCaseId() + ", case content: " +
+                    caseBackup.getCaseContent() + ", record: " + caseBackup.getRecordContent());
+            return null;
+        }
 
         LOGGER.info("备份保存当前用例。caseid:" + caseBackup.getCaseId());
 
