@@ -1,5 +1,6 @@
 package com.xiaoju.framework.handler;
 
+import com.xiaoju.framework.entity.persistent.CaseBackup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +36,16 @@ public class CaseRoom extends Room {
                 testCase.setCaseContent(testCaseContent);
                 testCase.setGmtModified(new Date(System.currentTimeMillis()));
                 int ret = caseMapper.update(testCase);
-                LOGGER.info(Thread.currentThread().getName() + ": 数据库用例内容更新。 ret = " + ret);
+                if (ret < 1) {
+                    LOGGER.error(Thread.currentThread().getName() + ": 数据库用例内容更新失败。 ret = " + ret);
+                    LOGGER.error("应该保存的用例内容是：" + testCaseContent);
+                }
+                CaseBackup caseBackup = new CaseBackup();
+                caseBackup.setCaseContent(testCaseContent);
+                caseBackup.setCreator(p.getClient().getClientName());
+                caseBackup.setTitle("离开自动保存用例");
+                caseBackup.setCaseId(testCase.getId());
+                caseBackupService.insertBackup(caseBackup);
             }
             LOGGER.info(Thread.currentThread().getName() + ": 最后一名用户离开，关闭。");
         }
