@@ -281,8 +281,7 @@ public class TreeUtil {
                     .addAttribute("timestamp",dataObj.getString("created"));
             Element title = topic.addElement("title");
             String text = dataObj.getString("text");
-            text = text.replace("<","&lt;");
-            text = text.replace(">","&gt;");
+            text = repalceSpecialChar(text);
             title.setText(text);
 
             String priority = getPriorityByJson(dataObj);
@@ -297,7 +296,19 @@ public class TreeUtil {
         }
     }
 
-
+    public static String repalceSpecialChar(String text)
+    {
+        Map<String,String> specialChars = new HashMap<>();
+        specialChars.put("<","&lt;");
+        specialChars.put(">","&gt;");
+        specialChars.put("&","&amp;");
+        for(Map.Entry<String,String> entry:specialChars.entrySet())
+        {
+            String key = entry.getKey();
+            text = text.replace(key,entry.getValue());
+        }
+        return  text;
+    }
 
     //根据xmind解压的json文件导入xmind内容
     public static void importDataByJson(JSONArray children, JSONObject rootTopic) {
