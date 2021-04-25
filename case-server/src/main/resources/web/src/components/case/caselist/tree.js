@@ -170,7 +170,7 @@ class FileTree extends React.Component {
     });
   };
   deleteFolder = item => {
-    let { getTreeList, productLineId, doneApiPrefix } = this.props;
+    let { getTreeList, getCaseList, productLineId, doneApiPrefix } = this.props;
     let url = `${doneApiPrefix}/dir/delete`;
     request(url, {
       method: 'POST',
@@ -187,7 +187,8 @@ class FileTree extends React.Component {
             treeSelect: ['root'],
           },
           () => {
-            getTreeList();
+            getTreeList(true);
+            getCaseList(['root']);
           },
         );
       }
