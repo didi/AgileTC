@@ -7,7 +7,7 @@ const getCookies = getQueryString.getCookie
 class casePage extends React.Component {
   componentDidMount() {
     if (!getCookies('username')) {
-      window.location.href = `/login?${window.location.pathname}`
+      window.location.href = `/login?jumpto=${window.location.href}`
     }
   }
   render() {
