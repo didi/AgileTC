@@ -2,7 +2,9 @@ package com.xiaoju.framework.config;
 
 import com.xiaoju.framework.handler.Room;
 import com.xiaoju.framework.handler.WebSocket;
+import com.xiaoju.framework.mapper.CaseBackupMapper;
 import com.xiaoju.framework.mapper.TestCaseMapper;
+import com.xiaoju.framework.service.CaseBackupService;
 import com.xiaoju.framework.service.RecordService;
 import org.apache.catalina.Context;
 import org.apache.catalina.connector.Connector;
@@ -109,10 +111,11 @@ public class ApplicationConfig {
      * 完成基于反射的实例构造
      */
     @Autowired
-    public void setWebsocketService(RecordService recordService, TestCaseMapper caseMapper) {
+    public void setWebsocketService(RecordService recordService, TestCaseMapper caseMapper, CaseBackupService caseBackupService) {
 //        WebSocket.recordService = recordService;
 //        WebSocket.caseMapper = caseMapper;
         Room.caseMapper = caseMapper;
         Room.recordService = recordService;
+        Room.caseBackupService = caseBackupService;
     }
 }

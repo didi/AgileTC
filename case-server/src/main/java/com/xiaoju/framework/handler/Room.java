@@ -6,7 +6,9 @@ import com.alibaba.fastjson.JSONObject;
 import com.xiaoju.framework.entity.dto.RecordWsDto;
 import com.xiaoju.framework.entity.persistent.TestCase;
 import com.xiaoju.framework.entity.xmind.IntCount;
+import com.xiaoju.framework.mapper.CaseBackupMapper;
 import com.xiaoju.framework.mapper.TestCaseMapper;
+import com.xiaoju.framework.service.CaseBackupService;
 import com.xiaoju.framework.service.RecordService;
 import com.xiaoju.framework.util.BitBaseUtil;
 import com.xiaoju.framework.util.TreeUtil;
@@ -49,6 +51,7 @@ public abstract class Room {
 
     public static TestCaseMapper caseMapper;
     public static RecordService recordService;
+    public static CaseBackupService caseBackupService;
 
     protected String testCaseContent;
     protected TestCase testCase;
