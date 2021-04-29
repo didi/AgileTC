@@ -371,13 +371,13 @@ export default class CaseMgt extends React.Component {
             mediaShow={!progressShow}
             editorStyle={{ height: 'calc(100vh - 100px)' }}
             toolbar={{
-              image: false,
+              image: true,
               theme: ['classic-compact', 'fresh-blue', 'fresh-green-compat'],
               template: ['default', 'right', 'fish-bone'],
               noteTemplate: '# test',
             }}
-            baseUrl="/"
-            uploadUrl="/api/projmgr/common/uploadAttachment"
+            baseUrl=""
+            uploadUrl="/api/file/uploadAttachment"
             wsUrl={`ws://${window.location.host}/api/case/${caseId}/${itemid}/${iscore}/${user}`}
             onSave={
               Number(iscore) !== 2
