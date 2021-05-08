@@ -46,7 +46,7 @@ export const Banner30DataSource = {
             <p>开始使用</p>
           </span>
         ),
-        href: getCookies('username') ? '/case/caseList/1' : '/login',
+        href: getCookies('username') ? '/case/caseList/1' : `/login?/case/caseList/1`,
       },
     ],
   },

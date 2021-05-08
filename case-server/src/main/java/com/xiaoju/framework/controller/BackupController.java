@@ -29,7 +29,7 @@ public class BackupController {
     CaseBackupService caseBackupService;
 
     /**
-     * 删除某个用例所有的备份记录
+     * 查询某个用例所有的备份记录
      *
      * @param caseId 用例id
      * @param beginTime 开始时间

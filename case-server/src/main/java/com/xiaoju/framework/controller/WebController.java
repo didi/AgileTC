@@ -41,4 +41,9 @@ public class WebController {
         return "index";
     }
 
+    @RequestMapping(value="/api/file/*")
+    public String file() {
+        System.out.println("pre request");
+        return "index";
+    }
 }
