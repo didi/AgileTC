@@ -6,6 +6,7 @@
     <result column="username" jdbcType="VARCHAR" property="username" />
     <result column="password" jdbcType="VARCHAR" property="password" />
     <result column="salt" jdbcType="VARCHAR" property="salt" />
+    <result column="authority_name" jdbcType="VARCHAR" property="authorityName" />
     <result column="is_delete" jdbcType="INTEGER" property="isDelete" />
     <result column="channel" jdbcType="INTEGER" property="channel" />
     <result column="product_line_id" jdbcType="BIGINT" property="productLineId" />
@@ -13,7 +14,7 @@
     <result column="gmt_updated" jdbcType="TIMESTAMP" property="gmtUpdated" />
   </resultMap>
   <sql id="Base_Column_List">
-    id, username, password, salt, is_delete, channel, product_line_id, gmt_created, gmt_updated
+    id, username, password, salt, authority_name, is_delete, channel, product_line_id, gmt_created, gmt_updated
   </sql>
   <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
     select 
@@ -33,11 +34,11 @@
   </delete>
   <insert id="insert" parameterType="com.xiaoju.framework.entity.dto.User">
     insert into user (id, username, password, 
-      salt, is_delete, channel, 
+      salt, authority_name, is_delete, channel,
       product_line_id, gmt_created, gmt_updated
       )
     values (#{id,jdbcType=BIGINT}, #{username,jdbcType=VARCHAR}, #{password,jdbcType=VARCHAR}, 
-      #{salt,jdbcType=VARCHAR}, #{isDelete,jdbcType=INTEGER}, #{channel,jdbcType=INTEGER}, 
+      #{salt,jdbcType=VARCHAR}, #{authorityName,jdbcType=VARCHAR}, #{isDelete,jdbcType=INTEGER}, #{channel,jdbcType=INTEGER},
       #{productLineId,jdbcType=BIGINT}, #{gmtCreated,jdbcType=TIMESTAMP}, #{gmtUpdated,jdbcType=TIMESTAMP}
       )
   </insert>
@@ -55,6 +56,9 @@
       </if>
       <if test="salt != null">
         salt,
+      </if>
+      <if test="authorityName != null">
+        authority_name,
       </if>
       <if test="isDelete != null">
         is_delete,
@@ -85,6 +89,9 @@
       <if test="salt != null">
         #{salt,jdbcType=VARCHAR},
       </if>
+      <if test="authorityName != null">
+        authority_name,
+      </if>
       <if test="isDelete != null">
         #{isDelete,jdbcType=INTEGER},
       </if>
@@ -114,6 +121,9 @@
       <if test="salt != null">
         salt = #{salt,jdbcType=VARCHAR},
       </if>
+      <if test="authorityName != null">
+        authority_name,
+      </if>
       <if test="isDelete != null">
         is_delete = #{isDelete,jdbcType=INTEGER},
       </if>
@@ -137,6 +147,7 @@
     set username = #{username,jdbcType=VARCHAR},
       password = #{password,jdbcType=VARCHAR},
       salt = #{salt,jdbcType=VARCHAR},
+      authority_name = #{authorityName,jdbcType=VARCHAR},
       is_delete = #{isDelete,jdbcType=INTEGER},
       channel = #{channel,jdbcType=INTEGER},
       product_line_id = #{productLineId,jdbcType=BIGINT},

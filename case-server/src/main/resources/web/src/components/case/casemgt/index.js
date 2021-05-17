@@ -96,6 +96,7 @@ export default class CaseMgt extends React.Component {
         );
       } else {
         message.error(res.msg);
+        this.props.history.push('/case/caseList/1')
       }
     });
   };

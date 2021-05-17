@@ -21,6 +21,8 @@ public enum StatusCode implements Status {
     FILE_EXPORT_ERROR(10009, "导出失败，请稍后再试"),
     NODE_ALREADY_EXISTS(20001, "节点已存在"),
     WS_UNKNOWN_ERROR(100010, "websocket访问异常"),
+    AUTHORITY_ERROR(100011, "权限认证错误"),
+    ASPECT_ERROR(100012, "权限内部处理错误"),
 
     // 内部异常
     INTERNAL_ERROR(10400, "内部参数校验或逻辑出错"),
