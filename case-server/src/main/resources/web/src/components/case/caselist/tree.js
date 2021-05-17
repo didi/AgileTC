@@ -191,6 +191,8 @@ class FileTree extends React.Component {
             getCaseList(['root']);
           },
         );
+      } else {
+        message.error(res.msg);
       }
     });
   };
@@ -218,8 +220,10 @@ class FileTree extends React.Component {
           isSibling: true,
           isAdd: true,
         });
-        getTreeList();
+      } else {
+        message.error(res.msg);
       }
+      getTreeList();
     });
   };
   renameInput = item => {
@@ -258,6 +262,10 @@ class FileTree extends React.Component {
           levelText: '',
         });
         getTreeList();
+      } else {
+        this.editNode(null, this.state.treeData)
+        this.setState({treeData: this.state.treeData})
+        message.error(res.msg);
       }
     });
   };

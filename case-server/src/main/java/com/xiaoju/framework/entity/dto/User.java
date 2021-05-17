@@ -18,6 +18,8 @@ public class User {
 
     private String salt;
 
+    private String authorityName;
+
     private Integer isDelete;
 
     private Integer channel;
