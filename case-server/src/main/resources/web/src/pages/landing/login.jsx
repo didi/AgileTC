@@ -45,7 +45,7 @@ class LogIn extends React.PureComponent {
         }).then(res => {
           if (res && res.code === 200) {
             message.success('注册成功')
-            window.location.href = window.location.href.split('?')[1]
+            window.location.href = utils.getQueryString('jumpto') 
           } else {
             message.error(res.msg)
           }
