@@ -1,15 +1,21 @@
 package com.xiaoju.framework.service.impl;
 
+import com.xiaoju.framework.constants.enums.StatusCode;
+import com.xiaoju.framework.entity.exception.CaseServerException;
 import com.xiaoju.framework.entity.persistent.CaseBackup;
 import com.xiaoju.framework.mapper.CaseBackupMapper;
 import com.xiaoju.framework.service.CaseBackupService;
+import com.xiaoju.framework.util.MinderJsonPatchUtil;
 import com.xiaoju.framework.util.TimeUtil;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 
@@ -69,5 +75,29 @@ public class CaseBackupServiceImpl implements CaseBackupService {
             return null;
         }
         return TimeUtil.transferStrToDateInSecond(time);
+    }
+
+    @Override
+    public CaseBackup getBackupById(Long backupId) {
+        CaseBackup caseBackup = caseBackupMapper.selectOne(backupId);
+
+        if (StringUtils.isEmpty(caseBackup.getJsonPatch())) {
+            // 老的数据没有 json-patch 记录，直接返回即可
+            return caseBackup;
+        }
+
+        try {
+            LOGGER.info("patch 内容: " + caseBackup.getJsonPatch());
+            caseBackup.setCaseContent(MinderJsonPatchUtil.markJsonPatchOnMinderContent(
+                    caseBackup.getJsonPatch(),
+                    caseBackup.getCaseContent()));
+        } catch (IOException | IllegalArgumentException e) {
+            throw new CaseServerException("添加标记出错，存储的 json-patch 的格式不正确", e, StatusCode.DATA_FORMAT_ERROR);
+        } catch (Exception e) {
+            // 其他异常，一般是标记失败造成。先记录一个 warning 即可，然后返回的内容就不做标记直接返回
+            LOGGER.warn("patch标记失败，backupId 为 {} ", caseBackup.getId(), e);
+        }
+
+        return caseBackup;
     }
 }

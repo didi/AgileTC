@@ -1,0 +1,22 @@
+{
+  "root": {
+    "data": {
+      "id": "bv8nxhi3c800",
+      "created": 1562059643204,
+      "text": "中心主题"
+    },
+    "children": [
+      {
+        "data": {
+          "id": "cby3h1dtg4g0",
+          "created": 1623141026007,
+          "text": "B"
+        },
+        "children": []
+      }
+    ]
+  },
+  "template": "default",
+  "theme": "fresh-blue",
+  "version": "1.4.43"
+}

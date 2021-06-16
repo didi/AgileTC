@@ -19,7 +19,7 @@ import java.util.List;
 public interface CaseBackupMapper {
 
     /**
-     * 获取一份用例下所有的用例备份记录
+     * 获取一份用例下所有的用例备份记录。
      *
      * @param caseId 用例id
      * @param beginTime 开始时间
@@ -27,8 +27,8 @@ public interface CaseBackupMapper {
      * @return 所有备份记录
      */
     List<CaseBackup> selectByCaseId(@Param("caseId") Long caseId,
-                                    @Param("beginTime") Date beginTime,
-                                    @Param("endTime")  Date endTime);
+                                                  @Param("beginTime") Date beginTime,
+                                                  @Param("endTime")  Date endTime);
 
     /**
      * 删除一批备份记录
@@ -46,4 +46,11 @@ public interface CaseBackupMapper {
      * @return int
      */
     int insert(CaseBackup caseBackup);
+
+    /**
+     * 根据备份记录id获取单条备份记录
+     * @param id 备份记录id
+     * @return
+     */
+    CaseBackup selectOne(Long id);
 }

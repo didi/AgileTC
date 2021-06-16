@@ -115,3 +115,8 @@ INSERT INTO `authority` (id,authority_name,authority_desc,authority_content) VAL
 INSERT INTO `authority` (id,authority_name,authority_desc,authority_content) VALUES (2, 'ROLE_ADMIN', '管理员', '/api/dir/list,/api/backup/**,/api/record/**,/api/file/**,/api/user/**,/api/case/**');
 INSERT INTO `authority` (id,authority_name,authority_desc,authority_content) VALUES (3, 'ROLE_SA', '超级管理员','/api/**');
 
+# 添加2个字段，记录每次保存的增量修改内容
+
+ALTER TABLE `case_manager`.`case_backup`
+ADD COLUMN `json_patch` longtext NULL COMMENT '本次修改内容的 json-patch 。如果是冲突，保存的是存在冲突无法应用的 patch ',
+ADD COLUMN `is_conflict` tinyint(1) NULL COMMENT '是否为冲突保存的副本';

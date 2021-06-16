@@ -1,0 +1,111 @@
+{
+  "template": "default",
+  "root": {
+    "data": {
+      "created": 1562059643204,
+      "id": "bv8nxhi3c800",
+      "text": "增量保存测试2"
+    },
+    "children": [{
+      "data": {
+        "expandState": "expand",
+        "resource": ["恒捷"],
+        "created": 1623332369626,
+        "id": "cbzzarfg4lc0",
+        "text": "恒捷编辑的"
+      },
+      "children": [{
+        "data": {
+          "resource": ["标签1", "恒捷"],
+          "created": 1623727000977,
+          "id": "cc3v6mkha2g0",
+          "text": "测试改动节点内容1",
+          "priority": 2
+        },
+        "children": []
+      }, {
+        "data": {
+          "created": 1623727119617,
+          "id": "cc3v852kol40",
+          "text": "测试冲突用"
+        },
+        "children": [{
+          "data": {
+            "created": 1623727217697,
+            "id": "cc3v9e4mfgg0",
+            "text": "不冲突"
+          },
+          "children": []
+        }]
+      }]
+    }, {
+      "data": {
+        "expandState": "expand",
+        "resource": ["管理员"],
+        "created": 1623332380387,
+        "id": "cbzzawdetqo0",
+        "text": "管理员编辑的"
+      },
+      "children": [{
+        "data": {
+          "created": 1623332415676,
+          "id": "cbzzbcl10i80",
+          "text": "第一个模块"
+        },
+        "children": [{
+          "data": {
+            "created": 1623332415676,
+            "id": "cbzzbcl12vk0",
+            "text": "第1.2个模块"
+          },
+          "children": []
+        }]
+      }, {
+        "data": {
+          "created": 1623332415677,
+          "id": "cbzzbcl17h40",
+          "text": "第二个模块"
+        },
+        "children": [{
+          "data": {
+            "created": 1623332912093,
+            "id": "cbzzhomurvs0",
+            "text": "管理员在这随便改"
+          },
+          "children": []
+        }]
+      }, {
+        "data": {
+          "expandState": "expand",
+          "created": 1623332926596,
+          "id": "cbzzhvap80w0",
+          "text": "好像增量有点慢？"
+        },
+        "children": [{
+          "data": {
+            "created": 1623332971073,
+            "id": "cbzzifq9q0o0",
+            "text": "去掉大节点，看增量快不快？"
+          },
+          "children": []
+        }]
+      }, {
+        "data": {
+          "created": 1623722956260,
+          "id": "cc3tr0g8ulk0",
+          "text": "我也加一个"
+        },
+        "children": []
+      }, {
+        "data": {
+          "created": 1623723200621,
+          "id": "cc3tu4pj30o0",
+          "text": "我也再加"
+        },
+        "children": []
+      }]
+    }]
+  },
+  "theme": "fresh-blue",
+  "version": "1.4.43"
+}

@@ -191,7 +191,8 @@ public class CaseController {
             caseService.wsSave(req);
             return Response.success();
         } catch (CaseServerException e) {
-            throw new CaseServerException(e.getLocalizedMessage(), e.getStatus());
+            LOGGER.error("[Case Update]Update test case failed. params={}.", req.toString(), e);
+            return Response.build(e.getStatus().getStatus(), e.getMessage());
         } catch (Exception e) {
             e.printStackTrace();
             LOGGER.error("[Case Update]Update test case failed. params={} e={} ", req.toString(), e.getMessage());

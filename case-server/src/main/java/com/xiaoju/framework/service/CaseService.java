@@ -93,5 +93,5 @@ public interface CaseService {
      *
      * @param req 请求体
      */
-    void wsSave(WsSaveReq req);
+    String wsSave(WsSaveReq req);
 }

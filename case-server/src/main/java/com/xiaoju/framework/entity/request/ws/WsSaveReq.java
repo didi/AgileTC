@@ -19,6 +19,11 @@ public class WsSaveReq implements ParamValidate {
      */
     private String caseContent;
 
+    /**
+     * 改动前的内容。可能是 record 的，也可能是 testcase 的。若提供，会进行增量保存。若不提供，进行全量保存
+     */
+    private String baseCaseContent;
+
     private Long id;
 
     private String modifier;
@@ -28,6 +33,11 @@ public class WsSaveReq implements ParamValidate {
      * 如果是任务页面 则传进来具体的任务id
      */
     private Long recordId;
+
+    /**
+     * 保存理由。若不为空，会作为历史记录的 title
+     */
+    private String saveReason;
 
     @Override
     public void validate() {
