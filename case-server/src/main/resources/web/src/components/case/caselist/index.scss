@@ -123,6 +123,7 @@
   min-height: calc(100vh - 160px);
   background: #fafafa;
   padding: 10px;
+  flex-grow: 1;
 }
 .text-left {
   text-align: left;
@@ -259,7 +260,7 @@
   display: flex;
   flex-flow: row nowrap;
   .ResizePanel-module_ResizeContentHorizontal__1gGbA {
-    max-width: 480px;
+    max-width: 450px;
     min-width: 200px;
     .sidebar {
       background: #ffffff;
