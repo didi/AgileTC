@@ -188,6 +188,14 @@ export default {
           component: './landing/login.jsx',
         },
         {
+          path: '/history/:caseId',
+          component: './contrast/index.jsx',
+        },
+        {
+          path: '/caseManager/historyContrast/:caseId1/:caseId2',
+          component: './contrast/seeResult.js',
+        },
+        {
           path: '*',
           redirect: '/',
         },
