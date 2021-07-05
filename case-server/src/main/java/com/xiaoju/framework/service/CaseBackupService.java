@@ -1,5 +1,6 @@
 package com.xiaoju.framework.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.xiaoju.framework.entity.persistent.CaseBackup;
 
 import java.util.List;
@@ -38,4 +39,6 @@ public interface CaseBackupService {
      * @return int
      */
     int deleteBackup(Long caseId);
+
+    JsonNode getCaseDiff(Long backupId1, Long backupId2);
 }

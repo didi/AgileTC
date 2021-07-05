@@ -30,6 +30,8 @@ public interface CaseBackupMapper {
                                     @Param("beginTime") Date beginTime,
                                     @Param("endTime")  Date endTime);
 
+    CaseBackup selectByBackupId(@Param("id") Long id);
+
     /**
      * 删除一批备份记录
      *

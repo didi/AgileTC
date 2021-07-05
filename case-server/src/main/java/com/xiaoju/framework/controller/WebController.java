@@ -23,6 +23,16 @@ public class WebController {
         return "index";
     }
 
+    @RequestMapping("/history/*")
+    public String history(){
+        return "index";
+    }
+
+    @RequestMapping("/caseManager/historyContrast/*/*")
+    public String historyContrast(){
+        return "index";
+    }
+
     @RequestMapping("/case/caseList/1")
     public String index(HttpServletRequest request){
         return "index";

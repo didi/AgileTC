@@ -31,6 +31,13 @@
     order by id desc
   </select>
 
+  <select id="selectByBackupId" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from case_backup
+    where id = #{id,jdbcType=BIGINT}
+  </select>
+
   <delete id="updateByCaseId" parameterType="java.lang.Long">
     update case_backup set is_delete =1
     where case_id = #{case_id,jdbcType=BIGINT} and is_delete = 0
