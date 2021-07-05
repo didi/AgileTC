@@ -246,7 +246,7 @@ public class FileServiceImpl implements FileService {
         if (!StringUtils.isEmpty(text)) {
             text = StringEscapeUtils.escapeXml11(text);
         } else {
-            title.setText("");
+            text = "";
         }
         title.setText(text);
         TreeUtil.exportDataToXml(rootObj.getJSONArray("children"), topic);
