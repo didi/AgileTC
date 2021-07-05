@@ -6,8 +6,6 @@ import com.alibaba.fastjson.JSONObject;
 import com.xiaoju.framework.constants.enums.ProgressEnum;
 import com.xiaoju.framework.entity.xmind.*;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringEscapeUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.dom4j.Element;
 
 
@@ -283,11 +281,7 @@ public class TreeUtil {
                     .addAttribute("timestamp",dataObj.getString("created"));
             Element title = topic.addElement("title");
             String text = dataObj.getString("text");
-            if (StringUtils.isNotEmpty(text)) {
-                text = StringEscapeUtils.escapeXml11(text);
-            } else {
-                text = "";
-            }
+            text = repalceSpecialChar(text);
             title.setText(text);
 
             String priority = getPriorityByJson(dataObj);
@@ -300,6 +294,20 @@ public class TreeUtil {
                 exportDataToXml(((JSONObject) o).getJSONArray("children"), topic);
             }
         }
+    }
+
+    public static String repalceSpecialChar(String text)
+    {
+        Map<String,String> specialChars = new HashMap<>();
+        specialChars.put("<","&lt;");
+        specialChars.put(">","&gt;");
+        specialChars.put("&","&amp;");
+        for(Map.Entry<String,String> entry:specialChars.entrySet())
+        {
+            String key = entry.getKey();
+            text = text.replace(key,entry.getValue());
+        }
+        return  text;
     }
 
     //根据xmind解压的json文件导入xmind内容
