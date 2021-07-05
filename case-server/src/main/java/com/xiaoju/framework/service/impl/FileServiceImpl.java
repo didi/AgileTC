@@ -15,6 +15,7 @@ import com.xiaoju.framework.service.FileService;
 import com.xiaoju.framework.util.FileUtil;
 import com.xiaoju.framework.util.TreeUtil;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
@@ -242,7 +243,11 @@ public class FileServiceImpl implements FileService {
 
         Element title = topic.addElement("title");
         String text = rootObj.getJSONObject(DATA).getString("text");
-        text = TreeUtil.repalceSpecialChar(text);
+        if (!StringUtils.isEmpty(text)) {
+            text = StringEscapeUtils.escapeXml11(text);
+        } else {
+            text = "";
+        }
         title.setText(text);
         TreeUtil.exportDataToXml(rootObj.getJSONArray("children"), topic);
         String targetPath = path  + "/content.xml";
