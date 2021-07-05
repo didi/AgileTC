@@ -106,14 +106,14 @@ class Lists extends React.Component {
         title: '用例集ID',
         dataIndex: 'id',
         key: 'id',
-        width: 100,
-        render: text => <div>{text}</div>,
+        width: '8%',
+        render: text => <div style={{ minWidth: '70px' }}>{text}</div>,
       },
       {
         title: '用例集名称',
         dataIndex: 'title',
         key: 'title',
-        width: 200,
+        width: '25%',
         render: (text, record) => {
           let url = `${this.props.baseUrl}/caseManager/${this.props.productId}/${record.id}/undefined/0`;
           return <Link to={url}>{text}</Link>;
@@ -123,24 +123,25 @@ class Lists extends React.Component {
         title: '关联需求',
         dataIndex: 'requirementId',
         key: 'requirementId',
-        width: 200,
+        width: '20%',
+        render: text => <div style={{ minWidth: '200px' }}>{text}</div>,
       },
       {
         title: '最近更新人',
         dataIndex: 'modifier',
-        width: 120,
+        width: '10%',
         key: 'modifier',
       },
       {
         title: '创建人',
         dataIndex: 'creator',
-        width: 120,
+        width: '7%',
         key: 'creator',
       },
       {
         title: '创建时间',
         dataIndex: 'gmtCreated',
-        width: 180,
+        width: '15%',
         key: 'gmtCreated',
         render: text => {
           return (
@@ -154,7 +155,7 @@ class Lists extends React.Component {
       {
         title: '操作',
         dataIndex: 'handle',
-        width: 300,
+        width: '15%',
         key: 'handle',
         render: (text, record) => {
           const { projectLs, requirementLs } = this.props.options;
