@@ -1,21 +1,21 @@
 :global(.ant-dropdown).dropStyle {
   :global(.ant-dropdown-menu) {
+    padding: 0;
     background-color: #3377ff;
     border-radius: 0;
-    padding: 0;
   }
   :global(.ant-dropdown-menu-item) {
-    color: #fff;
-    padding: 0;
     width: auto;
+    padding: 0;
+    color: #fff;
     span,
     a {
       display: block;
       height: 50px;
-      line-height: 50px;
-      padding: 0 15px;
       margin: 0;
+      padding: 0 15px;
       color: #fff;
+      line-height: 50px;
     }
   }
   :global(.ant-dropdown-menu-item):hover,
@@ -24,25 +24,26 @@
   }
 }
 .user {
-  float: right;
   display: flex;
   align-items: center;
-  color: #ffff;
+  float: right;
   height: 32px;
+  margin-top: 16px;
   padding: 0 10px;
+  color: #ffff;
   background: #3377ff;
   border-radius: 4px;
   cursor: pointer;
-  margin-top: 16px;
-  .userIcon, .dowm {
+  .userIcon,
+  .dowm {
     font-size: large;
   }
   .username {
-    white-space: nowrap;
     margin: 0 10px;
+    white-space: nowrap;
   }
 }
 .loginCss {
-  color: #fff;
   float: right;
+  color: #fff;
 }

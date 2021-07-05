@@ -265,6 +265,9 @@ class Lists extends React.Component {
                       </a>
                     </Menu.Item>
                     <Menu.Item>
+                      <a href={`/history/${record.id}`}>历史版本</a>
+                    </Menu.Item>
+                    <Menu.Item>
                       <a
                         href={`/api/file/export?id=${record.id}`}
                         target="_blank"

@@ -1,0 +1,45 @@
+.contras_card,
+.contras_card_default {
+  margin: 24px;
+  .contras_title {
+    margin-top: -24px;
+    padding: 16px 0;
+    > span:first-child {
+      margin-right: 20px;
+      color: #000;
+      font-size: 14px;
+    }
+  }
+}
+.contras_card_default {
+  .ant-table-thead .ant-table-selection-column .ant-table-header-column {
+    display: none;
+  }
+}
+.historyBox {
+  padding: 0 20px 20px;
+  background: white;
+  .box_title {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+  }
+  .title_history,
+  .title_color {
+    .ant-card-head {
+      border-bottom: 0;
+    }
+    .ant-card-head,
+    > .ant-card-body {
+      padding: 0;
+    }
+  }
+  .title_color {
+    width: 300px;
+    span {
+      margin-bottom: 15px;
+      padding: 3px 20px;
+      color: rgba(0, 0, 0, 0.65);
+    }
+  }
+}
