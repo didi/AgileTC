@@ -151,6 +151,14 @@
 			<artifactId>httpclient</artifactId>
 			<version>4.5.5</version>
 		</dependency>
+
+		<!-- json patch组件 -->
+		<dependency>
+			<groupId>com.flipkart.zjsonpatch</groupId>
+			<artifactId>zjsonpatch</artifactId>
+			<version>0.4.11</version>
+		</dependency>
+
 	</dependencies>
 
 	<build>
