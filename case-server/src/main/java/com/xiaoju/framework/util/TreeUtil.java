@@ -7,8 +7,8 @@ import com.xiaoju.framework.constants.enums.ProgressEnum;
 import com.xiaoju.framework.entity.xmind.*;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.dom4j.Element;
+import org.springframework.util.StringUtils;
 
 
 import java.util.*;
@@ -283,7 +283,7 @@ public class TreeUtil {
                     .addAttribute("timestamp",dataObj.getString("created"));
             Element title = topic.addElement("title");
             String text = dataObj.getString("text");
-            if (StringUtils.isNotEmpty(text)) {
+            if (!StringUtils.isEmpty(text)) {
                 text = StringEscapeUtils.escapeXml11(text);
             } else {
                 text = "";
