@@ -1,0 +1,72 @@
+{
+  "root": {
+    "data": {
+      "expandState": "expand",
+      "created": 1562059643204,
+      "id": "bv8nxhi3c800",
+      "text": "示例用例"
+    },
+    "children": [{
+      "data": {
+        "expandState": "expand",
+        "created": 1616069354364,
+        "id": "ca0grwa2aww0",
+        "text": "优先级"
+      },
+      "children": [{
+        "data": {
+          "expandState": "expand",
+          "created": 1608689668493,
+          "id": "c7zsw7e4hp40",
+          "text": "优先级P0",
+          "priority": 1
+        },
+        "children": []
+      }, {
+        "data": {
+          "created": 1616069399281,
+          "id": "ca0gsgwwtt40",
+          "text": "优先级P1",
+          "priority": 2
+        },
+        "children": []
+      }, {
+        "data": {
+          "created": 1616069411231,
+          "id": "ca0gsmejqy80",
+          "text": "优先级P2",
+          "priority": 3
+        },
+        "children": []
+      }]
+    }, {
+      "data": {
+        "resource": ["自定义标签"],
+        "created": 1616069364633,
+        "id": "ca0gs0zwi940",
+        "text": "自定义标签"
+      },
+      "children": []
+    }, {
+      "data": {
+        "note": "我是备注",
+        "created": 1616069378505,
+        "id": "ca0gs7db36w0",
+        "text": "备注"
+      },
+      "children": []
+    }, {
+      "data": {
+        "hyperlink": "http://baidu.com",
+        "created": 1616069422262,
+        "id": "ca0gsrgywog0",
+        "text": "链接",
+        "hyperlinkTitle": "百度链接"
+      },
+      "children": []
+    }]
+  },
+  "template": "structure",
+  "theme": "fresh-blue",
+  "version": "1.4.43"
+}

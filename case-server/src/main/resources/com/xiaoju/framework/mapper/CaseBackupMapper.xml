@@ -14,7 +14,7 @@
   </resultMap>
 
   <sql id="Base_Column_List">
-    id, case_id, title, creator, gmt_created,case_content, record_content,extra,is_delete
+    id, case_id, title, creator, gmt_created,case_content, record_content,extra, is_delete, json_patch, is_conflict
   </sql>
 
   <select id="selectByCaseId" parameterType="java.lang.Long" resultMap="BaseResultMap">
@@ -69,6 +69,12 @@
       <if test="isDelete != null">
         is_delete,
       </if>
+      <if test="jsonPatch != null">
+        json_patch,
+      </if>
+      <if test="isConflict != null">
+        is_conflict,
+      </if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
       <if test="id != null">
@@ -98,7 +104,20 @@
       <if test="isDelete != null">
         #{isDelete,jdbcType=INTEGER},
       </if>
+      <if test="jsonPatch != null">
+        #{jsonPatch,jdbcType=LONGVARCHAR},
+      </if>
+      <if test="isConflict != null">
+        #{isConflict,jdbcType=TINYINT},
+      </if>
     </trim>
   </insert>
+
+  <select id="selectOne" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from case_backup
+    where id = #{backupId,jdbcType=BIGINT} and is_delete = 0
+  </select>
 
 </mapper>

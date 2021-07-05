@@ -23,6 +23,7 @@ public enum StatusCode implements Status {
     WS_UNKNOWN_ERROR(100010, "websocket访问异常"),
     AUTHORITY_ERROR(100011, "权限认证错误"),
     ASPECT_ERROR(100012, "权限内部处理错误"),
+    SAVE_CONFLICT(20002, "本次修改内容和数据库最新版本存在冲突"),
 
     // 内部异常
     INTERNAL_ERROR(10400, "内部参数校验或逻辑出错"),

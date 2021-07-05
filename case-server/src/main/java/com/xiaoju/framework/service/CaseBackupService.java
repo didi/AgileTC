@@ -38,4 +38,11 @@ public interface CaseBackupService {
      * @return int
      */
     int deleteBackup(Long caseId);
+
+    /**
+     * 根据 id 获取备份记录
+     * @param backupId 备份记录id
+     * @return
+     */
+    CaseBackup getBackupById(Long backupId);
 }

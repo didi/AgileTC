@@ -44,6 +44,20 @@ public class BackupController {
     }
 
     /**
+     * 获取单个备份记录
+     * @param backupId 备份记录对应的 id
+     * @return
+     */
+    @GetMapping(value = "/getBackupById")
+    public Response<CaseBackup> getBackupById(@RequestParam @NotNull(message = "备份记录id为空") Long backupId) {
+        CaseBackup caseBackup = caseBackupService.getBackupById(backupId);
+        if (caseBackup == null) {
+            return Response.build(StatusCode.NOT_FOUND_ENTITY, String.format("未找到备份记录id为 %d 的备份记录", backupId));
+        }
+        return Response.success(caseBackup);
+    }
+
+    /**
      * 删除某个用例所有的备份记录
      *
      * @param caseId 实体，本市上这里应该包装一层Request
