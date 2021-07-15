@@ -58,6 +58,23 @@ public class WebSocket {
     private static volatile Map<Long, Room> rooms = new ConcurrentHashMap<>();
     private static final Object roomLock = new Object();
 
+    static {
+        Thread t = new Thread(() -> {
+            while(true) {
+                for (Room room : rooms.values()) {
+                    room.broadcastRoomMessage(CaseMessageType.PING, CaseWsMessages.PING.getMsg());
+                }
+                try {
+                    Thread.sleep(15000);
+                } catch (Exception e) {
+                    LOGGER.error("ping thread sleep error.", e);
+                }
+            }
+        });
+        t.setDaemon(true);
+        t.start();
+    }
+
     public static Room getRoom(boolean create, long id) {
         if (create) {
             // todo: 清除的逻辑放到线程定时任务中
@@ -110,7 +127,7 @@ public class WebSocket {
                         }
                         LOGGER.info(Thread.currentThread().getName() + ": player " + client.getClientName() + " 加入: " + player);
                     } catch (IllegalStateException e) {
-                        client.sendMessage(new String("0" + e.getMessage()));
+                        client.sendMessage(CaseMessageType.NOTIFY, new String("0" + e.getMessage()));
                         client.close();
                     }
                 } catch (RuntimeException e) {
@@ -171,7 +188,13 @@ public class WebSocket {
                         String messageContent = message.substring(1);
                         switch (messageType) {
                             case '0': // 处理ping/pong消息
-                                room.cs.get(session).sendMessage(CaseWsMessages.PONG.getMsg());
+                                if (messageContent.equals(CaseWsMessages.PING.getMsg())) {
+                                    room.cs.get(session).sendMessage(CaseMessageType.PING, CaseWsMessages.PONG.getMsg());
+                                } else if (messageContent.equals(CaseWsMessages.PONG.getMsg())) {
+                                    player.clearPingCount();
+                                } else {
+                                    LOGGER.error(Thread.currentThread().getName() + "ping pong 信息有误。消息是：" + message);
+                                }
                                 break;
 
                             case '1': // 处理编辑消息
@@ -189,7 +212,7 @@ public class WebSocket {
 
                                 if (messageContent.equals("lock")) { // lock消息
                                     if (player.getRoom().getLock()) {
-                                        player.sendRoomMessageSync("2" + "failed" + "已经被人锁住了"); // 当前已经lock了,后续可以发送详细锁住人信息
+                                        player.sendRoomMessageSync(CaseMessageType.NOTIFY,"2" + "failed" + "已经被人锁住了"); // 当前已经lock了,后续可以发送详细锁住人信息
                                         return;
                                     } else {
                                         player.getRoom().lock();
@@ -197,14 +220,14 @@ public class WebSocket {
                                     }
                                 } else if(messageContent.equals("unlock")) {
                                     if (!player.getRoom().getLock()) { // 当前已经unlock状态
-                                        player.sendRoomMessageSync("2" + "failed" + " 当前已经是解锁状态");
+                                        player.sendRoomMessageSync(CaseMessageType.NOTIFY,"2" + "failed" + " 当前已经是解锁状态");
                                         return;
                                     } else {
                                         if (player.getRoom().getLocker().equals(session.getId())) { // 自己锁的
                                             player.getRoom().unlock();
                                             player.getRoom().setLocker("");
                                         } else {// 其他人锁的
-                                            player.sendRoomMessageSync("2" + "failed" + "当前被其他人锁住了");
+                                            player.sendRoomMessageSync(CaseMessageType.NOTIFY,"2" + "failed" + "当前被其他人锁住了");
                                             return;
                                         }
                                     }
