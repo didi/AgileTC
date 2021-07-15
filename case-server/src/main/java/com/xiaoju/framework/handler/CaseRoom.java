@@ -20,7 +20,7 @@ public class CaseRoom extends Room {
     public Player createAndAddPlayer(Client client) {
         Player p = super.createAndAddPlayer(client);
         String caseContent = testCaseContent != null ? testCaseContent : testCase.getCaseContent();
-        p.getClient().sendMessage(caseContent);
+        p.getClient().sendMessage(CaseMessageType.EDITOR, caseContent);
         LOGGER.info(Thread.currentThread().getName() + ": 新的用户加入成功，传输用例内容： " + testCaseContent);
         return p;
     }
@@ -51,6 +51,6 @@ public class CaseRoom extends Room {
         }
 
         // 广播有用户离开
-        broadcastRoomMessage("当前用户数:" + players.size() + "。用例编辑者 " + p.getClient().getClientName() + " 离开");
+        broadcastRoomMessage(CaseMessageType.NOTIFY, "当前用户数:" + players.size() + "。用例编辑者 " + p.getClient().getClientName() + " 离开");
     }
 }

@@ -40,7 +40,7 @@ public class RecordRoom extends Room {
         if (p.getRoom().players.size() <= 1) {
             mergeRecoed(p.getClient().getRecordId(), caseContent);
         }
-        p.getClient().sendMessage(testCaseContent);
+        p.getClient().sendMessage(CaseMessageType.EDITOR, testCaseContent);
         LOGGER.info(Thread.currentThread().getName() + ": 新的用户加入成功，传输用例内容： " + testCaseContent);
         return p;
     }
@@ -97,7 +97,7 @@ public class RecordRoom extends Room {
         }
 
         // 广播有用户离开
-        broadcastRoomMessage( "当前用户数:" + players.size() + "。用例执行者 " + p.getClient().getClientName() + " 离开");
+        broadcastRoomMessage(CaseMessageType.NOTIFY, "当前用户数:" + players.size() + "。用例执行者 " + p.getClient().getClientName() + " 离开");
 
     }
 

@@ -106,7 +106,7 @@ public abstract class Room {
         Player p = new Player(this, client);
 
         // 通知消息
-        broadcastRoomMessage( "当前用户数： " + (players.size() + 1) + "。新用户是：" + client.getClientName());
+        broadcastRoomMessage(CaseMessageType.NOTIFY, "当前用户数： " + (players.size() + 1) + "。新用户是：" + client.getClientName());
 
         players.add(p);
         cs.put(client.getSession(), client);
@@ -120,7 +120,7 @@ public abstract class Room {
 
         // 发送当前用户数
         String content = String.valueOf(players.size());
-        p.sendRoomMessageSync("当前用户数：" + content);
+        p.sendRoomMessageSync(CaseMessageType.NOTIFY, "当前用户数：" + content);
 
         return p;
     }
@@ -147,9 +147,10 @@ public abstract class Room {
     }
 
     // 直接广播发送内容，不经过buffer池。适用于所有消息都是一致的场景。
-    protected void broadcastRoomMessage(String content) {
+    protected void broadcastRoomMessage(CaseMessageType type, String content) {
+
         for (Player p : players) {
-            p.sendRoomMessageSync(content);
+            p.sendRoomMessageSync(type, content);
         }
     }
 
@@ -184,7 +185,7 @@ public abstract class Room {
             for (Player p : players) {
                 String s = String.valueOf(p.getLastReceivedMessageId())
                         + "," + msgStr;
-                p.sendRoomMessageSync(s); // 直接发送，不放到buffer
+                p.sendRoomMessageSync(CaseMessageType.EDITOR, s); // 直接发送，不放到buffer
             }
         } else {
             int seperateIndex = msg.indexOf('|');
@@ -227,7 +228,7 @@ public abstract class Room {
 
                 caseMessages.clear();
 
-                p.sendRoomMessageSync(sb.toString());
+                p.sendRoomMessageSync(CaseMessageType.EDITOR, sb.toString());
             }
         }
 
@@ -293,6 +294,8 @@ public abstract class Room {
         private final Client client;
         private final long enterTimeStamp;
 
+        private Integer pingCount;
+
 //        private final boolean isRecord;
 
         /**
@@ -304,10 +307,19 @@ public abstract class Room {
             return bufferedMessages;
         }
 
+        public boolean isPingNormal() {
+            return pingCount <= 2;
+        }
+
+        public void clearPingCount() {
+            this.pingCount = 0;
+        }
+
         private Player(Room room, Client client) {
             this.room = room;
             this.client = client;
             this.enterTimeStamp = System.currentTimeMillis();
+            this.pingCount = 0;
 //            isRecord = client.getRecordId();
         }
 
@@ -356,10 +368,16 @@ public abstract class Room {
          * 发送room的消息
          * @param content
          */
-        public void sendRoomMessageSync(String content) {
+        public void sendRoomMessageSync(CaseMessageType type, String content) {
             Objects.requireNonNull(content);
-
-            client.sendMessage(content);
+            if (content.equals(CaseWsMessages.PING.getMsg())) {
+                this.pingCount ++;
+                if (!isPingNormal()) {
+                    LOGGER.error("服务端ping客户端3次失败，当前用户连接有问题：" + this.getClient().getClientName());
+                    throw new RuntimeException("心跳错误，客户端与服务端连接错误");
+                }
+            }
+            client.sendMessage(type, content);
         }
 
         public void sendRoomMessageAsync(String content) {

@@ -48,11 +48,11 @@ public class Client {
 
     public void close() {
         LOGGER.info(Thread.currentThread().getName() + ": client " + this.getClientName() + " 准备退出。" + this.session.getId());
-        sendMessage(new String(CaseWsMessages.CLIENT_CLOSE.getMsg()));
+        sendMessage(CaseMessageType.CTRL, new String(CaseWsMessages.CLIENT_CLOSE.getMsg()));
     }
 
-    public void sendMessage(String msg) {
-        if (!msg.contains(CaseWsMessages.PONG.getMsg())) {
+    public void sendMessage(CaseMessageType type, String msg) {
+        if (!type.equals(CaseMessageType.PING)) {
             LOGGER.info(Thread.currentThread().getName() + ": 准备向 " + this.getClientName() + " 发送消息：" + msg);
         }
         synchronized (messagesToSend) {
