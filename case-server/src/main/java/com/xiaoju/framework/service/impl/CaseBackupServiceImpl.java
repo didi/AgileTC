@@ -20,10 +20,8 @@ import java.util.regex.Pattern;
 
 import javax.annotation.Resource;
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.util.*;
 
-import static com.flipkart.zjsonpatch.DiffFlags.ADD_EXPLICIT_REMOVE_ADD_ON_REPLACE;
 import static com.flipkart.zjsonpatch.DiffFlags.ADD_ORIGINAL_VALUE_ON_REPLACE;
 
 /**

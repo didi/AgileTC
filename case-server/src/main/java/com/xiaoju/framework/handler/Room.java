@@ -1,22 +1,19 @@
 package com.xiaoju.framework.handler;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.xiaoju.framework.entity.persistent.TestCase;
 import com.xiaoju.framework.mapper.TestCaseMapper;
 import com.xiaoju.framework.service.CaseBackupService;
 import com.xiaoju.framework.service.RecordService;
 import com.xiaoju.framework.util.BitBaseUtil;
-import com.xiaoju.framework.util.TreeUtil;
 import org.apache.poi.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 
-import javax.annotation.Resource;
 import javax.websocket.Session;
-import java.awt.*;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -45,6 +42,8 @@ public abstract class Room {
     public static TestCaseMapper caseMapper;
     public static RecordService recordService;
     public static CaseBackupService caseBackupService;
+
+    ObjectMapper jsonMapper = new ObjectMapper();
 
     protected String testCaseContent;
     protected TestCase testCase;
@@ -190,18 +189,22 @@ public abstract class Room {
         } else {
             int seperateIndex = msg.indexOf('|');
             String sendSessionId = msg.substring(0, seperateIndex);
-            JSONObject request = JSON.parseObject(msg.substring(seperateIndex + 1));
-            JSONArray patch = (JSONArray) request.get("patch");
-            long currentVersion = ((JSONObject) request.get("case")).getLong("base");
-            testCaseContent = ((JSONObject) request.get("case")).toJSONString().replace("\"base\":" + currentVersion, "\"base\":" + (currentVersion + 1));
-            for (Player p : players) {
-                if (sendSessionId.equals(p.getClient().getSession().getId())) { //ack消息
-                    String msgAck = "[[{\"op\":\"replace\",\"path\":\"/base\",\"value\":" + (currentVersion + 1) + "}]]";
-                    p.getBufferedMessages().add(msgAck);
-                } else { // notify消息
-                    String msgNotify = patch.toJSONString().replace("[[{", "[[{\"op\":\"replace\",\"path\":\"/base\",\"value\":" + (currentVersion + 1) + "},{");
-                    p.getBufferedMessages().add(msgNotify);
+            try {
+                JsonNode request = jsonMapper.readTree(msg.substring(seperateIndex + 1));
+                ArrayNode patch = (ArrayNode) request.get("patch");
+                long currentVersion = ((JsonNode) request.get("case")).get("base").asLong();
+                testCaseContent = ((JsonNode) request.get("case")).toString().replace("\"base\":" + currentVersion, "\"base\":" + (currentVersion + 1));
+                for (Player p : players) {
+                    if (sendSessionId.equals(p.getClient().getSession().getId())) { //ack消息
+                        String msgAck = "[[{\"op\":\"replace\",\"path\":\"/base\",\"value\":" + (currentVersion + 1) + "}]]";
+                        p.getBufferedMessages().add(msgAck);
+                    } else { // notify消息
+                        String msgNotify = patch.toString().replace("[[{", "[[{\"op\":\"replace\",\"path\":\"/base\",\"value\":" + (currentVersion + 1) + "},{");
+                        p.getBufferedMessages().add(msgNotify);
+                    }
                 }
+            } catch (Exception e) {
+                LOGGER.error("json 操作失败。", e);
             }
         }
     }
