@@ -284,9 +284,15 @@ public class CaseServiceImpl implements CaseService {
         } else {
             // 这里触发保存testcase
             TestCase testCase = caseMapper.selectOne(req.getId());
-            testCase.setCaseContent(req.getCaseContent());
-            testCase.setModifier(req.getModifier());
-            caseMapper.update(testCase);
+            String caseContent = testCase.getCaseContent();
+
+            JSONObject caseContentJson = JSON.parseObject(caseContent);
+            JSONObject caseContentCurrent = JSON.parseObject(req.getCaseContent());
+            if(caseContentJson.getInteger("base") < caseContentCurrent.getInteger("base")){
+                testCase.setCaseContent(req.getCaseContent());
+                testCase.setModifier(req.getModifier());
+                caseMapper.update(testCase);
+            }
             caseBackup.setCaseId(req.getId());
             caseBackup.setCaseContent(req.getCaseContent());
             caseBackup.setRecordContent("");
