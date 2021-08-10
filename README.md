@@ -86,7 +86,9 @@ Users can circle the test cases according to their priority and tags, and combin
 
 Group members exceed 200, you need to scan the QR code to add customer service and invite to join the group
 
-<img src="https://dpubstatic.udache.com/static/dpubimg/73bf1082-1da0-47f9-bef6-70491beed629.png" alt="avatar" style="zoom:50%;" />
+<img src="https://dpubstatic.udache.com/static/dpubimg/73bf1082-1da0-47f9-bef6-70491beed629.png" alt="avatar" style="zoom:20%;" />
+
+
 
 
 
