@@ -2,6 +2,10 @@ English | [简体中文](./README_zh-CN.md)
 
 ## AgileTC
 
+![image](https://dpubstatic.udache.com/static/dpubimg/RQnYIFAwEd/logo.png)
+
+[![License](https://img.shields.io/badge/license-Apache%202-4EB1BA.svg)](https://www.apache.org/licenses/LICENSE-2.0.html)[![GitHub issues](https://img.shields.io/github/issues/didi/AgileTC.svg)](https://github.com/didi/AgileTC/issues)
+
 ### Introduction
 
 AgileTC - A Test case management platform with ability of multi real-time collaboration base on mind map.
@@ -63,7 +67,7 @@ Users can circle the test cases according to their priority and tags, and combin
 - java 1.8
 - mysql
 
-#### download
+#### Download
 
 * git clone https://github.com/didi/AgileTC.git 
   Or download ZIP directly
@@ -82,11 +86,15 @@ Users can circle the test cases according to their priority and tags, and combin
 * mvn spring-boot:run
 * Browser open http://localhost:8094/case/caseList/1
 
-#### contact us
+#### Contact us
 
 Group members exceed 200, you need to scan the QR code to add customer service and invite to join the group
 
-<img src="https://dpubstatic.udache.com/static/dpubimg/73bf1082-1da0-47f9-bef6-70491beed629.png" alt="avatar" style="zoom:20%;" />
+![image](https://dpubstatic.udache.com/static/dpubimg/1caac875-675a-4078-a946-6680f30553ef.png)
+
+
+
+
 
 
 
