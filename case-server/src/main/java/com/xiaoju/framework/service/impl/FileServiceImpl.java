@@ -98,6 +98,14 @@ public class FileServiceImpl implements FileService {
         throw new CaseServerException("传入的文件名非法", StatusCode.FILE_IMPORT_ERROR);
     }
 
+    /**
+     *
+     * @param id 用例id
+     * @param userAgent
+     * @return
+     * @throws Exception
+     */
+
     @Override
     public ExportXmindResp exportXmindFile(Long id, String userAgent) throws Exception {
 
@@ -105,7 +113,7 @@ public class FileServiceImpl implements FileService {
 
         //将用例内容写内容入xml文件
         Map<String,String> pathMap= createFile(id);
-
+;
         //压缩文件夹成xmind文件
         String filePath = pathMap.get("exportPath") + ".xmind";
         FileUtil.compressZip(pathMap.get("exportPath") ,filePath);
@@ -183,9 +191,9 @@ public class FileServiceImpl implements FileService {
 
     private void writeXml(String path, Document document)
     {
-        OutputFormat format = OutputFormat.createPrettyPrint();
+        OutputFormat format = OutputFormat.createPrettyPrint(); // 有空格换行
         // 设置编码格式
-        format.setEncoding("UTF-8");
+        format.setEncoding("UTF-8"); // 使用UTF-8进行编码解码
         File xmlFile = new File(path);
         try {
             XMLWriter writer = new XMLWriter(new FileOutputStream(xmlFile), format);
@@ -208,7 +216,7 @@ public class FileServiceImpl implements FileService {
             throw new CaseServerException("用例不存在或者content为空", StatusCode.FILE_EXPORT_ERROR);
         }
 
-        String path = creteFolder(testCase);
+        String path = creteFolder(testCase); // 创建要写入的文件夹
         //写入content.xml内容
         writeContentXml(testCase,path);
         //写Meta文件
@@ -230,16 +238,17 @@ public class FileServiceImpl implements FileService {
         Element root = document.addElement("xmap-content");
         // 3、生成子节点及子节点内容
         Element sheet = root.addElement("sheet")
-                .addAttribute("id",ZEN_ROOT_VERSION)
-                .addAttribute("modified-by",XMIND_MODIFIED_VERSION)
-                .addAttribute("theme",XMIND_THEME_VERSION)
-                .addAttribute("timestamp",XMIND_CREATED_VERSION);
-
+                .addAttribute("id",ZEN_ROOT_VERSION) // 给sheet添加属性id
+                .addAttribute("modified-by",XMIND_MODIFIED_VERSION) // 给sheet添加属性modified-by
+                .addAttribute("theme",XMIND_THEME_VERSION) // 给sheet添加属性theme
+                .addAttribute("timestamp",XMIND_CREATED_VERSION); // 给sheet添加属性timestamp
+        // 获得全部json数据，此时的json数据中有图片的链接地址，需要把image取出来
         JSONObject rootObj = JSON.parseObject(testCase.getCaseContent()).getJSONObject(ROOT);
-        Element topic = sheet.addElement("topic")
-                .addAttribute("id",rootObj.getJSONObject(DATA).getString("id"))
-                .addAttribute("modified-by","didi")
-                .addAttribute("timestamp",rootObj.getJSONObject(DATA).getString("created"));
+        Element topic = sheet.addElement("topic") // 给sheet添加新的节点topic
+                .addAttribute("id",rootObj.getJSONObject(DATA).getString("id")) // 获得id
+                .addAttribute("modified-by","didi") // 获得用户名
+                .addAttribute("timestamp",rootObj.getJSONObject(DATA).getString("created")) // 获得创建时间戳
+                .addAttribute("image",rootObj.getJSONObject(DATA).getString("image")); // 新加的，获得图片2021/08/12
 
         Element title = topic.addElement("title");
         String text = rootObj.getJSONObject(DATA).getString("text");
@@ -248,7 +257,8 @@ public class FileServiceImpl implements FileService {
         } else {
             text = "";
         }
-        title.setText(text);
+        title.setText(text); // 加入标题
+        // 在xml里面的children添加数据，但是对于图片来说，它的key是image，而不是children
         TreeUtil.exportDataToXml(rootObj.getJSONArray("children"), topic);
         String targetPath = path  + "/content.xml";
         //写入xml
@@ -289,12 +299,11 @@ public class FileServiceImpl implements FileService {
     //xmind8从content文件读取用例内容
     public CaseCreateReq buildCaseByXml(FileImportReq request, String fileName) throws Exception {
 
-        // 开始读取文件中的xml内容了
         JSONArray jsonArray = new JSONArray();
         String fileXml = "content.xml";
         fileName = (fileName + fileXml).replace("/", File.separator);
         File file = new File(fileName);
-        if(!file.exists())
+        if(!file.exists()) // 判断文件是否存在
             throw new CaseServerException("导入失败，文件不存在", StatusCode.FILE_IMPORT_ERROR);
         SAXReader reade = new SAXReader();
         org.dom4j.Document doc = reade.read(file);
@@ -318,6 +327,7 @@ public class FileServiceImpl implements FileService {
         caseObj.put(THEME, THEME_DEFAULT);
         caseObj.put(VERSION, VERSION_DEFAULT);
         caseObj.put(BASE, BASE_DEFAULT);
+
 
         CaseCreateReq testCase = new CaseCreateReq();
         testCase.setProductLineId(request.getProductLineId());

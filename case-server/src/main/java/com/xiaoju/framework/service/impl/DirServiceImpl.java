@@ -148,7 +148,6 @@ public class DirServiceImpl implements DirService {
         biz.setProductLineId(productLineId);
         biz.setChannel(channel);
         biz.setContent(JSONObject.toJSONString(root));
-
         bizMapper.insert(biz);
         root.getCaseIds().addAll(child.getCaseIds());
         return root;

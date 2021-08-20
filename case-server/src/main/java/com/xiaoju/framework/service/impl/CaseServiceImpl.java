@@ -125,7 +125,6 @@ public class CaseServiceImpl implements CaseService {
         List<String> addBizs = Arrays.asList(request.getBizId().split(SystemConstant.COMMA));
         updateDFS(packageTree(tree), String.valueOf(testcase.getId()), new HashSet<>(addBizs), new HashSet<>());
         updateBiz(testcase, tree);
-
         return testcase.getId();
     }
 
@@ -293,6 +292,16 @@ public class CaseServiceImpl implements CaseService {
                 testCase.setModifier(req.getModifier());
                 caseMapper.update(testCase);
             }
+//            if (caseContentJson.getInteger("base") >= caseContentCurrent.getInteger("base")) { // 库里是最新的内容
+//                // 不落库
+//            } else {
+//                testCase.setCaseContent(req.getCaseContent());
+//                testCase.setModifier(req.getModifier());
+//                caseMapper.update(testCase);
+//            }
+//            testCase.setCaseContent(req.getCaseContent());
+//            testCase.setModifier(req.getModifier());
+//            caseMapper.update(testCase);
             caseBackup.setCaseId(req.getId());
             caseBackup.setCaseContent(req.getCaseContent());
             caseBackup.setRecordContent("");
