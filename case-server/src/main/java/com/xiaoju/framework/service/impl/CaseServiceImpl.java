@@ -125,7 +125,6 @@ public class CaseServiceImpl implements CaseService {
         List<String> addBizs = Arrays.asList(request.getBizId().split(SystemConstant.COMMA));
         updateDFS(packageTree(tree), String.valueOf(testcase.getId()), new HashSet<>(addBizs), new HashSet<>());
         updateBiz(testcase, tree);
-
         return testcase.getId();
     }
 

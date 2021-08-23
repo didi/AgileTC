@@ -85,20 +85,18 @@ public class UploadController {
         JSONObject ret = new JSONObject();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd/");
         String format = sdf.format(new Date());
-        File folder = new File(uploadPath + format);
-        if (!folder.isDirectory()) {
+        File folder = new File(uploadPath + format);// 文件夹的名字
+        if (!folder.isDirectory()) { // 如果文件夹为空，则新建文件夹
             folder.mkdirs();
         }
         // 对上传的文件重命名，避免文件重名
-        String oldName = file.getOriginalFilename();
+        String oldName = file.getOriginalFilename(); // 获取文件的名字
         String newName = UUID.randomUUID().toString()
-                + oldName.substring(oldName.lastIndexOf("."), oldName.length());
-
+                + oldName.substring(oldName.lastIndexOf("."), oldName.length()); // 生成新的随机的文件名字
         try {
-            // 文件保存
             file.transferTo(new File(folder, newName));
-
             // 返回上传文件的访问路径
+            // request.getScheme()可获取请求的协议名，request.getServerName()可获取请求的域名，request.getServerPort()可获取请求的端口号
             String filePath = request.getScheme() + "://" + request.getServerName()
                     + ":" + request.getServerPort() + "/" + format + newName;
             JSONArray datas = new JSONArray();

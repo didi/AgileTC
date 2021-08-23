@@ -37,6 +37,8 @@ public class TestCase {
 
     private Integer caseType;
 
+    private String caseContent;
+
     /**
      * 模块id 已经废弃
      */
@@ -51,7 +53,7 @@ public class TestCase {
     @Deprecated
     private Long smkCaseId;
 
-    private String caseContent;
+
 
     private Integer channel;
 

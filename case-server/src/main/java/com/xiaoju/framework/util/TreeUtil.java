@@ -13,6 +13,8 @@ import org.springframework.util.StringUtils;
 
 import java.util.*;
 
+import static com.xiaoju.framework.constants.XmindConstant.DATA;
+
 
 /**
  * 树 - 数据结构处理类
@@ -274,13 +276,24 @@ public class TreeUtil {
         if(children.size() == 0)
             return;
         Element children1 = rootTopic.addElement("children");
-        Element  topics = children1.addElement("topics").addAttribute("type","attached");
+        Element topics = children1.addElement("topics").addAttribute("type","attached");
         for (Object o : children) {
             JSONObject dataObj = ((JSONObject) o).getJSONObject("data");
             Element topic = topics.addElement("topic")
                     .addAttribute("id",dataObj.getString("id"))
                     .addAttribute("modified-by","didi")
-                    .addAttribute("timestamp",dataObj.getString("created"));
+                    .addAttribute("timestamp",dataObj.getString("created"))
+                    .addAttribute("imageTitle", dataObj.getString("imageTitle"))
+                    .addAttribute("image",dataObj.getString("image")); // 2021/08/13
+
+            JSONObject dataObj1 = dataObj.getJSONObject("imageSize");
+
+            if(dataObj1 != null){
+                Element imageSize = topic.addElement("imageSize")
+                         .addAttribute("width", dataObj1.getString("width"))
+                        .addAttribute("height", dataObj1.getString("height"));
+            }
+
             Element title = topic.addElement("title");
             String text = dataObj.getString("text");
             if (!StringUtils.isEmpty(text)) {
@@ -331,7 +344,7 @@ public class TreeUtil {
     }
 
     //导入xml内容
-     public  static JSONArray importDataByXml(Element e) {
+     public static JSONArray importDataByXml(Element e) {
          JSONArray jsonArray = new JSONArray();
          List<Element> elementList = e.elements();
          if(elementList.size() == 0)
@@ -344,13 +357,21 @@ public class TreeUtil {
                  JSONObject root = new JSONObject();
                  JSONObject dataObj = new JSONObject();
                  List<Element> newList = element1.elements();
+                 Map<String, String> imageSize = new HashMap<>();
                  String text = "";
                  Integer priorityId = 0;
                  String created = element1.attributeValue("timestamp");
                  String id = element1.attributeValue("id");
+                 // 2021/08/13
+                 String image = element1.attributeValue("image");
+                 String imageTitle = element1.attributeValue("imageTitle");
 
                  for (Element element : newList) {
-                     if (element.getName().equalsIgnoreCase("title")) {
+                     if(element.getName().equalsIgnoreCase("imageSize")){ // 添加imagesize属性
+                         imageSize.put("width", element.attributeValue("width"));
+                         imageSize.put("height", element.attributeValue("height"));
+                     }
+                     else if (element.getName().equalsIgnoreCase("title")) {
                          //标题
                          text = element.getText();
                      }else if (element.getName().equalsIgnoreCase("marker-refs")) {
@@ -376,6 +397,9 @@ public class TreeUtil {
 
                  dataObj.put("created", created);
                  dataObj.put("id", id);
+                 dataObj.put("image", image); // 2021/08/13
+                 dataObj.put("imageTitle", imageTitle); // 2021/08/17
+                 dataObj.put("imageSize", imageSize); // 2021/08/20
                  dataObj.put("text", text);
                  dataObj.put("priority", priorityId);
                  root.put("data",dataObj);
