@@ -98,13 +98,6 @@ public class FileServiceImpl implements FileService {
         throw new CaseServerException("传入的文件名非法", StatusCode.FILE_IMPORT_ERROR);
     }
 
-    /**
-     *
-     * @param id 用例id
-     * @param userAgent
-     * @return
-     * @throws Exception
-     */
 
     @Override
     public ExportXmindResp exportXmindFile(Long id, String userAgent) throws Exception {
@@ -113,7 +106,7 @@ public class FileServiceImpl implements FileService {
 
         //将用例内容写内容入xml文件
         Map<String,String> pathMap= createFile(id);
-;
+
         //压缩文件夹成xmind文件
         String filePath = pathMap.get("exportPath") + ".xmind";
         FileUtil.compressZip(pathMap.get("exportPath") ,filePath);

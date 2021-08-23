@@ -99,7 +99,6 @@ public class UploadController {
             // request.getScheme()可获取请求的协议名，request.getServerName()可获取请求的域名，request.getServerPort()可获取请求的端口号
             String filePath = request.getScheme() + "://" + request.getServerName()
                     + ":" + request.getServerPort() + "/" + format + newName;
-            System.out.println(filePath);
             JSONArray datas = new JSONArray();
             JSONObject data = new JSONObject();
             data.put("url", filePath);
