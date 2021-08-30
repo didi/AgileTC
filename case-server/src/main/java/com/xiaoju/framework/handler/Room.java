@@ -12,6 +12,7 @@ import com.xiaoju.framework.mapper.TestCaseMapper;
 import com.xiaoju.framework.service.CaseBackupService;
 import com.xiaoju.framework.service.RecordService;
 import com.xiaoju.framework.util.BitBaseUtil;
+import lombok.extern.flogger.Flogger;
 import org.apache.poi.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -144,7 +145,7 @@ public abstract class Room {
 
         boolean removed = players.remove(p);
         assert removed;
-        
+
         cs.remove(p.getClient().getSession());
         LOGGER.info(Thread.currentThread().getName() + ": 有用户 " + p.getClient().getClientName() + " 离开 session id:" + p.getClient().getSession().getId());
 
@@ -180,6 +181,7 @@ public abstract class Room {
             redo();
         } else {
             broadcastMessage(msg);
+
         }
     }
 
@@ -245,7 +247,7 @@ public abstract class Room {
                 JsonNode request = jsonMapper.readTree(msg.substring(seperateIndex + 1));
                 ArrayNode patch = (ArrayNode) request.get("patch");
                 long currentVersion = ((JsonNode) request.get("case")).get("base").asLong();
-                String tmpTestCaseContent = ((JsonNode) request.get("case")).toString().replace("\"base\":" + currentVersion, "\"base\":" + (currentVersion + 1));;
+                String tmpTestCaseContent = ((JsonNode) request.get("case")).toString().replace("\"base\":" + currentVersion, "\"base\":" + (currentVersion + 1));
                 ArrayNode patchReverse = (ArrayNode) JsonDiff.asJson(jsonMapper.readTree(tmpTestCaseContent),
                         jsonMapper.readTree(testCaseContent==null?testCase.getCaseContent():testCaseContent), EnumSet.of(ADD_ORIGINAL_VALUE_ON_REPLACE, OMIT_MOVE_OPERATION));
 
