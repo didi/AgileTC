@@ -28,7 +28,7 @@ public class TreeUtil {
     // 剥离出progress的内容
     public static JSONObject parse(String caseContent) {
         JSONObject retContent = new JSONObject();
-        CaseContent content = JSONObject.parseObject(caseContent, CaseContent.class); // 将casecontent的内容解析为CaseContent.class对象并返回
+        CaseContent content = JSONObject.parseObject(caseContent, CaseContent.class);
         CaseCount count = caseDFS(content.getRoot());
         JSONObject caseObj = JSON.parseObject(caseContent);
 

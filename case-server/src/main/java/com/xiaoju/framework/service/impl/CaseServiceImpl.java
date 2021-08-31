@@ -4,7 +4,6 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
-import com.sun.media.jfxmedia.logging.Logger;
 import com.xiaoju.framework.constants.SystemConstant;
 import com.xiaoju.framework.constants.enums.StatusCode;
 import com.xiaoju.framework.entity.dto.DirNodeDto;
@@ -93,12 +92,14 @@ public class CaseServiceImpl implements CaseService {
         // select * from test_case where case_id in (request.getCaseIds()) [and ...any other condition];
         List<TestCase> caseList = caseMapper.search(request.getCaseType(), caseIds, request.getTitle(),
                 request.getCreator(), request.getRequirementId(), beginTime, endTime, request.getChannel(), request.getLineId());
+
         List<RecordNumDto> recordNumDtos = recordMapper.getRecordNumByCaseIds(caseIds);
         Map<Long, Integer> recordMap = recordNumDtos.stream().collect(Collectors.toMap(RecordNumDto::getCaseId, RecordNumDto::getRecordNum));
 
         for (TestCase testCase : caseList) {
             res.add(buildListResp(testCase, recordMap.get(testCase.getId())));
         }
+
         return PageModule.buildPage(res, ((Page<TestCase>) caseList).getTotal());
     }
 
@@ -286,14 +287,15 @@ public class CaseServiceImpl implements CaseService {
 
             JSONObject caseContentJson = JSON.parseObject(caseContent);
             JSONObject caseContentCurrent = JSON.parseObject(req.getCaseContent());
-            testCase.setModifier(req.getModifier());
             if(caseContentJson.getInteger("base") < caseContentCurrent.getInteger("base")){
                 testCase.setCaseContent(req.getCaseContent());
+                testCase.setModifier(req.getModifier());
+                caseMapper.update(testCase);
             }
-            caseMapper.update(testCase);
             caseBackup.setCaseId(req.getId());
             caseBackup.setCaseContent(req.getCaseContent());
             caseBackup.setRecordContent("");
+
         }
         caseBackup.setCreator(req.getModifier());
         caseBackup.setExtra("");
