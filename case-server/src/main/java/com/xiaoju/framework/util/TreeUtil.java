@@ -10,10 +10,7 @@ import org.apache.commons.lang3.StringEscapeUtils;
 import org.dom4j.Element;
 import org.springframework.util.StringUtils;
 
-
 import java.util.*;
-
-import static com.xiaoju.framework.constants.XmindConstant.DATA;
 
 
 /**
@@ -309,8 +306,9 @@ public class TreeUtil {
                 marker_refs.addElement("marker-ref")
                         .addAttribute("marker-id",priority);
             }
-            if (((JSONObject) o).getJSONArray("children").size() > 0) {
-                exportDataToXml(((JSONObject) o).getJSONArray("children"), topic);
+            JSONArray child_children = ((JSONObject) o).getJSONArray("children");
+            if (child_children != null && child_children.size() > 0) {
+                exportDataToXml(child_children, topic);
             }
         }
     }
