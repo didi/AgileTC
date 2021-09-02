@@ -3,7 +3,6 @@ package com.xiaoju.framework.handler;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.xiaoju.framework.constants.SystemConstant;
 import com.xiaoju.framework.entity.dto.RecordWsDto;
 import com.xiaoju.framework.entity.persistent.ExecRecord;
 import com.xiaoju.framework.entity.xmind.IntCount;
@@ -90,8 +89,17 @@ public class RecordRoom extends Room {
                 recordUpdate.setPassCount(passCount);
                 recordUpdate.setTotalCount(totalCount);
                 recordUpdate.setSuccessCount(successCount);
-                recordService.modifyRecord(recordUpdate);
-                LOGGER.info(Thread.currentThread().getName() + ": 数据库用例记录更新。");
+                synchronized (WebSocket.getRoomLock()) {
+                    recordService.modifyRecord(recordUpdate);
+                    LOGGER.info(Thread.currentThread().getName() + ": 数据库用例记录更新。");
+                    WebSocket.getRooms().remove(Long.valueOf(BitBaseUtil.mergeLong(Long.valueOf(recordId), Long.valueOf(testCase.getId()))));
+                    LOGGER.info(Thread.currentThread().getName() + ": [websocket-onClose 关闭当前Room成功]当前sessionid:" + p.getClient().getSession().getId());
+                }
+            } else {
+                synchronized (WebSocket.getRoomLock()) {
+                    WebSocket.getRooms().remove(Long.valueOf(BitBaseUtil.mergeLong(Long.valueOf(recordId), Long.valueOf(testCase.getId()))));
+                    LOGGER.info(Thread.currentThread().getName() + ": [websocket-onClose 关闭当前Room成功]用户未变更,当前sessionid:" + p.getClient().getSession().getId());
+                }
             }
             LOGGER.info(Thread.currentThread().getName() + ": 最后一名用户 " + p.getClient().getClientName() + " 离开，关闭。");
         }

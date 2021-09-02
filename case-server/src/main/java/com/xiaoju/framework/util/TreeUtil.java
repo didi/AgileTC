@@ -306,9 +306,9 @@ public class TreeUtil {
                 marker_refs.addElement("marker-ref")
                         .addAttribute("marker-id",priority);
             }
-            JSONArray child_children = ((JSONObject) o).getJSONArray("children");
-            if (child_children != null && child_children.size() > 0) {
-                exportDataToXml(child_children, topic);
+            JSONArray childChildren = ((JSONObject) o).getJSONArray("children");
+            if (childChildren != null && childChildren.size() > 0) {
+                exportDataToXml(childChildren, topic);
             }
         }
     }

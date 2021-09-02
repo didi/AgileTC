@@ -74,12 +74,17 @@ public class WebSocket {
         t.setDaemon(true);
         t.start();
     }
-
+    public static Object getRoomLock() {
+        return roomLock;
+    }
+    public static Map<Long, Room> getRooms() {
+        return rooms;
+    }
     public static Room getRoom(boolean create, long id) {
         if (create) {
             // todo: 清除的逻辑放到线程定时任务中
             if (rooms.get(id) == null) {
-                synchronized (roomLock) {
+                synchronized (roomLock) { // TODO: 2021/9/2 此处使用的全局锁,可以优化为局部锁
                     if (rooms.get(id) == null) {
                         if (id > Integer.MAX_VALUE) {
                             rooms.put(id, new RecordRoom(id));
@@ -145,12 +150,12 @@ public class WebSocket {
         long record = recordId.equals(CaseWsMessages.UNDEFINED.getMsg()) ? 0l : Long.valueOf(recordId);
         long id = BitBaseUtil.mergeLong(record, Long.valueOf(caseId));
         final Room room = getRoom(false, id);
-        if (room.players.size() == 1) {
-            synchronized (roomLock) {
-                rooms.remove(Long.valueOf(id));
-                LOGGER.info(Thread.currentThread().getName() + ": [websocket-onClose 关闭当前Room成功]当前sessionid:" + room.players.get(0).getClient().getSession().getId());
-            }
-        }
+//        if (room.players.size() == 1) {
+//            synchronized (roomLock) {
+//                rooms.remove(Long.valueOf(id));
+//                LOGGER.info(Thread.currentThread().getName() + ": [websocket-onClose 关闭当前Room成功]当前sessionid:" + room.players.get(0).getClient().getSession().getId());
+//            }
+//        }
         room.invokeAndWait(new Runnable() {
             @Override
             public void run() {
@@ -260,7 +265,7 @@ public class WebSocket {
 
     @OnError
     public void onError(Session session, Throwable e) {
-        LOGGER.info(Thread.currentThread().getName() + ": [websocket-onError 会话出现异常]当前session={}, 原因={}", session.getId(), e.getMessage());
+        LOGGER.info(Thread.currentThread().getName() + ": [websocket-onError 会话出现异常]当前session={}, 原因={}", session.getId(), e);
         int count = 0;
         Throwable root = e;
         while (root.getCause() != null && count < 20) {

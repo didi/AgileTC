@@ -106,7 +106,7 @@ public class RecordServiceImpl implements RecordService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void editRecord(RecordUpdateReq req) {
+    public synchronized void editRecord(RecordUpdateReq req) {
         // 需要注意的是 圈选用例的对content的修改与脑图patch的修改不是同一频段
         // 所以这里修改的是圈选用例的话 一定要将websocket的redis清空
         ExecRecord record = recordMapper.selectOne(req.getId());

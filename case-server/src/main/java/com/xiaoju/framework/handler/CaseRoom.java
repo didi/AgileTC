@@ -1,6 +1,7 @@
 package com.xiaoju.framework.handler;
 
 import com.xiaoju.framework.entity.persistent.CaseBackup;
+import com.xiaoju.framework.util.BitBaseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,13 +34,7 @@ public class CaseRoom extends Room {
         if (players.size() == 0) {
             if (testCaseContent != null) {
                 LOGGER.info(Thread.currentThread().getName() + ": 当前的用例内容是：" + testCaseContent);
-                testCase.setCaseContent(testCaseContent);
-                testCase.setGmtModified(new Date(System.currentTimeMillis()));
-                int ret = caseMapper.update(testCase);
-                if (ret < 1) {
-                    LOGGER.error(Thread.currentThread().getName() + ": 数据库用例内容更新失败。 ret = " + ret);
-                    LOGGER.error("应该保存的用例内容是：" + testCaseContent);
-                }
+
                 CaseBackup caseBackup = new CaseBackup();
                 caseBackup.setCaseContent(testCaseContent);
                 caseBackup.setCreator(p.getClient().getClientName());
@@ -47,6 +42,20 @@ public class CaseRoom extends Room {
                 caseBackup.setCaseId(testCase.getId());
                 caseBackupService.insertBackup(caseBackup);
             }
+            synchronized (WebSocket.getRoomLock()) {
+                if (testCaseContent != null) {
+                    testCase.setCaseContent(testCaseContent);
+                    testCase.setGmtModified(new Date(System.currentTimeMillis()));
+                    int ret = caseMapper.update(testCase);
+                    if (ret < 1) {
+                        LOGGER.error(Thread.currentThread().getName() + ": 数据库用例内容更新失败。 ret = " + ret);
+                        LOGGER.error("应该保存的用例内容是：" + testCaseContent);
+                    }
+                }
+                WebSocket.getRooms().remove(Long.valueOf(BitBaseUtil.mergeLong(0l, Long.valueOf(testCase.getId()))));
+                LOGGER.info(Thread.currentThread().getName() + ": [websocket-onClose 关闭当前Room成功]当前sessionid:" + p.getClient().getSession().getId());
+            }
+
             LOGGER.info(Thread.currentThread().getName() + ": 最后一名用户离开，关闭。");
         }
 

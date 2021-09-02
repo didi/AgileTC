@@ -1,6 +1,7 @@
 package com.xiaoju.framework.mapper;
 
 import com.xiaoju.framework.entity.persistent.Biz;
+import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -36,7 +37,7 @@ public interface BizMapper {
      * @param channel 渠道
      * @return 文件夹实体
      */
-    Biz selectOne(Long productLineId, Integer channel);
+    Biz selectOne(@Param("productLineId")Long productLineId, @Param("channel")Integer channel);
 
     /**
      * 更新文件夹树内容
@@ -45,6 +46,6 @@ public interface BizMapper {
      * @param content 文件夹内容
      * @param channel 渠道
      */
-    void updateContent(Long productLineId, String content, Integer channel);
+    void updateContent(@Param("productLineId")Long productLineId, @Param("content")String content, @Param("channel")Integer channel);
 
 }

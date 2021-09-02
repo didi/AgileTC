@@ -80,7 +80,7 @@ public interface TestCaseMapper {
      * @param productLineId 业务线id
      * @return 一堆姓名
      */
-    List<String> listCreators(Integer caseType, Long productLineId);
+    List<String> listCreators(@Param("caseType") Integer caseType, @Param("productLineId") Long productLineId);
 
     /**
      * 拿到渠道下某条业务线所有的caseIds
@@ -89,5 +89,5 @@ public interface TestCaseMapper {
      * @param channel 渠道
      * @return id集合
      */
-    Set<String> findCaseIdsInBiz(Long productLineId, Integer channel);
+    Set<String> findCaseIdsInBiz(@Param("productLineId") Long productLineId, @Param("channel") Integer channel);
 }

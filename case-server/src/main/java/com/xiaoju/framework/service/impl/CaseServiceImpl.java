@@ -4,7 +4,6 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
-import com.sun.media.jfxmedia.logging.Logger;
 import com.xiaoju.framework.constants.SystemConstant;
 import com.xiaoju.framework.constants.enums.StatusCode;
 import com.xiaoju.framework.entity.dto.DirNodeDto;
@@ -36,8 +35,11 @@ import com.xiaoju.framework.service.CaseBackupService;
 import com.xiaoju.framework.service.CaseService;
 import com.xiaoju.framework.service.DirService;
 import com.xiaoju.framework.service.RecordService;
+import com.xiaoju.framework.util.BitBaseUtil;
 import com.xiaoju.framework.util.TimeUtil;
 import com.xiaoju.framework.util.TreeUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -59,6 +61,7 @@ import static com.xiaoju.framework.constants.SystemConstant.IS_DELETE;
  */
 @Service
 public class CaseServiceImpl implements CaseService {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CaseServiceImpl.class);
 
     @Resource
     private BizMapper bizMapper;
@@ -247,50 +250,64 @@ public class CaseServiceImpl implements CaseService {
         CaseBackup caseBackup = new CaseBackup();
         // 这里触发保存record
         if (!StringUtils.isEmpty(req.getRecordId())) {
-            RecordWsDto dto = recordService.getWsRecord(req.getRecordId());
-            // 看看是不是有重合的执行人
-            List<String> names = Arrays.stream(dto.getExecutors().split(COMMA)).filter(e->!StringUtils.isEmpty(e)).collect(Collectors.toList());
-            long count = names.stream().filter(e -> e.equals(req.getModifier())).count();
-            String executors;
-            if (count > 0) {
-                // 有重合，不管了
-                executors = dto.getExecutors();
-            } else {
-                // 没重合往后面塞一个
-                names.add(req.getModifier());
-                executors = String.join(",", names);
-            }
+            synchronized (WebSocket.getRoomLock()) {
+                RecordWsDto dto = recordService.getWsRecord(req.getRecordId());
+                // 看看是不是有重合的执行人
+                List<String> names = Arrays.stream(dto.getExecutors().split(COMMA)).filter(e -> !StringUtils.isEmpty(e)).collect(Collectors.toList());
+                long count = names.stream().filter(e -> e.equals(req.getModifier())).count();
+                String executors;
+                if (count > 0) {
+                    // 有重合，不管了
+                    executors = dto.getExecutors();
+                } else {
+                    // 没重合往后面塞一个
+                    names.add(req.getModifier());
+                    executors = String.join(",", names);
+                }
 
-            JSONObject jsonObject = TreeUtil.parse(req.getCaseContent());
-            ExecRecord record = new ExecRecord();
-            record.setId(req.getRecordId());
-            record.setCaseId(req.getId());
-            record.setModifier(req.getModifier());
-            record.setGmtModified(new Date(System.currentTimeMillis()));
-            record.setCaseContent(jsonObject.getJSONObject("progress").toJSONString());
-            record.setFailCount(jsonObject.getInteger("failCount"));
-            record.setBlockCount(jsonObject.getInteger("blockCount"));
-            record.setIgnoreCount(jsonObject.getInteger("ignoreCount"));
-            record.setPassCount(jsonObject.getInteger("passCount"));
-            record.setTotalCount(jsonObject.getInteger("totalCount"));
-            record.setSuccessCount(jsonObject.getInteger("successCount"));
-            record.setExecutors(executors);
-            recordService.modifyRecord(record);
+                JSONObject jsonObject = TreeUtil.parse(req.getCaseContent());
+                ExecRecord record = new ExecRecord();
+                record.setId(req.getRecordId());
+                record.setCaseId(req.getId());
+                record.setModifier(req.getModifier());
+                record.setGmtModified(new Date(System.currentTimeMillis()));
+                record.setCaseContent(jsonObject.getJSONObject("progress").toJSONString());
+                record.setFailCount(jsonObject.getInteger("failCount"));
+                record.setBlockCount(jsonObject.getInteger("blockCount"));
+                record.setIgnoreCount(jsonObject.getInteger("ignoreCount"));
+                record.setPassCount(jsonObject.getInteger("passCount"));
+                record.setTotalCount(jsonObject.getInteger("totalCount"));
+                record.setSuccessCount(jsonObject.getInteger("successCount"));
+                record.setExecutors(executors);
+                if (null == WebSocket.getRoom(false, BitBaseUtil.mergeLong(req.getRecordId(), Long.valueOf(req.getId())))) {
+                    recordService.modifyRecord(record);
+                    LOGGER.info("当前是最后一个退出, 落库保存执行记录.");
+                } else {
+                    LOGGER.info("还有编辑人未退出, 不落库保存执行记录.");
+                }
+            }
             caseBackup.setCaseId(req.getRecordId());
             caseBackup.setRecordContent(req.getCaseContent());
             caseBackup.setCaseContent("");
         } else {
             // 这里触发保存testcase
-            TestCase testCase = caseMapper.selectOne(req.getId());
-            String caseContent = testCase.getCaseContent();
+            synchronized (WebSocket.getRoomLock()) {
+                if (null == WebSocket.getRoom(false, BitBaseUtil.mergeLong(0l, Long.valueOf(req.getId())))) {
+                    TestCase testCase = caseMapper.selectOne(req.getId());
+                    String caseContent = testCase.getCaseContent();
 
-            JSONObject caseContentJson = JSON.parseObject(caseContent);
-            JSONObject caseContentCurrent = JSON.parseObject(req.getCaseContent());
-            testCase.setModifier(req.getModifier());
-            if(caseContentJson.getInteger("base") < caseContentCurrent.getInteger("base")){
-                testCase.setCaseContent(req.getCaseContent());
+                    JSONObject caseContentJson = JSON.parseObject(caseContent);
+                    JSONObject caseContentCurrent = JSON.parseObject(req.getCaseContent());
+                    testCase.setModifier(req.getModifier());
+                    if (caseContentJson.getInteger("base") < caseContentCurrent.getInteger("base")) {
+                        testCase.setCaseContent(req.getCaseContent());
+                    }
+                    caseMapper.update(testCase);
+                    LOGGER.info("当前是最后一个退出, 落库保存用例.");
+                } else {
+                    LOGGER.info("当前不是最后一个退出, 不落库保存用例.");
+                }
             }
-            caseMapper.update(testCase);
             caseBackup.setCaseId(req.getId());
             caseBackup.setCaseContent(req.getCaseContent());
             caseBackup.setRecordContent("");
