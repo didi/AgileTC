@@ -1,6 +1,9 @@
 package com.xiaoju.framework.handler;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.xiaoju.framework.entity.persistent.CaseBackup;
+import com.xiaoju.framework.entity.persistent.TestCase;
 import com.xiaoju.framework.util.BitBaseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,13 +47,25 @@ public class CaseRoom extends Room {
             }
             synchronized (WebSocket.getRoomLock()) {
                 if (testCaseContent != null) {
-                    testCase.setCaseContent(testCaseContent);
-                    testCase.setGmtModified(new Date(System.currentTimeMillis()));
-                    int ret = caseMapper.update(testCase);
-                    if (ret < 1) {
-                        LOGGER.error(Thread.currentThread().getName() + ": 数据库用例内容更新失败。 ret = " + ret);
-                        LOGGER.error("应该保存的用例内容是：" + testCaseContent);
+                    TestCase testCaseBase = caseMapper.selectOne(testCase.getId());
+
+
+                    JSONObject caseContentToSave = JSON.parseObject(testCaseContent);
+                    JSONObject caseContentBase = JSON.parseObject(testCaseBase.getCaseContent());
+                    if (caseContentToSave.getInteger("base") > caseContentBase.getInteger("base")) {
+                        // 保存落库
+                        testCase.setCaseContent(testCaseContent);
+                        testCase.setGmtModified(new Date(System.currentTimeMillis()));
+                        int ret = caseMapper.update(testCase);
+                        if (ret < 1) {
+                            LOGGER.error(Thread.currentThread().getName() + ": 数据库用例内容更新失败。 ret = " + ret);
+                            LOGGER.error("应该保存的用例内容是：" + testCaseContent);
+                        }
+                    } else {
+                        // 不保存
+                        LOGGER.info(Thread.currentThread().getName() + "不落库." + testCaseContent );
                     }
+
                 }
                 WebSocket.getRooms().remove(Long.valueOf(BitBaseUtil.mergeLong(0l, Long.valueOf(testCase.getId()))));
                 LOGGER.info(Thread.currentThread().getName() + ": [websocket-onClose 关闭当前Room成功]当前sessionid:" + p.getClient().getSession().getId());
@@ -61,5 +76,7 @@ public class CaseRoom extends Room {
 
         // 广播有用户离开
         broadcastRoomMessage(CaseMessageType.NOTIFY, "当前用户数:" + players.size() + "。用例编辑者 " + p.getClient().getClientName() + " 离开");
+        LOGGER.info(Thread.currentThread().getName() + ": 用例保存完成。");
+
     }
 }
