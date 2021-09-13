@@ -325,18 +325,18 @@ public class CaseServiceImpl implements CaseService {
                             basePatch.put("path", "/base");
                             basePatch.put("value", reqContent.get("base").asLong() + 1);
                             patches.add(basePatch);
-                            room.leavebroadcastMessageForHttp(patches.toString());
+                            room.leavebroadcastMessageForHttp(req.getCaseContent());
                             room.setTestCaseContent(req.getCaseContent());
                             LOGGER.info("非最后离开, 将变更补丁信息发送给其他用户. req内容是: ", reqContent.toString());
                             LOGGER.info("room内容是: ", baseContent.toString());
                         } else {
-                            LOGGER.info("patch太小." + patches.toString());
+                            LOGGER.info("内存中数据与待保存数据一致." + patches.toString());
                         }
                     } catch (Exception e) {
                         LOGGER.error("http保存比较内容失败.", e);
                     }
                 } else {
-                    LOGGER.info("websocket实例已经退出,无需发送消息.");
+                    LOGGER.info("websocket实例已经退出或未编辑,无需发送消息.");
                 }
 //                }
 

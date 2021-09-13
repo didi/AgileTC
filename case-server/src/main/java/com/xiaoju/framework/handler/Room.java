@@ -240,7 +240,7 @@ public abstract class Room {
 
     public void leavebroadcastMessageForHttp(String msg) {
         for (Player p : players) {
-                p.getBufferedMessages().add(msg);
+                p.getClient().sendMessage(CaseMessageType.EDITOR, msg);
         }
     }
 
