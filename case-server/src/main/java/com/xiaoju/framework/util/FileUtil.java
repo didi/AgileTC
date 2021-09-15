@@ -38,8 +38,15 @@ public class FileUtil {
                 InputStream in = zip.getInputStream(entry);
                 //指定解压后的文件夹+当前zip文件的名称
                 String outPath = (descDir+zipEntryName).replace("/", File.separator);
-                //判断路径是否存在,不存在则创建文件路径
+
+                //判断路径是否存在，不存在则创建文件路径，同时添加检验
+                String canonicalDescDirPath = pathFile.getCanonicalPath();
                 File file = new File(outPath.substring(0, outPath.lastIndexOf(File.separator)));
+                String CanonicalDescFile = file.getCanonicalPath() + "/";
+                if(!CanonicalDescFile.startsWith(canonicalDescDirPath + File.separator)){
+                    throw new ArithmeticException("Entry is outside of the target dir: " + zipEntryName);
+                }
+
                 if(!file.exists()){
                     file.mkdirs();
                 }
