@@ -27,11 +27,12 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
-import javax.print.Doc;
+import javax.servlet.http.HttpServletRequest;
 import java.io.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static com.xiaoju.framework.constants.SystemConstant.POINT;
 import static com.xiaoju.framework.constants.XmindConstant.*;
@@ -55,9 +56,8 @@ public class FileServiceImpl implements FileService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long importXmindFile(FileImportReq req) throws Exception {
+    public Long importXmindFile(FileImportReq req, HttpServletRequest request, String uploadPath) throws Exception {
         String fileName = req.getFile().getOriginalFilename();
-
         if (!StringUtils.isEmpty(fileName)) {
             // 得到上传文件的扩展名
             String suffix = fileName.substring(fileName.lastIndexOf(POINT) + 1).toLowerCase();
@@ -92,7 +92,7 @@ public class FileServiceImpl implements FileService {
 
             // 导入用例
             File jsonFile = new File((desc + CONTENT_JSON).replace("/", File.separator));
-            CaseCreateReq caseCreateReq = jsonFile.exists() ? buildCaseByJson(req, desc) : buildCaseByXml(req, desc);
+            CaseCreateReq caseCreateReq = jsonFile.exists() ? buildCaseByJson(req, desc) : buildCaseByXml(req, desc, request, uploadPath);
             return caseService.insertOrDuplicateCase(caseCreateReq);
         }
         throw new CaseServerException("传入的文件名非法", StatusCode.FILE_IMPORT_ERROR);
@@ -158,7 +158,7 @@ public class FileServiceImpl implements FileService {
         Document document = DocumentHelper.createDocument();
         // 2、创建根节点root
         Element root = document.addElement("manifest").addAttribute("xmlns",XMIND_MAINFEST_XMLNS);
-        // 3、生成子节点及子节点内容
+        // 3、生成子节点及子节点内容，此处应该添加图片属性（2021/09/06）
         root.addElement("file-entry")
                 .addAttribute("full-path","content.xml")
                 .addAttribute("media-type","text/xml");
@@ -210,17 +210,25 @@ public class FileServiceImpl implements FileService {
         }
 
         String path = creteFolder(testCase); // 创建要写入的文件夹
+        // 此处需要新加一个文件夹，命名为attachments，里面存放图片
+        writeAttachments(path);
         //写入content.xml内容
         writeContentXml(testCase,path);
         //写Meta文件
         writeMetaXml(path);
-        //写MainFest文件
+        //写MainFest文件,需要在此处添加文件夹中的问题信息
         writeManifestXml(path);
 
         Map<String,String> pathMap = new HashMap<>();
         pathMap.put("exportPath",path);
         pathMap.put("exportFileName",testCase.getTitle() + ".xmind");
         return pathMap;
+    }
+
+    // 将照片拷贝到path文件夹里面
+    private void writeAttachments(String path){
+        String targetPath = path  + "/attachments";
+
     }
 
     //拼接xml内容
@@ -237,6 +245,7 @@ public class FileServiceImpl implements FileService {
                 .addAttribute("timestamp",XMIND_CREATED_VERSION); // 给sheet添加属性timestamp
         // 获得全部json数据，此时的json数据中有图片的链接地址，需要把image取出来
         JSONObject rootObj = JSON.parseObject(testCase.getCaseContent()).getJSONObject(ROOT);
+        System.out.println("case中的内容：" + testCase.getCaseContent());
         Element topic = sheet.addElement("topic") // 给sheet添加新的节点topic
                 .addAttribute("id",rootObj.getJSONObject(DATA).getString("id")) // 获得id
                 .addAttribute("modified-by","didi") // 获得用户名
@@ -290,12 +299,15 @@ public class FileServiceImpl implements FileService {
     }
 
     //xmind8从content文件读取用例内容
-    public CaseCreateReq buildCaseByXml(FileImportReq request, String fileName) throws Exception {
+    public CaseCreateReq buildCaseByXml(FileImportReq request, String fileName, HttpServletRequest requests, String uploadPath) throws Exception {
 
         JSONArray jsonArray = new JSONArray();
         String fileXml = "content.xml";
+        String picXml = "attachments"; // 存放图片的文件夹
+        String picName = (fileName + picXml).replace("/", File.separator);
         fileName = (fileName + fileXml).replace("/", File.separator);
         File file = new File(fileName);
+        File file1 = new File(picName);
         if(!file.exists()) // 判断文件是否存在
             throw new CaseServerException("导入失败，文件不存在", StatusCode.FILE_IMPORT_ERROR);
         SAXReader reade = new SAXReader();
@@ -306,7 +318,20 @@ public class FileServiceImpl implements FileService {
         String eleName = childElement.getName();
         if(eleName.equalsIgnoreCase("sheet"))
         {
-            jsonArray = TreeUtil.importDataByXml(childElement);
+            // 如果包含图片的文件夹存在，则重写importDataXml方法，将file1添加进去
+            if(file1.exists()){
+                if(file1.isDirectory()){
+                    System.out.println("有图片信息");
+                    // 此时需要将本地文件传到网上
+                    jsonArray = TreeUtil.importDataByXml1(request, childElement, picName, requests, uploadPath);
+                }
+            }
+            // 如果包含图片的文件夹不存在，则直接调用importDataByXml方法，不需要再传入file1这个参数
+            else{
+                System.out.println("没有图片信息");
+                jsonArray = TreeUtil.importDataByXml(childElement);
+            }
+
         }
         return buildCaseCreateReq(request, jsonArray);
     }
