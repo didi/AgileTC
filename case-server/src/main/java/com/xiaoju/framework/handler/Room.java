@@ -187,32 +187,41 @@ public abstract class Room {
 
     private void undo() {
         roomLock.lock();
-        undoPosition --;
-        redoPosition --;
-        broadcastRoomMessage(CaseMessageType.EDITOR, undoDiffs.get(undoPosition));
-        try {
-            JsonNode target = JsonPatch.apply(jsonMapper.readTree(undoDiffs.get(undoPosition)), jsonMapper.readTree(testCaseContent));
-            testCaseContent = target.toString();
-        } catch (Exception e) {
-            roomLock.unlock();
-            LOGGER.error("undo json parse error。", e);
+        if(undoPosition == 0)
+            LOGGER.error("不能再进行undoPosition操作");
+        else{
+            undoPosition --;
+            redoPosition --;
+            broadcastRoomMessage(CaseMessageType.EDITOR, undoDiffs.get(undoPosition));
+            try {
+                JsonNode target = JsonPatch.apply(jsonMapper.readTree(undoDiffs.get(undoPosition)), jsonMapper.readTree(testCaseContent));
+                testCaseContent = target.toString();
+            } catch (Exception e) {
+                roomLock.unlock();
+                LOGGER.error("undo json parse error。", e);
+            }
         }
         roomLock.unlock();
     }
 
     private void redo() {
         roomLock.lock();
-        broadcastRoomMessage(CaseMessageType.EDITOR, redoDiffs.get(redoPosition));
-        try {
-            JsonNode target = JsonPatch.apply(jsonMapper.readTree(redoDiffs.get(undoPosition)), jsonMapper.readTree(testCaseContent));
-            testCaseContent = target.toString();
-        } catch (Exception e) {
-            roomLock.unlock();
-            LOGGER.error("redo json parse error。", e);
+        if(redoPosition == undoDiffs.size())
+            LOGGER.error("不能再进行redoPosition操作");
+        else{
+            broadcastRoomMessage(CaseMessageType.EDITOR, redoDiffs.get(redoPosition));
+            try {
+                JsonNode target = JsonPatch.apply(jsonMapper.readTree(redoDiffs.get(undoPosition)), jsonMapper.readTree(testCaseContent));
+                testCaseContent = target.toString();
+            } catch (Exception e) {
+                roomLock.unlock();
+                LOGGER.error("redo json parse error。", e);
+            }
+
+            undoPosition ++;
+            redoPosition ++;
         }
 
-        undoPosition ++;
-        redoPosition ++;
         roomLock.unlock();
     }
 
@@ -505,4 +514,5 @@ public abstract class Room {
             this.getBufferedMessages().add(content);
         }
     }
+
 }
