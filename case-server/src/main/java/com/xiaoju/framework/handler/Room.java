@@ -197,10 +197,10 @@ public abstract class Room {
         if(undoPosition == 0)
             LOGGER.error("不能再进行undoPosition操作");
         else{
-            undoPosition --;
-            redoPosition --;
-            broadcastRoomMessage(CaseMessageType.EDITOR, undoDiffs.get(undoPosition));
             try {
+                undoPosition --;
+                redoPosition --;
+                broadcastRoomMessage(CaseMessageType.EDITOR, undoDiffs.get(undoPosition));
                 JsonNode target = JsonPatch.apply(jsonMapper.readTree(undoDiffs.get(undoPosition)), jsonMapper.readTree(testCaseContent));
                 testCaseContent = target.toString();
             } catch (Exception e) {
@@ -217,8 +217,8 @@ public abstract class Room {
         if(redoPosition == undoDiffs.size())
             LOGGER.error("不能再进行redoPosition操作");
         else{
-            broadcastRoomMessage(CaseMessageType.EDITOR, redoDiffs.get(redoPosition));
             try {
+                broadcastRoomMessage(CaseMessageType.EDITOR, redoDiffs.get(redoPosition));
                 JsonNode target = JsonPatch.apply(jsonMapper.readTree(redoDiffs.get(undoPosition)), jsonMapper.readTree(testCaseContent));
                 testCaseContent = target.toString();
             } catch (Exception e) {
