@@ -9,6 +9,7 @@ import com.xiaoju.framework.entity.exception.CaseServerException;
 import com.xiaoju.framework.entity.request.cases.CaseCreateReq;
 import com.xiaoju.framework.entity.request.cases.FileImportReq;
 import com.xiaoju.framework.entity.response.cases.ExportXmindResp;
+import com.xiaoju.framework.handler.RecordRoom;
 import com.xiaoju.framework.mapper.TestCaseMapper;
 import com.xiaoju.framework.service.CaseService;
 import com.xiaoju.framework.service.FileService;
@@ -29,10 +30,7 @@ import org.springframework.util.StringUtils;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.io.*;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static com.xiaoju.framework.constants.SystemConstant.POINT;
 import static com.xiaoju.framework.constants.XmindConstant.*;
@@ -45,6 +43,8 @@ import static com.xiaoju.framework.constants.XmindConstant.*;
  */
 @Service
 public class FileServiceImpl implements FileService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(FileServiceImpl.class);
 
     @Resource
     private CaseService caseService;
@@ -92,7 +92,8 @@ public class FileServiceImpl implements FileService {
 
             // 导入用例
             File jsonFile = new File((desc + CONTENT_JSON).replace("/", File.separator));
-            CaseCreateReq caseCreateReq = jsonFile.exists() ? buildCaseByJson(req, desc) : buildCaseByXml(req, desc, request, uploadPath);
+            LOGGER.info("[jsonFile是否存在]" + jsonFile.exists());
+            CaseCreateReq caseCreateReq = jsonFile.exists() ? buildCaseByJson(req, desc, request, uploadPath) : buildCaseByXml(req, desc, request, uploadPath);
             return caseService.insertOrDuplicateCase(caseCreateReq);
         }
         throw new CaseServerException("传入的文件名非法", StatusCode.FILE_IMPORT_ERROR);
@@ -210,8 +211,6 @@ public class FileServiceImpl implements FileService {
         }
 
         String path = creteFolder(testCase); // 创建要写入的文件夹
-        // 此处需要新加一个文件夹，命名为attachments，里面存放图片
-        writeAttachments(path);
         //写入content.xml内容
         writeContentXml(testCase,path);
         //写Meta文件
@@ -225,18 +224,19 @@ public class FileServiceImpl implements FileService {
         return pathMap;
     }
 
-    // 将照片拷贝到path文件夹里面
-    private void writeAttachments(String path){
-        String targetPath = path  + "/attachments";
-
-    }
 
     //拼接xml内容
     private void writeContentXml(TestCase testCase,String path){
         // 1、创建document对象
         Document document = DocumentHelper.createDocument();
         // 2、创建根节点root
-        Element root = document.addElement("xmap-content");
+        Element root = document.addElement("xhtml:image")
+                .addAttribute("xmlns:xhtml", "http://www.w3.org/1999/xhtml")
+                .addNamespace("fo", "http://www.w3.org/1999/XSL/Format")
+                .addNamespace("svg", "http://www.w3/org/2000/svg") // 在此处svg：添加命名空间
+                .addNamespace("xhtml", "http://www.w3.org/1999/xhtml") // 在此为xhtml：添加命名空间
+                .addNamespace("xlink", "http://www.w3.org/1999/xlink");
+
         // 3、生成子节点及子节点内容
         Element sheet = root.addElement("sheet")
                 .addAttribute("id",ZEN_ROOT_VERSION) // 给sheet添加属性id
@@ -245,12 +245,12 @@ public class FileServiceImpl implements FileService {
                 .addAttribute("timestamp",XMIND_CREATED_VERSION); // 给sheet添加属性timestamp
         // 获得全部json数据，此时的json数据中有图片的链接地址，需要把image取出来
         JSONObject rootObj = JSON.parseObject(testCase.getCaseContent()).getJSONObject(ROOT);
-        System.out.println("case中的内容：" + testCase.getCaseContent());
+        LOGGER.info("case中的内容：" + testCase.getCaseContent());
         Element topic = sheet.addElement("topic") // 给sheet添加新的节点topic
                 .addAttribute("id",rootObj.getJSONObject(DATA).getString("id")) // 获得id
                 .addAttribute("modified-by","didi") // 获得用户名
-                .addAttribute("timestamp",rootObj.getJSONObject(DATA).getString("created")) // 获得创建时间戳
-                .addAttribute("image",rootObj.getJSONObject(DATA).getString("image")); // 新加的，获得图片2021/08/12
+                .addAttribute("timestamp",rootObj.getJSONObject(DATA).getString("created")); // 获得创建时间戳
+
 
         Element title = topic.addElement("title");
         String text = rootObj.getJSONObject(DATA).getString("text");
@@ -261,7 +261,7 @@ public class FileServiceImpl implements FileService {
         }
         title.setText(text); // 加入标题
         // 在xml里面的children添加数据，但是对于图片来说，它的key是image，而不是children
-        TreeUtil.exportDataToXml(rootObj.getJSONArray("children"), topic);
+        TreeUtil.exportDataToXml(rootObj.getJSONArray("children"), topic, path);
         String targetPath = path  + "/content.xml";
         //写入xml
         writeXml(targetPath,document);
@@ -284,16 +284,27 @@ public class FileServiceImpl implements FileService {
         return  desPath;
     }
 
-    private CaseCreateReq buildCaseByJson(FileImportReq request, String fileName) {
+    private CaseCreateReq buildCaseByJson(FileImportReq request, String fileName, HttpServletRequest requests, String uploadPath) throws IOException  {
         // 开始读取文件中的json内容了
         String s = FileUtil.readJsonFile(fileName);
         JSONArray parseArray = JSONObject.parseArray(s);
         JSONObject getObj = parseArray.getJSONObject(0);
         JSONObject rootTopic = getObj.getJSONObject("rootTopic");
 
+        String picXml = "resources";
+        String picName = (fileName + picXml).replace("/", File.separator);
+        File file = new File(picName);
+
         // case-content设置
         JSONArray jsonArray = new JSONArray();
-        TreeUtil.importDataByJson(jsonArray, rootTopic);
+        if(file.exists()){
+            if(file.isDirectory()){
+                TreeUtil.importDataByJson1(jsonArray, rootTopic, picName, requests, uploadPath);
+            }
+        }
+        else {
+            TreeUtil.importDataByJson(jsonArray, rootTopic);
+        }
 
         return buildCaseCreateReq(request, jsonArray);
     }
@@ -321,14 +332,14 @@ public class FileServiceImpl implements FileService {
             // 如果包含图片的文件夹存在，则重写importDataXml方法，将file1添加进去
             if(file1.exists()){
                 if(file1.isDirectory()){
-                    System.out.println("有图片信息");
+                    LOGGER.info("有图片信息");
                     // 此时需要将本地文件传到网上
                     jsonArray = TreeUtil.importDataByXml1(request, childElement, picName, requests, uploadPath);
                 }
             }
             // 如果包含图片的文件夹不存在，则直接调用importDataByXml方法，不需要再传入file1这个参数
             else{
-                System.out.println("没有图片信息");
+                LOGGER.info("没有图片信息");
                 jsonArray = TreeUtil.importDataByXml(childElement);
             }
 
@@ -364,4 +375,5 @@ public class FileServiceImpl implements FileService {
         testCase.setBizId(request.getBizId());
         return testCase;
     }
+
 }

@@ -113,6 +113,7 @@ public abstract class Room {
         return testCaseContent;
     }
 
+    // 创建并添加一个新用户并进行广播
     public Player createAndAddPlayer(Client client) {
         if (players.size() >= MAX_PLAYER_COUNT) {
             throw new IllegalStateException("Maximum player count ("
@@ -190,10 +191,10 @@ public abstract class Room {
         if(undoPosition == 0)
             LOGGER.error("不能再进行undoPosition操作");
         else{
-            undoPosition --;
-            redoPosition --;
-            broadcastRoomMessage(CaseMessageType.EDITOR, undoDiffs.get(undoPosition));
             try {
+                undoPosition --;
+                redoPosition --;
+                broadcastRoomMessage(CaseMessageType.EDITOR, undoDiffs.get(undoPosition));
                 JsonNode target = JsonPatch.apply(jsonMapper.readTree(undoDiffs.get(undoPosition)), jsonMapper.readTree(testCaseContent));
                 testCaseContent = target.toString();
             } catch (Exception e) {
@@ -209,8 +210,8 @@ public abstract class Room {
         if(redoPosition == undoDiffs.size())
             LOGGER.error("不能再进行redoPosition操作");
         else{
-            broadcastRoomMessage(CaseMessageType.EDITOR, redoDiffs.get(redoPosition));
             try {
+                broadcastRoomMessage(CaseMessageType.EDITOR, redoDiffs.get(redoPosition));
                 JsonNode target = JsonPatch.apply(jsonMapper.readTree(redoDiffs.get(undoPosition)), jsonMapper.readTree(testCaseContent));
                 testCaseContent = target.toString();
             } catch (Exception e) {
@@ -255,11 +256,10 @@ public abstract class Room {
             try {
                 JsonNode request = jsonMapper.readTree(msg.substring(seperateIndex + 1));
                 ArrayNode patch = (ArrayNode) request.get("patch");
-                long currentVersion = ((JsonNode) request.get("case")).get("base").asLong();
-                String tmpTestCaseContent = ((JsonNode) request.get("case")).toString().replace("\"base\":" + currentVersion, "\"base\":" + (currentVersion + 1));
+                long currentVersion = ((JsonNode) request.get("case")).get("base").asLong(); // 获得当前的Version版本号
+                String tmpTestCaseContent = ((JsonNode) request.get("case")).toString().replace("\"base\":" + currentVersion, "\"base\":" + (currentVersion + 1)); // 临时的content在之前的version版本号上+1
                 ArrayNode patchReverse = (ArrayNode) JsonDiff.asJson(jsonMapper.readTree(tmpTestCaseContent),
                         jsonMapper.readTree(testCaseContent==null?testCase.getCaseContent():testCaseContent), EnumSet.of(ADD_ORIGINAL_VALUE_ON_REPLACE, OMIT_MOVE_OPERATION));
-
                 testCaseContent = tmpTestCaseContent;
                 ArrayNode patchNew = patchTraverse(patch);
 
