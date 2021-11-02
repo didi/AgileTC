@@ -270,10 +270,11 @@ public abstract class Room {
             try {
                 JsonNode request = jsonMapper.readTree(msg.substring(seperateIndex + 1));
                 ArrayNode patch = (ArrayNode) request.get("patch");
-                long currentVersion = ((JsonNode) request.get("case")).get("base").asLong(); // 获得当前的Version版本号
-                String tmpTestCaseContent = ((JsonNode) request.get("case")).toString().replace("\"base\":" + currentVersion, "\"base\":" + (currentVersion + 1)); // 临时的content在之前的version版本号上+1
+                long currentVersion = ((JsonNode) request.get("case")).get("base").asLong();
+                String tmpTestCaseContent = ((JsonNode) request.get("case")).toString().replace("\"base\":" + currentVersion, "\"base\":" + (currentVersion + 1));
                 ArrayNode patchReverse = (ArrayNode) JsonDiff.asJson(jsonMapper.readTree(tmpTestCaseContent),
                         jsonMapper.readTree(testCaseContent==null?testCase.getCaseContent():testCaseContent), EnumSet.of(ADD_ORIGINAL_VALUE_ON_REPLACE, OMIT_MOVE_OPERATION));
+
                 testCaseContent = tmpTestCaseContent;
                 ArrayNode patchNew = patchTraverse(patch);
 
@@ -528,5 +529,4 @@ public abstract class Room {
             this.getBufferedMessages().add(content);
         }
     }
-
 }
