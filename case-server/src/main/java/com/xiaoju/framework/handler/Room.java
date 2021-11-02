@@ -251,7 +251,7 @@ public abstract class Room {
 
     public void leavebroadcastMessageForHttp(String msg) {
         for (Player p : players) {
-            p.getClient().sendMessage(CaseMessageType.EDITOR, msg);
+                p.getClient().sendMessage(CaseMessageType.EDITOR, msg);
         }
     }
 
