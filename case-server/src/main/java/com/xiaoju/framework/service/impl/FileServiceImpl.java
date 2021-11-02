@@ -235,7 +235,7 @@ public class FileServiceImpl implements FileService {
                 .addNamespace("fo", "http://www.w3.org/1999/XSL/Format")
                 .addNamespace("svg", "http://www.w3/org/2000/svg") // 在此处svg：添加命名空间
                 .addNamespace("xhtml", "http://www.w3.org/1999/xhtml") // 在此为xhtml：添加命名空间
-                .addNamespace("xlink", "http://www.w3.org/1999/xlink");
+                .addNamespace("xlink", "http://www.w3.org/1999/xlink"); // 在此为xlink：添加命名空间
 
         // 3、生成子节点及子节点内容
         Element sheet = root.addElement("sheet")
@@ -293,18 +293,10 @@ public class FileServiceImpl implements FileService {
 
         String picXml = "resources";
         String picName = (fileName + picXml).replace("/", File.separator);
-        File file = new File(picName);
 
         // case-content设置
         JSONArray jsonArray = new JSONArray();
-        if(file.exists()){
-            if(file.isDirectory()){
-                TreeUtil.importDataByJson1(jsonArray, rootTopic, picName, requests, uploadPath);
-            }
-        }
-        else {
-            TreeUtil.importDataByJson(jsonArray, rootTopic);
-        }
+        TreeUtil.importDataByJson(jsonArray, rootTopic, picName, requests, uploadPath);
 
         return buildCaseCreateReq(request, jsonArray);
     }
@@ -318,7 +310,6 @@ public class FileServiceImpl implements FileService {
         String picName = (fileName + picXml).replace("/", File.separator);
         fileName = (fileName + fileXml).replace("/", File.separator);
         File file = new File(fileName);
-        File file1 = new File(picName);
         if(!file.exists()) // 判断文件是否存在
             throw new CaseServerException("导入失败，文件不存在", StatusCode.FILE_IMPORT_ERROR);
         SAXReader reade = new SAXReader();
@@ -329,20 +320,7 @@ public class FileServiceImpl implements FileService {
         String eleName = childElement.getName();
         if(eleName.equalsIgnoreCase("sheet"))
         {
-            // 如果包含图片的文件夹存在，则重写importDataXml方法，将file1添加进去
-            if(file1.exists()){
-                if(file1.isDirectory()){
-                    LOGGER.info("有图片信息");
-                    // 此时需要将本地文件传到网上
-                    jsonArray = TreeUtil.importDataByXml1(request, childElement, picName, requests, uploadPath);
-                }
-            }
-            // 如果包含图片的文件夹不存在，则直接调用importDataByXml方法，不需要再传入file1这个参数
-            else{
-                LOGGER.info("没有图片信息");
-                jsonArray = TreeUtil.importDataByXml(childElement);
-            }
-
+            jsonArray = TreeUtil.importDataByXml(request, childElement, picName, requests, uploadPath);
         }
         return buildCaseCreateReq(request, jsonArray);
     }

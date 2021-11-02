@@ -318,7 +318,6 @@ public class TreeUtil {
                     .addAttribute("modified-by","didi")
                     .addAttribute("timestamp",dataObj.getString("created"))
                     .addAttribute("imageTitle", dataObj.getString("imageTitle"));
-//                    .addAttribute("image",dataObj.getString("image")); // 2021/08/13
 
             JSONObject dataObj1 = dataObj.getJSONObject("imageSize");
             String picPath = dataObj.getString("image");
@@ -395,35 +394,7 @@ public class TreeUtil {
         }
     }
 
-    //根据xmind解压的json文件导入xmind内容
-    public static void importDataByJson(JSONArray children, JSONObject rootTopic) {
-        JSONObject rootObj = new JSONObject();
-        JSONObject dataObj = new JSONObject();
-        JSONArray childrenNext = new JSONArray();
-        dataObj.put("text", rootTopic.getString("title"));
-        dataObj.put("created", System.currentTimeMillis());
-        dataObj.put("id", rootTopic.getString("id"));
-
-        Integer priority = getPriorityByJsonArray(rootTopic.getJSONArray("markers"));
-
-        if(priority != 0)
-        {
-            dataObj.put("priority",priority);
-        }
-        rootObj.put("data", dataObj);
-        rootObj.put("children", childrenNext);
-        if (children != null) {
-            children.add(rootObj);
-        }
-        if (rootTopic.containsKey("children") && rootTopic.getJSONObject("children").containsKey("attached")) {
-            JSONArray jsonArray = rootTopic.getJSONObject("children").getJSONArray("attached");
-            for (int i = 0; i < jsonArray.size(); i++) {
-                importDataByJson(childrenNext, (JSONObject) jsonArray.get(i));
-            }
-        }
-    }
-
-    public static void importDataByJson1(JSONArray children, JSONObject rootTopic, String fileName, HttpServletRequest requests, String uploadPath) throws IOException {
+    public static void importDataByJson(JSONArray children, JSONObject rootTopic, String fileName, HttpServletRequest requests, String uploadPath) throws IOException {
         String vaildName = fileName;
         JSONObject rootObj = new JSONObject();
         JSONObject dataObj = new JSONObject();
@@ -492,8 +463,6 @@ public class TreeUtil {
         {
             dataObj.put("priority",priority);
         }
-
-
         rootObj.put("data", dataObj);
         rootObj.put("children", childrenNext);
         if (children != null) {
@@ -502,83 +471,14 @@ public class TreeUtil {
         if (rootTopic.containsKey("children") && rootTopic.getJSONObject("children").containsKey("attached")) {
             JSONArray jsonArray = rootTopic.getJSONObject("children").getJSONArray("attached");
             for (int i = 0; i < jsonArray.size(); i++) {
-                importDataByJson1(childrenNext, (JSONObject) jsonArray.get(i), vaildName, requests, uploadPath);
+                importDataByJson(childrenNext, (JSONObject) jsonArray.get(i), vaildName, requests, uploadPath);
             }
         }
     }
 
+
     //导入xml内容
-     public static JSONArray importDataByXml(Element e) {
-         JSONArray jsonArray = new JSONArray();
-         List<Element> elementList = e.elements();
-         if(elementList.size() == 0)
-             return jsonArray;
-         for(Element element1:elementList)
-         {
-             if(element1.getName().equalsIgnoreCase("topic"))
-             {
-                 JSONArray childrenNext = new JSONArray();
-                 JSONObject root = new JSONObject();
-                 JSONObject dataObj = new JSONObject();
-                 List<Element> newList = element1.elements();
-                 Map<String, String> imageSize = new HashMap<>();
-                 String text = "";
-                 Integer priorityId = 0;
-                 String created = element1.attributeValue("timestamp");
-                 String id = element1.attributeValue("id");
-                 // 2021/08/13
-                 String image = element1.attributeValue("image");
-                 String imageTitle = element1.attributeValue("imageTitle");
-
-                 for (Element element : newList) {
-                     if(element.getName().equalsIgnoreCase("imageSize")){ // 添加imagesize属性
-                         imageSize.put("width", element.attributeValue("width"));
-                         imageSize.put("height", element.attributeValue("height"));
-                     }
-                     else if (element.getName().equalsIgnoreCase("title")) {
-                         //标题
-                         text = element.getText();
-                     }else if (element.getName().equalsIgnoreCase("marker-refs")) {
-                         // 优先级
-                         priorityId =  getPriorityByElement(element);
-                     }else if (element.getName().equalsIgnoreCase("children")) {
-                         //子节点
-                         List<Element> elementList1 = element.elements();
-                         for(Element childEle:elementList1)
-                         {
-                             if(childEle.getName().equalsIgnoreCase("topics"))
-                             {
-                                 JSONArray jsonArray1 = importDataByXml(childEle);
-                                 if(jsonArray1.size()>0){
-                                     childrenNext.addAll(jsonArray1);
-                                 }
-                             }
-                         }
-                     } else {
-                         continue;
-                     }
-                 }
-
-                 dataObj.put("created", created);
-                 dataObj.put("id", id);
-                 dataObj.put("image", image); // 2021/08/13
-                 dataObj.put("imageTitle", imageTitle); // 2021/08/17
-                 dataObj.put("imageSize", imageSize); // 2021/08/20
-                 dataObj.put("text", text);
-                 dataObj.put("priority", priorityId);
-                 root.put("data",dataObj);
-                 if(childrenNext.size() != 0) {
-                     root.put("children",childrenNext);
-                 }
-                 jsonArray.add(root);
-             }
-         }
-         return jsonArray;
-
-     }
-
-     // 添加一个新的方法，接口中有带有图片的文件夹名属性
-    public static JSONArray importDataByXml1(FileImportReq request, Element e, String fileName, HttpServletRequest requests, String uploadPath) throws IOException {
+    public static JSONArray importDataByXml(FileImportReq request, Element e, String fileName, HttpServletRequest requests, String uploadPath) throws IOException {
         JSONArray jsonArray = new JSONArray();
         List<Element> elementList = e.elements();
         if(elementList.size() == 0)
@@ -651,6 +551,7 @@ public class TreeUtil {
                             ret.put("data", "");
                         }
                     }
+
                     // 获取xml里面中的图片importDataByXml1
 
                     else if (element.getName().equalsIgnoreCase("title")) {
@@ -666,7 +567,7 @@ public class TreeUtil {
                         {
                             if(childEle.getName().equalsIgnoreCase("topics"))
                             {
-                                JSONArray jsonArray1 = importDataByXml1(request, childEle, fileName, requests, uploadPath);
+                                JSONArray jsonArray1 = importDataByXml(request, childEle, fileName, requests, uploadPath);
                                 if(jsonArray1.size()>0){
                                     childrenNext.addAll(jsonArray1);
                                 }
@@ -679,8 +580,8 @@ public class TreeUtil {
 
                 dataObj.put("created", created);
                 dataObj.put("id", id);
-                dataObj.put("image", picPath); // 2021/08/13
-                dataObj.put("imageSize", imageSize); // 2021/08/20
+                dataObj.put("image", picPath);
+                dataObj.put("imageSize", imageSize);
                 dataObj.put("text", text);
                 dataObj.put("priority", priorityId);
                 root.put("data",dataObj);
@@ -766,38 +667,4 @@ public class TreeUtil {
          priorityIds.put("priority-9", 3);
          return priorityIds;
      }
-    public class TreeNode {
-          int val;
-          TreeNode left;
-          TreeNode right;
-          TreeNode() {}
-          TreeNode(int val) { this.val = val; }
-          TreeNode(int val, TreeNode left, TreeNode right) {
-              this.val = val;
-              this.left = left;
-              this.right = right;
-          }
-    }
-    public String multiply(String num1, String num2) {
-        int len1 = num1.length(), len2 = num2.length();
-        if(len1 == 0 || num1 == "0" || len2 == 0 || num2 == "0")
-            return "0";
-        int[] ans = new int[len1+len2+1];
-        for(int i = len1 - 1; i >= 0; i--){
-            for(int j = len2 - 1; j >= 0; j--){
-                int val1 = num1.charAt(i) - '0';
-                int val2 = num2.charAt(j) - '0';
-                int val = val1 * val2 + ans[i+j+1];
-                ans[i+j+1] = val % 10;
-                ans[i+j] += val / 10;
-            }
-        }
-        int left = 0;
-        while(left < len1 + len2 + 1 && ans[left] == 0)
-            left++;
-        StringBuilder str = new StringBuilder();
-        for(int i = left; i < len1 + len2; i++)
-            str.append(ans[i]);
-        return str.toString();
-    }
 }
