@@ -113,7 +113,12 @@ public abstract class Room {
         return testCaseContent;
     }
 
+
     // 创建并添加一个新用户并进行广播
+
+    public void setTestCaseContent(String content) {
+        testCaseContent = content;
+    }
     public Player createAndAddPlayer(Client client) {
         if (players.size() >= MAX_PLAYER_COUNT) {
             throw new IllegalStateException("Maximum player count ("
@@ -200,6 +205,7 @@ public abstract class Room {
             } catch (Exception e) {
                 roomLock.unlock();
                 LOGGER.error("undo json parse error。", e);
+                return;
             }
         }
         roomLock.unlock();
@@ -217,6 +223,7 @@ public abstract class Room {
             } catch (Exception e) {
                 roomLock.unlock();
                 LOGGER.error("redo json parse error。", e);
+                return;
             }
 
             undoPosition ++;
