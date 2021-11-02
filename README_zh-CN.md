@@ -22,23 +22,23 @@
 
 ##### 如何使用
 ##### 环境依赖
-- mac/linux/windows 
-- java 1.8 
-- mysql 服务端 
+- mac/linux/windows
+- java 1.8
+- mysql 服务端
 
 ##### 下载
 ```
-git clone https://github.com/didi/AgileTC.git 
+git clone https://github.com/didi/AgileTC.git
 或者 直接Download ZIP
 ```
 
 ##### 准备
-- 创建依赖数据库，application-dev.properties中配置数据库名称为case_manager create database case_manager 
-- 利用sql中的脚本配置对应表。创建脚本路径：case-server/sql/case-server.sql 
-- 修改application-dev.properties中spring.datasource的配置。默认数据库端口号为3306 
+- 创建依赖数据库，application-dev.properties中配置数据库名称为case_manager `create database case_manager`
+- 利用sql中的脚本配置对应表。创建脚本路径：`case-server/sql/case-server.sql`
+- 修改application-dev.properties中spring.datasource的配置。默认数据库端口号为3306
 
 ##### 运行
-- mvn spring-boot:run  （在case-server目录下执行）
+- `mvn spring-boot:run` （在case-server目录下执行）
 - 浏览器打开 http://localhost:8094/case/caseList/1
 
 #### 整体架构
