@@ -12,7 +12,6 @@ import com.xiaoju.framework.mapper.TestCaseMapper;
 import com.xiaoju.framework.service.CaseBackupService;
 import com.xiaoju.framework.service.RecordService;
 import com.xiaoju.framework.util.BitBaseUtil;
-import lombok.extern.flogger.Flogger;
 import org.apache.poi.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +19,6 @@ import org.springframework.util.StringUtils;
 
 import javax.websocket.Session;
 import java.util.*;
-import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -43,13 +41,15 @@ public abstract class Room {
     private static final int TIMER_DELAY = 30;
     private TimerTask activeBroadcastTimerTask;
 
-    private static final int MAX_PLAYER_COUNT = 100;
+    private static final int MAX_PLAYER_COUNT = 10;
     public final List<Player> players = new ArrayList<>();
 
     public final List<String> undoDiffs = new LinkedList<>();
     public final List<String> redoDiffs = new LinkedList<>();
     private Integer undoPosition;
     private Integer redoPosition;
+
+    protected Integer lastUndoCounts;
 
     public final Map<Session, Client> cs = new ConcurrentHashMap<>();
 
@@ -93,6 +93,7 @@ public abstract class Room {
         }
         undoPosition = undoDiffs.size();
         redoPosition = redoDiffs.size();
+        lastUndoCounts = 0;
     }
 
     private TimerTask createBroadcastTimerTask() {
@@ -113,12 +114,10 @@ public abstract class Room {
         return testCaseContent;
     }
 
-
-    // 创建并添加一个新用户并进行广播
-
     public void setTestCaseContent(String content) {
         testCaseContent = content;
     }
+
     public Player createAndAddPlayer(Client client) {
         if (players.size() >= MAX_PLAYER_COUNT) {
             throw new IllegalStateException("Maximum player count ("
@@ -177,14 +176,16 @@ public abstract class Room {
     }
 
     private void internalHandleMessage(Player p, String msg,
-                                           long msgId) {
+                                       long msgId) {
         p.setLastReceivedMessageId(msgId);
 
         //todo: testCase.apply(msg) 新增如上的方法.
         if (msg.endsWith("undo")) {
             undo();
+            lastUndoCounts ++;
         } else if (msg.endsWith("redo")) {
             redo();
+            lastUndoCounts --;
         } else {
             broadcastMessage(msg);
 
@@ -245,6 +246,12 @@ public abstract class Room {
                 p.getBufferedMessages().add("2" + msg.substring(seperateIndex + 1));
 //                p.sendRoomMessage("2" + "lock");
             }
+        }
+    }
+
+    public void leavebroadcastMessageForHttp(String msg) {
+        for (Player p : players) {
+            p.getClient().sendMessage(CaseMessageType.EDITOR, msg);
         }
     }
 
@@ -398,7 +405,7 @@ public abstract class Room {
 
         private Integer pingCount;
 
-//        private Integer undoPosition;
+        //        private Integer undoPosition;
 //        private Integer redoPosition;
         private Integer undoCount;
         private Integer redoCount;
