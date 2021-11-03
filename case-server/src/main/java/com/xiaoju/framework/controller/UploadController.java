@@ -60,13 +60,17 @@ public class UploadController {
      * @param requirementId 需求idStr
      * @return 响应体
      */
+
+    @Value("${web.upload-path}")
+    private String uploadPath;
+
     @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public Response<Long> importXmind(@RequestParam MultipartFile file, String creator, String bizId,
-                                      Long productLineId, String title, String description, Integer channel, String requirementId) {
+                                      Long productLineId, String title, String description, Integer channel, String requirementId, HttpServletRequest request) {
         FileImportReq req = new FileImportReq(file, creator, productLineId, title, description, channel, requirementId, bizId);
         req.validate();
         try {
-            return Response.success(fileService.importXmindFile(req));
+            return Response.success(fileService.importXmindFile(req, request, uploadPath));
         } catch (CaseServerException e) {
             throw new CaseServerException(e.getLocalizedMessage(), e.getStatus());
         } catch (Exception e) {
@@ -76,8 +80,7 @@ public class UploadController {
         }
     }
 
-    @Value("${web.upload-path}")
-    private String uploadPath;
+
 
     @PostMapping(value = "/uploadAttachment", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public JSONObject uploadAttachment(@RequestParam MultipartFile file, HttpServletRequest request) {

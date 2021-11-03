@@ -4,12 +4,37 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.xiaoju.framework.constants.enums.ProgressEnum;
+import com.xiaoju.framework.constants.enums.StatusCode;
+import com.xiaoju.framework.controller.UploadController;
+import com.xiaoju.framework.entity.exception.CaseServerException;
+import com.xiaoju.framework.entity.request.cases.FileImportReq;
 import com.xiaoju.framework.entity.xmind.*;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.dom4j.Document;
+import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
+import org.dom4j.Namespace;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
+import javax.servlet.http.HttpServletRequest;
+import java.io.*;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 
@@ -21,6 +46,12 @@ import java.util.*;
  * @date 2020/11/26
  */
 public class TreeUtil {
+
+    /**
+     * 常量
+     */
+    private static final Logger LOGGER = LoggerFactory.getLogger(TreeUtil.class);
+
 
     // 剥离出progress的内容
     public static JSONObject parse(String caseContent) {
@@ -269,26 +300,76 @@ public class TreeUtil {
     }
 
     // 导出json内容到xml
-    public static void exportDataToXml(JSONArray children, Element rootTopic) {
+    public static void exportDataToXml(JSONArray children, Element rootTopic, String path){
         if(children.size() == 0)
             return;
+
+        Document document = rootTopic.getDocument();
+        LOGGER.info("rootTopic中的内容为： " + rootTopic);
+        LOGGER.info("document中的内容为：" + document);
         Element children1 = rootTopic.addElement("children");
         Element topics = children1.addElement("topics").addAttribute("type","attached");
         for (Object o : children) {
             JSONObject dataObj = ((JSONObject) o).getJSONObject("data");
+
+
             Element topic = topics.addElement("topic")
                     .addAttribute("id",dataObj.getString("id"))
                     .addAttribute("modified-by","didi")
                     .addAttribute("timestamp",dataObj.getString("created"))
-                    .addAttribute("imageTitle", dataObj.getString("imageTitle"))
-                    .addAttribute("image",dataObj.getString("image")); // 2021/08/13
+                    .addAttribute("imageTitle", dataObj.getString("imageTitle"));
 
             JSONObject dataObj1 = dataObj.getJSONObject("imageSize");
+            String picPath = dataObj.getString("image");
+            if(picPath != null && picPath.length() != 0){
+                String targetPath = path  + "/attachments";
 
-            if(dataObj1 != null){
-                Element imageSize = topic.addElement("imageSize")
-                         .addAttribute("width", dataObj1.getString("width"))
-                        .addAttribute("height", dataObj1.getString("height"));
+                // 创建一个新的文件夹
+                File file = new File(targetPath);
+                if(!file.isDirectory()){
+                    file.mkdir();
+                }
+                try{
+                    String[] strs = picPath.split("/");
+                    int size = strs.length;
+                    String fileName = strs[size - 1];
+                    LOGGER.info("picPath路径为：" + picPath);
+                    LOGGER.info("outfile的内容为：" + file + "/" + fileName);
+
+                    if(dataObj1 != null && dataObj1.getString("width") != null){
+                        LOGGER.info("topic1的内容为：" + topic);
+                        LOGGER.info("dataonj1中有内容, 其中width：" + dataObj1.getString("width") + "  ，height：" + dataObj1.getString("height"));
+                        Element imageSize = topic.addElement("xhtml:img")
+                                .addAttribute("svg:height", dataObj1.getString("height"))
+                                .addAttribute("svg:width", dataObj1.getString("width"))
+                                .addAttribute("xhtml:src", "xap:attachments/" + fileName);
+
+                    }
+
+                    FileOutputStream outFile = new FileOutputStream(file + "/" + fileName);
+                    URL httpUrl=new URL(picPath);
+                    HttpURLConnection conn=(HttpURLConnection) httpUrl.openConnection();
+                    //以Post方式提交表单，默认get方式
+                    conn.setRequestMethod("GET");
+                    conn.setDoInput(true);
+                    conn.setDoOutput(true);
+                    // post方式不能使用缓存
+                    conn.setUseCaches(false);
+                    //连接指定的资源
+                    conn.connect();
+                    //获取网络输入流
+                    InputStream inputStream=conn.getInputStream();
+                    BufferedInputStream bis = new BufferedInputStream(inputStream);
+                    byte b [] = new byte[1024];
+                    int len = 0;
+                    while((len=bis.read(b))!=-1){
+                        outFile.write(b, 0, len);
+                    }
+                    LOGGER.info("下载完成...");
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
 
             Element title = topic.addElement("title");
@@ -302,25 +383,79 @@ public class TreeUtil {
 
             String priority = getPriorityByJson(dataObj);
             if(priority != null && !priority.equals("")){
-                Element marker_refs  = topic.addElement("marker-refs");
+                Element marker_refs = topic.addElement("marker-refs");
                 marker_refs.addElement("marker-ref")
                         .addAttribute("marker-id",priority);
             }
             JSONArray childChildren = ((JSONObject) o).getJSONArray("children");
             if (childChildren != null && childChildren.size() > 0) {
-                exportDataToXml(childChildren, topic);
+                exportDataToXml(childChildren, topic, path);
             }
         }
     }
 
-    //根据xmind解压的json文件导入xmind内容
-    public static void importDataByJson(JSONArray children, JSONObject rootTopic) {
+    public static void importDataByJson(JSONArray children, JSONObject rootTopic, String fileName, HttpServletRequest requests, String uploadPath) throws IOException {
+        String vaildName = fileName;
         JSONObject rootObj = new JSONObject();
         JSONObject dataObj = new JSONObject();
         JSONArray childrenNext = new JSONArray();
         dataObj.put("text", rootTopic.getString("title"));
         dataObj.put("created", System.currentTimeMillis());
         dataObj.put("id", rootTopic.getString("id"));
+        if(rootTopic.containsKey("image")){ // 添加imagesize属性
+            // 需要将图片传到云空间中，然后将返回的链接导入
+            Map<String, String> imageSize = new HashMap<>();
+            imageSize.put("width", "400");
+            imageSize.put("height", "184");
+            String image = "";
+            String picPath = "";
+            String path = rootTopic.getJSONObject("image").getString("src");
+            String[] strs = path.split("/");
+            int len = strs.length;
+            fileName = fileName + "/";
+            image = strs[len-1]; // 此时image为图片所在的本地位置
+            // 将文件传入到temp文件下，因此需要将文件进行转换，将file文件类型转化为MultipartFile类型，然后进行上传
+            File file = new File(fileName + image);
+            FileInputStream fileInputStream = new FileInputStream(file);
+            MultipartFile multipartFile = new MockMultipartFile(file.getName(), file.getName(),
+                    ContentType.APPLICATION_OCTET_STREAM.toString(), fileInputStream);
+
+            // 将MultipartFile文件进行上传
+            JSONObject ret = new JSONObject();
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd/");
+            String format = sdf.format(new Date());
+            File folder = new File(uploadPath + format);// 文件夹的名字
+            if (!folder.isDirectory()) { // 如果文件夹为空，则新建文件夹
+                folder.mkdirs();
+            }
+            // 对上传的文件重命名，避免文件重名
+            String oldName = multipartFile.getOriginalFilename(); // 获取文件的名字
+            String newName = UUID.randomUUID().toString()
+                    + oldName.substring(oldName.lastIndexOf("."), oldName.length()); // 生成新的随机的文件名字
+            File newFile = new File(folder, newName);
+            LOGGER.info("newFile的名字为" + newFile);
+            try {
+                multipartFile.transferTo(newFile);
+                // 返回上传文件的访问路径
+                // request.getScheme()可获取请求的协议名，request.getServerName()可获取请求的域名，request.getServerPort()可获取请求的端口号
+                String filePath = requests.getScheme() + "://" + requests.getServerName()
+                        + ":" + requests.getServerPort() + "/" + format + newName;
+                LOGGER.info("filepath的路径为：" + filePath);
+                picPath = filePath;
+                JSONArray datas = new JSONArray();
+                JSONObject data = new JSONObject();
+                data.put("url", filePath);
+                ret.put("success", 1);
+                datas.add(data);
+                ret.put("data", datas);
+            } catch (IOException err) {
+                LOGGER.error("上传文件失败, 请重试。", err);
+                ret.put("success", 0);
+                ret.put("data", "");
+            }
+            dataObj.put("image", picPath);
+            dataObj.put("imageSize", imageSize);
+        }
 
         Integer priority = getPriorityByJsonArray(rootTopic.getJSONArray("markers"));
 
@@ -336,80 +471,129 @@ public class TreeUtil {
         if (rootTopic.containsKey("children") && rootTopic.getJSONObject("children").containsKey("attached")) {
             JSONArray jsonArray = rootTopic.getJSONObject("children").getJSONArray("attached");
             for (int i = 0; i < jsonArray.size(); i++) {
-                importDataByJson(childrenNext, (JSONObject) jsonArray.get(i));
+                importDataByJson(childrenNext, (JSONObject) jsonArray.get(i), vaildName, requests, uploadPath);
             }
         }
     }
 
+
     //导入xml内容
-     public static JSONArray importDataByXml(Element e) {
-         JSONArray jsonArray = new JSONArray();
-         List<Element> elementList = e.elements();
-         if(elementList.size() == 0)
-             return jsonArray;
-         for(Element element1:elementList)
-         {
-             if(element1.getName().equalsIgnoreCase("topic"))
-             {
-                 JSONArray childrenNext = new JSONArray();
-                 JSONObject root = new JSONObject();
-                 JSONObject dataObj = new JSONObject();
-                 List<Element> newList = element1.elements();
-                 Map<String, String> imageSize = new HashMap<>();
-                 String text = "";
-                 Integer priorityId = 0;
-                 String created = element1.attributeValue("timestamp");
-                 String id = element1.attributeValue("id");
-                 // 2021/08/13
-                 String image = element1.attributeValue("image");
-                 String imageTitle = element1.attributeValue("imageTitle");
+    public static JSONArray importDataByXml(FileImportReq request, Element e, String fileName, HttpServletRequest requests, String uploadPath) throws IOException {
+        JSONArray jsonArray = new JSONArray();
+        List<Element> elementList = e.elements();
+        if(elementList.size() == 0)
+            return jsonArray;
+        for(Element element1:elementList)
+        {
+            if(element1.getName().equalsIgnoreCase("topic"))
+            {
+                JSONArray childrenNext = new JSONArray();
+                JSONObject root = new JSONObject();
+                JSONObject dataObj = new JSONObject();
+                List<Element> newList = element1.elements();
+                Map<String, String> imageSize = new HashMap<>();
+                String text = "";
+                String image = "";
+                String picPath = "";
+                Integer priorityId = 0;
+                String created = element1.attributeValue("timestamp");
+                String id = element1.attributeValue("id");
 
-                 for (Element element : newList) {
-                     if(element.getName().equalsIgnoreCase("imageSize")){ // 添加imagesize属性
-                         imageSize.put("width", element.attributeValue("width"));
-                         imageSize.put("height", element.attributeValue("height"));
-                     }
-                     else if (element.getName().equalsIgnoreCase("title")) {
-                         //标题
-                         text = element.getText();
-                     }else if (element.getName().equalsIgnoreCase("marker-refs")) {
-                         // 优先级
-                         priorityId =  getPriorityByElement(element);
-                     }else if (element.getName().equalsIgnoreCase("children")) {
-                         //子节点
-                         List<Element> elementList1 = element.elements();
-                         for(Element childEle:elementList1)
-                         {
-                             if(childEle.getName().equalsIgnoreCase("topics"))
-                             {
-                                 JSONArray jsonArray1 = importDataByXml(childEle);
-                                 if(jsonArray1.size()>0){
-                                     childrenNext.addAll(jsonArray1);
-                                 }
-                             }
-                         }
-                     } else {
-                         continue;
-                     }
-                 }
+                for (Element element : newList) {
+                    // 获取xml里面的图片大小信息
+                    if(element.getName().equalsIgnoreCase("img")){ // 添加imagesize属性
+                        // 需要将图片传到云空间中，然后将返回的链接导入
+                        LOGGER.info("xhtml:img可以使用，其中element中的内容为：" + element);
+                        imageSize.put("width", element.attributeValue("width"));
+                        imageSize.put("height", element.attributeValue("height"));
+                        String path = element.attributeValue("src");
+                        String[] strs = path.split("/");
+                        int len = strs.length;
+                        fileName = fileName + "/";
+                        image = strs[len-1]; // 此时image为图片所在的本地位置
+                        // 将文件传入到temp文件下，因此需要将文件进行转换，将file文件类型转化为MultipartFile类型，然后进行上传
+                        File file = new File(fileName + image);
+                        FileInputStream fileInputStream = new FileInputStream(file);
+                        MultipartFile multipartFile = new MockMultipartFile(file.getName(), file.getName(),
+                                ContentType.APPLICATION_OCTET_STREAM.toString(), fileInputStream);
 
-                 dataObj.put("created", created);
-                 dataObj.put("id", id);
-                 dataObj.put("image", image); // 2021/08/13
-                 dataObj.put("imageTitle", imageTitle); // 2021/08/17
-                 dataObj.put("imageSize", imageSize); // 2021/08/20
-                 dataObj.put("text", text);
-                 dataObj.put("priority", priorityId);
-                 root.put("data",dataObj);
-                 if(childrenNext.size() != 0) {
-                     root.put("children",childrenNext);
-                 }
-                 jsonArray.add(root);
-             }
-         }
-         return jsonArray;
+                        // 将MultipartFile文件进行上传
+                        JSONObject ret = new JSONObject();
+                        SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd/");
+                        String format = sdf.format(new Date());
+                        File folder = new File(uploadPath + format);// 文件夹的名字
+                        if (!folder.isDirectory()) { // 如果文件夹为空，则新建文件夹
+                            folder.mkdirs();
+                        }
+                        // 对上传的文件重命名，避免文件重名
+                        String oldName = multipartFile.getOriginalFilename(); // 获取文件的名字
+                        String newName = UUID.randomUUID().toString()
+                                + oldName.substring(oldName.lastIndexOf("."), oldName.length()); // 生成新的随机的文件名字
+                        File newFile = new File(folder, newName);
+                        LOGGER.info("newFile的名字为" + newFile);
+                        try {
+                             multipartFile.transferTo(newFile);
+                            // 返回上传文件的访问路径
+                            // request.getScheme()可获取请求的协议名，request.getServerName()可获取请求的域名，request.getServerPort()可获取请求的端口号
+                            String filePath = requests.getScheme() + "://" + requests.getServerName()
+                                    + ":" + requests.getServerPort() + "/" + format + newName;
+                            LOGGER.info("filepath的路径为：" + filePath);
+                            picPath = filePath;
+                            JSONArray datas = new JSONArray();
+                            JSONObject data = new JSONObject();
+                            data.put("url", filePath);
+                            ret.put("success", 1);
+                            datas.add(data);
+                            ret.put("data", datas);
+                        } catch (IOException err) {
+                            LOGGER.error("上传文件失败, 请重试。", err);
+                            ret.put("success", 0);
+                            ret.put("data", "");
+                        }
+                    }
 
-     }
+                    // 获取xml里面中的图片importDataByXml1
+
+                    else if (element.getName().equalsIgnoreCase("title")) {
+                        //标题
+                        text = element.getText();
+                    }else if (element.getName().equalsIgnoreCase("marker-refs")) {
+                        // 优先级
+                        priorityId =  getPriorityByElement(element);
+                    }else if (element.getName().equalsIgnoreCase("children")) {
+                        //子节点
+                        List<Element> elementList1 = element.elements();
+                        for(Element childEle:elementList1)
+                        {
+                            if(childEle.getName().equalsIgnoreCase("topics"))
+                            {
+                                JSONArray jsonArray1 = importDataByXml(request, childEle, fileName, requests, uploadPath);
+                                if(jsonArray1.size()>0){
+                                    childrenNext.addAll(jsonArray1);
+                                }
+                            }
+                        }
+                    } else {
+                        continue;
+                    }
+                }
+
+                dataObj.put("created", created);
+                dataObj.put("id", id);
+                dataObj.put("image", picPath);
+                dataObj.put("imageSize", imageSize);
+                dataObj.put("text", text);
+                dataObj.put("priority", priorityId);
+                root.put("data",dataObj);
+                if(childrenNext.size() != 0) {
+                    root.put("children",childrenNext);
+                }
+                jsonArray.add(root);
+            }
+        }
+        return jsonArray;
+
+    }
 
      //根据xml文件获取优先级
      private static Integer getPriorityByElement(Element element)
@@ -483,5 +667,4 @@ public class TreeUtil {
          priorityIds.put("priority-9", 3);
          return priorityIds;
      }
-
 }

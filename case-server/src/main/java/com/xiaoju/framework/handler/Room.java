@@ -176,7 +176,7 @@ public abstract class Room {
     }
 
     private void internalHandleMessage(Player p, String msg,
-                                           long msgId) {
+                                       long msgId) {
         p.setLastReceivedMessageId(msgId);
 
         //todo: testCase.apply(msg) 新增如上的方法.
@@ -406,7 +406,7 @@ public abstract class Room {
 
         private Integer pingCount;
 
-//        private Integer undoPosition;
+        //        private Integer undoPosition;
 //        private Integer redoPosition;
         private Integer undoCount;
         private Integer redoCount;
