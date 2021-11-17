@@ -40,7 +40,7 @@ public class RecordRoom extends Room {
             mergeRecoed(p.getClient().getRecordId(), caseContent);
         }
         p.getClient().sendMessage(CaseMessageType.EDITOR, testCaseContent);
-        LOGGER.info(Thread.currentThread().getName() + ": 新的用户加入成功，传输用例内容： " + testCaseContent);
+        LOGGER.info(Thread.currentThread().getName() + ": 新的用户加入成功");
         return p;
     }
 
@@ -51,8 +51,6 @@ public class RecordRoom extends Room {
         // 如果是最后一个用户离开，需要关闭广播任务
         if (players.size() == 0) {
             if (testCaseContent != null) {
-                LOGGER.info(Thread.currentThread().getName() + ": 当前的用例内容是：" + testCaseContent);
-//                testCase.setCaseContent(testCaseContent);
                 testCase.setGmtModified(new Date(System.currentTimeMillis()));
 
                 JSONObject jsonObject = TreeUtil.parse(testCaseContent);

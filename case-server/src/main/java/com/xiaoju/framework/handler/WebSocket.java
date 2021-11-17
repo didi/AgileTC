@@ -205,7 +205,6 @@ public class WebSocket {
                                 break;
 
                             case '1': // 处理编辑消息，包括对信息的编辑以及撤销等操作
-                                LOGGER.info(Thread.currentThread().getName() + ": 收到消息... onMessage: " + message.trim());
                                 if (player != null) {
                                     //todo：此处分隔符待优化
                                     LOGGER.info(Thread.currentThread().getName() + ": 消息内部处理中...");

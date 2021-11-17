@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.flipkart.zjsonpatch.JsonDiff;
 import com.flipkart.zjsonpatch.JsonPatch;
+import com.xiaoju.framework.entity.persistent.CaseBackup;
 import com.xiaoju.framework.entity.persistent.TestCase;
 import com.xiaoju.framework.mapper.TestCaseMapper;
 import com.xiaoju.framework.service.CaseBackupService;
@@ -41,6 +42,8 @@ public abstract class Room {
     private static final int TIMER_DELAY = 30;
     private TimerTask activeBroadcastTimerTask;
 
+    public static Boolean editInfoSaveToDB = true; // true:编辑信息保存到数据库; false:编辑信息保存到日志
+    public static Long roomId;
     private static final int MAX_PLAYER_COUNT = 10;
     public final List<Player> players = new ArrayList<>();
 
@@ -82,6 +85,7 @@ public abstract class Room {
     }
     // id 前面部分是case id；后面部分是record id
     public Room(Long id) {
+        this.roomId = id;
         long caseId = BitBaseUtil.getLow32(id);
         if (testCase != null) {
             return;
@@ -178,6 +182,23 @@ public abstract class Room {
     private void internalHandleMessage(Player p, String msg,
                                        long msgId) {
         p.setLastReceivedMessageId(msgId);
+
+        if (editInfoSaveToDB) {
+            CaseBackup caseBackup = new CaseBackup();
+            caseBackup.setCaseContent(msg);
+            caseBackup.setCaseId(p.getRoom().roomId);
+            caseBackup.setTitle("edit from session: " + p.getClient().getSession().getId());
+            caseBackup.setCreator(p.getClient().getClientName());
+            caseBackup.setIsDelete(2); // 对编辑信息的内容进行特殊标记
+            caseBackup.setRecordContent("");
+            int ret = caseBackupService.insertEditInfo(caseBackup);
+            if (ret < 1) {
+                LOGGER.error("编辑过程备份落库失败. casebackup id: " + caseBackup.getCaseId() + ", case content: " +
+                        caseBackup.getCaseContent());
+            }
+        } else {
+            LOGGER.info(Thread.currentThread().getName() + ": 收到消息... onMessage: " + msg.trim());
+        }
 
         //todo: testCase.apply(msg) 新增如上的方法.
         if (msg.endsWith("undo")) {

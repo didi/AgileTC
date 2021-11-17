@@ -25,7 +25,7 @@ public class CaseRoom extends Room {
         Player p = super.createAndAddPlayer(client);
         String caseContent = testCaseContent != null ? testCaseContent : testCase.getCaseContent();
         p.getClient().sendMessage(CaseMessageType.EDITOR, caseContent);
-        LOGGER.info(Thread.currentThread().getName() + ": 新的用户加入成功，传输用例内容： " + testCaseContent);
+        LOGGER.info(Thread.currentThread().getName() + ": 新的用户加入成功");
         return p;
     }
 
@@ -36,7 +36,6 @@ public class CaseRoom extends Room {
         // 如果是最后一个用户离开，需要关闭广播任务
         if (players.size() == 0) {
             if (testCaseContent != null) {
-                LOGGER.info(Thread.currentThread().getName() + ": 当前的用例内容是：" + testCaseContent);
 
                 CaseBackup caseBackup = new CaseBackup();
                 caseBackup.setCaseContent(testCaseContent);

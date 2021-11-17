@@ -53,7 +53,7 @@ public class Client {
 
     public void sendMessage(CaseMessageType type, String msg) {
         if (!type.equals(CaseMessageType.PING)) {
-            LOGGER.info(Thread.currentThread().getName() + ": 准备向 " + this.getClientName() + " 发送消息：" + msg);
+            LOGGER.info(Thread.currentThread().getName() + ": 准备向 " + this.getClientName() + " 发送消息");
         }
         synchronized (messagesToSend) {
             if (!isClosing) {
@@ -63,7 +63,7 @@ public class Client {
                 }
 
                 if (isSendingMessage) {
-                    LOGGER.warn(Thread.currentThread().getName() + ": 消息正在发送中，先缓存住. msg： " + msg);
+                    LOGGER.warn(Thread.currentThread().getName() + ": 消息正在发送中，先缓存住. ");
                     // 检查缓存消息大小或数量是否异常
                     if (messagesToSend.size() >= 1000
                             || messagesToSendLength >= 1000000) {

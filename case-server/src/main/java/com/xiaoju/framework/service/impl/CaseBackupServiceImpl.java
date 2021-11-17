@@ -210,4 +210,8 @@ public class CaseBackupServiceImpl implements CaseBackupService {
         }
         return TimeUtil.transferStrToDateInSecond(time);
     }
+
+    public int insertEditInfo(CaseBackup caseBackup) {
+        return caseBackupMapper.insert(caseBackup);
+    }
 }

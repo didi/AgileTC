@@ -14,7 +14,7 @@ import java.util.List;
 public interface CaseBackupService {
 
     /**
-     * 插入备份记录
+     * 插入备份记录,比较内容后插入
      *
      * @param caseBackup 备份实体
      * @return 实体
@@ -41,4 +41,6 @@ public interface CaseBackupService {
     int deleteBackup(Long caseId);
 
     JsonNode getCaseDiff(Long backupId1, Long backupId2);
+
+    int insertEditInfo(CaseBackup caseBackup);
 }
