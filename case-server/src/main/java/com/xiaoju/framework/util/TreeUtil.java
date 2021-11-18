@@ -4,36 +4,25 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.xiaoju.framework.constants.enums.ProgressEnum;
-import com.xiaoju.framework.constants.enums.StatusCode;
-import com.xiaoju.framework.controller.UploadController;
-import com.xiaoju.framework.entity.exception.CaseServerException;
 import com.xiaoju.framework.entity.request.cases.FileImportReq;
 import com.xiaoju.framework.entity.xmind.*;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.dom4j.Document;
-import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
-import org.dom4j.Namespace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+
+import javax.imageio.ImageIO;
+import javax.servlet.http.HttpServletRequest;
+import java.awt.image.BufferedImage;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
-
-import javax.servlet.http.HttpServletRequest;
-import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -395,7 +384,6 @@ public class TreeUtil {
     }
 
     public static void importDataByJson(JSONArray children, JSONObject rootTopic, String fileName, HttpServletRequest requests, String uploadPath) throws IOException {
-        String vaildName = fileName;
         JSONObject rootObj = new JSONObject();
         JSONObject dataObj = new JSONObject();
         JSONArray childrenNext = new JSONArray();
@@ -405,6 +393,7 @@ public class TreeUtil {
         if(rootTopic.containsKey("image")){ // 添加imagesize属性
             // 需要将图片传到云空间中，然后将返回的链接导入
             Map<String, String> imageSize = new HashMap<>();
+            // todo: 此处直接写死的方式存在问题
             imageSize.put("width", "400");
             imageSize.put("height", "184");
             String image = "";
@@ -412,11 +401,11 @@ public class TreeUtil {
             String path = rootTopic.getJSONObject("image").getString("src");
             String[] strs = path.split("/");
             int len = strs.length;
-            fileName = fileName + "/";
             image = strs[len-1]; // 此时image为图片所在的本地位置
             // 将文件传入到temp文件下，因此需要将文件进行转换，将file文件类型转化为MultipartFile类型，然后进行上传
-            File file = new File(fileName + image);
+            File file = new File(fileName + File.separator + image);
             FileInputStream fileInputStream = new FileInputStream(file);
+
             MultipartFile multipartFile = new MockMultipartFile(file.getName(), file.getName(),
                     ContentType.APPLICATION_OCTET_STREAM.toString(), fileInputStream);
 
@@ -471,7 +460,7 @@ public class TreeUtil {
         if (rootTopic.containsKey("children") && rootTopic.getJSONObject("children").containsKey("attached")) {
             JSONArray jsonArray = rootTopic.getJSONObject("children").getJSONArray("attached");
             for (int i = 0; i < jsonArray.size(); i++) {
-                importDataByJson(childrenNext, (JSONObject) jsonArray.get(i), vaildName, requests, uploadPath);
+                importDataByJson(childrenNext, (JSONObject) jsonArray.get(i), fileName, requests, uploadPath);
             }
         }
     }
@@ -504,51 +493,37 @@ public class TreeUtil {
                     if(element.getName().equalsIgnoreCase("img")){ // 添加imagesize属性
                         // 需要将图片传到云空间中，然后将返回的链接导入
                         LOGGER.info("xhtml:img可以使用，其中element中的内容为：" + element);
-                        imageSize.put("width", element.attributeValue("width"));
-                        imageSize.put("height", element.attributeValue("height"));
+
                         String path = element.attributeValue("src");
                         String[] strs = path.split("/");
                         int len = strs.length;
-                        fileName = fileName + "/";
                         image = strs[len-1]; // 此时image为图片所在的本地位置
                         // 将文件传入到temp文件下，因此需要将文件进行转换，将file文件类型转化为MultipartFile类型，然后进行上传
-                        File file = new File(fileName + image);
-                        FileInputStream fileInputStream = new FileInputStream(file);
-                        MultipartFile multipartFile = new MockMultipartFile(file.getName(), file.getName(),
-                                ContentType.APPLICATION_OCTET_STREAM.toString(), fileInputStream);
+                        File file = new File(fileName + File.separator + image);
 
-                        // 将MultipartFile文件进行上传
-                        JSONObject ret = new JSONObject();
-                        SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd/");
-                        String format = sdf.format(new Date());
-                        File folder = new File(uploadPath + format);// 文件夹的名字
-                        if (!folder.isDirectory()) { // 如果文件夹为空，则新建文件夹
-                            folder.mkdirs();
+                        if (StringUtils.isEmpty(element.attributeValue("width")) || StringUtils.isEmpty(element.attributeValue("height"))) {
+                            BufferedImage sourceImg = ImageIO.read(new FileInputStream(file));
+                            imageSize.put("width", String.valueOf(sourceImg.getWidth()));
+                            imageSize.put("height", String.valueOf(sourceImg.getHeight()));
+                        } else {
+                            imageSize.put("width", element.attributeValue("width"));
+                            imageSize.put("height", element.attributeValue("height"));
                         }
-                        // 对上传的文件重命名，避免文件重名
-                        String oldName = multipartFile.getOriginalFilename(); // 获取文件的名字
-                        String newName = UUID.randomUUID().toString()
-                                + oldName.substring(oldName.lastIndexOf("."), oldName.length()); // 生成新的随机的文件名字
-                        File newFile = new File(folder, newName);
-                        LOGGER.info("newFile的名字为" + newFile);
+
+                        MultipartFile multipartFile = new MockMultipartFile(file.getName(), new FileInputStream(file));
+
                         try {
-                             multipartFile.transferTo(newFile);
+                            String fileUrlPath = FileUtil.fileUpload(uploadPath, multipartFile);
+
                             // 返回上传文件的访问路径
                             // request.getScheme()可获取请求的协议名，request.getServerName()可获取请求的域名，request.getServerPort()可获取请求的端口号
                             String filePath = requests.getScheme() + "://" + requests.getServerName()
-                                    + ":" + requests.getServerPort() + "/" + format + newName;
+                                    + ":" + requests.getServerPort() + "/" + fileUrlPath;
                             LOGGER.info("filepath的路径为：" + filePath);
                             picPath = filePath;
-                            JSONArray datas = new JSONArray();
-                            JSONObject data = new JSONObject();
-                            data.put("url", filePath);
-                            ret.put("success", 1);
-                            datas.add(data);
-                            ret.put("data", datas);
-                        } catch (IOException err) {
-                            LOGGER.error("上传文件失败, 请重试。", err);
-                            ret.put("success", 0);
-                            ret.put("data", "");
+
+                        } catch (Exception err) {
+                            LOGGER.error("图片上传文件失败, 请重试。", err);
                         }
                     }
 

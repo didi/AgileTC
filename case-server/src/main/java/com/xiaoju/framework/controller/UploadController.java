@@ -1,6 +1,5 @@
 package com.xiaoju.framework.controller;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.xiaoju.framework.constants.SystemConstant;
@@ -10,6 +9,7 @@ import com.xiaoju.framework.entity.request.cases.FileImportReq;
 import com.xiaoju.framework.entity.response.cases.ExportXmindResp;
 import com.xiaoju.framework.entity.response.controller.Response;
 import com.xiaoju.framework.service.FileService;
+import com.xiaoju.framework.util.FileUtil;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,20 +17,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.constraints.NotNull;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.URLEncoder;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
 
 /**
  * 文件上传与导出
@@ -84,24 +76,14 @@ public class UploadController {
 
     @PostMapping(value = "/uploadAttachment", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public JSONObject uploadAttachment(@RequestParam MultipartFile file, HttpServletRequest request) {
-
         JSONObject ret = new JSONObject();
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd/");
-        String format = sdf.format(new Date());
-        File folder = new File(uploadPath + format);// 文件夹的名字
-        if (!folder.isDirectory()) { // 如果文件夹为空，则新建文件夹
-            folder.mkdirs();
-        }
-        // 对上传的文件重命名，避免文件重名
-        String oldName = file.getOriginalFilename(); // 获取文件的名字
-        String newName = UUID.randomUUID().toString()
-                + oldName.substring(oldName.lastIndexOf("."), oldName.length()); // 生成新的随机的文件名字
         try {
-            file.transferTo(new File(folder, newName));
+            String fileUrlPath = FileUtil.fileUpload(uploadPath, file);
+
             // 返回上传文件的访问路径
             // request.getScheme()可获取请求的协议名，request.getServerName()可获取请求的域名，request.getServerPort()可获取请求的端口号
             String filePath = request.getScheme() + "://" + request.getServerName()
-                    + ":" + request.getServerPort() + "/" + format + newName;
+                    + ":" + request.getServerPort() + "/" + fileUrlPath;
             JSONArray datas = new JSONArray();
             JSONObject data = new JSONObject();
             data.put("url", filePath);
@@ -109,7 +91,7 @@ public class UploadController {
             datas.add(data);
             ret.put("data", datas);
             return ret;
-        } catch (IOException e) {
+        } catch (Exception e) {
             LOGGER.error("上传文件失败, 请重试。", e);
             ret.put("success", 0);
             ret.put("data", "");
