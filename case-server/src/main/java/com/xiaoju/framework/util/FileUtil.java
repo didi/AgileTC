@@ -42,7 +42,7 @@ public class FileUtil {
                 //判断路径是否存在，不存在则创建文件路径，同时添加检验
                 String canonicalDescDirPath = pathFile.getCanonicalPath();
                 File file = new File(outPath.substring(0, outPath.lastIndexOf(File.separator)));
-                String CanonicalDescFile = file.getCanonicalPath() + "/";
+                String CanonicalDescFile = file.getCanonicalPath() + File.separator;
                 if(!CanonicalDescFile.startsWith(canonicalDescDirPath + File.separator)){
                     throw new ArithmeticException("Entry is outside of the target dir: " + zipEntryName);
                 }
