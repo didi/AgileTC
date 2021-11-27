@@ -482,7 +482,6 @@ public class TreeUtil {
                 List<Element> newList = element1.elements();
                 Map<String, String> imageSize = new HashMap<>();
                 String text = "";
-                String image = "";
                 String picPath = "";
                 Integer priorityId = 0;
                 String created = element1.attributeValue("timestamp");
@@ -495,24 +494,21 @@ public class TreeUtil {
                         LOGGER.info("xhtml:img可以使用，其中element中的内容为：" + element);
 
                         String path = element.attributeValue("src");
-                        String[] strs = path.split("/");
-                        int len = strs.length;
-                        image = strs[len-1]; // 此时image为图片所在的本地位置
+
                         // 将文件传入到temp文件下，因此需要将文件进行转换，将file文件类型转化为MultipartFile类型，然后进行上传
-                        File file = new File(fileName + File.separator + image);
-
-                        if (StringUtils.isEmpty(element.attributeValue("width")) || StringUtils.isEmpty(element.attributeValue("height"))) {
-                            BufferedImage sourceImg = ImageIO.read(new FileInputStream(file));
-                            imageSize.put("width", String.valueOf(sourceImg.getWidth()));
-                            imageSize.put("height", String.valueOf(sourceImg.getHeight()));
-                        } else {
-                            imageSize.put("width", element.attributeValue("width"));
-                            imageSize.put("height", element.attributeValue("height"));
-                        }
-
-                        MultipartFile multipartFile = new MockMultipartFile(file.getName(), new FileInputStream(file));
-
+                        File file = new File(fileName + path.split(":")[1]);
                         try {
+                            if (StringUtils.isEmpty(element.attributeValue("width")) || StringUtils.isEmpty(element.attributeValue("height"))) {
+                                BufferedImage sourceImg = ImageIO.read(new FileInputStream(file));
+                                imageSize.put("width", String.valueOf(sourceImg.getWidth()));
+                                imageSize.put("height", String.valueOf(sourceImg.getHeight()));
+                            } else {
+                                imageSize.put("width", element.attributeValue("width"));
+                                imageSize.put("height", element.attributeValue("height"));
+                            }
+
+                            MultipartFile multipartFile = new MockMultipartFile(file.getName(), new FileInputStream(file));
+
                             String fileUrlPath = FileUtil.fileUpload(uploadPath, multipartFile);
 
                             // 返回上传文件的访问路径

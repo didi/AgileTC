@@ -4,12 +4,11 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.xiaoju.framework.constants.enums.StatusCode;
-import com.xiaoju.framework.entity.persistent.TestCase;
 import com.xiaoju.framework.entity.exception.CaseServerException;
+import com.xiaoju.framework.entity.persistent.TestCase;
 import com.xiaoju.framework.entity.request.cases.CaseCreateReq;
 import com.xiaoju.framework.entity.request.cases.FileImportReq;
 import com.xiaoju.framework.entity.response.cases.ExportXmindResp;
-import com.xiaoju.framework.handler.RecordRoom;
 import com.xiaoju.framework.mapper.TestCaseMapper;
 import com.xiaoju.framework.service.CaseService;
 import com.xiaoju.framework.service.FileService;
@@ -20,7 +19,9 @@ import org.apache.commons.lang3.StringEscapeUtils;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
-import org.dom4j.io.*;
+import org.dom4j.io.OutputFormat;
+import org.dom4j.io.SAXReader;
+import org.dom4j.io.XMLWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -30,7 +31,9 @@ import org.springframework.util.StringUtils;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.io.*;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static com.xiaoju.framework.constants.SystemConstant.POINT;
 import static com.xiaoju.framework.constants.XmindConstant.*;
@@ -306,10 +309,10 @@ public class FileServiceImpl implements FileService {
 
         JSONArray jsonArray = new JSONArray();
         String fileXml = "content.xml";
-        String picXml = "attachments"; // 存放图片的文件夹
-        String picName = (fileName + picXml).replace("/", File.separator);
-        fileName = (fileName + fileXml).replace("/", File.separator);
-        File file = new File(fileName);
+//        String picXml = "attachments"; // 存放图片的文件夹
+//        String picName = (fileName + picXml).replace("/", File.separator);
+        String contentFullName = (fileName + fileXml).replace("/", File.separator);
+        File file = new File(contentFullName);
         if(!file.exists()) // 判断文件是否存在
             throw new CaseServerException("导入失败，文件不存在", StatusCode.FILE_IMPORT_ERROR);
         SAXReader reade = new SAXReader();
@@ -320,7 +323,7 @@ public class FileServiceImpl implements FileService {
         String eleName = childElement.getName();
         if(eleName.equalsIgnoreCase("sheet"))
         {
-            jsonArray = TreeUtil.importDataByXml(request, childElement, picName, requests, uploadPath);
+            jsonArray = TreeUtil.importDataByXml(request, childElement, fileName, requests, uploadPath);
         }
         return buildCaseCreateReq(request, jsonArray);
     }
