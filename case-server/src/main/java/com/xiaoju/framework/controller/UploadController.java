@@ -72,7 +72,21 @@ public class UploadController {
         }
     }
 
-
+    @PostMapping(value = "/importExcel", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public Response<Long> importExcel(@RequestParam MultipartFile file, String creator, String bizId,
+                                      Long productLineId, String title, String description, Integer channel, String requirementId, HttpServletRequest request) {
+        FileImportReq req = new FileImportReq(file, creator, productLineId, title, description, channel, requirementId, bizId);
+        req.validate();
+        try {
+            return Response.success(fileService.importExcelFile(req, request));
+        } catch (CaseServerException e) {
+            throw new CaseServerException(e.getLocalizedMessage(), e.getStatus());
+        } catch (Exception e) {
+            LOGGER.error("[导入x-excel出错] 传参req={},错误原因={}", req.toString(), e.getMessage());
+            e.printStackTrace();
+            return Response.build(StatusCode.FILE_IMPORT_ERROR.getStatus(), StatusCode.FILE_IMPORT_ERROR.getMsg());
+        }
+    }
 
     @PostMapping(value = "/uploadAttachment", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public JSONObject uploadAttachment(@RequestParam MultipartFile file, HttpServletRequest request) {

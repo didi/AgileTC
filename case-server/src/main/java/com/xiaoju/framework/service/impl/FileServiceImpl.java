@@ -16,6 +16,11 @@ import com.xiaoju.framework.util.FileUtil;
 import com.xiaoju.framework.util.TreeUtil;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
@@ -27,13 +32,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.io.*;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.xiaoju.framework.constants.SystemConstant.POINT;
 import static com.xiaoju.framework.constants.XmindConstant.*;
@@ -102,6 +106,154 @@ public class FileServiceImpl implements FileService {
         throw new CaseServerException("传入的文件名非法", StatusCode.FILE_IMPORT_ERROR);
     }
 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Long importExcelFile(FileImportReq req, HttpServletRequest request) throws Exception {
+
+        checkExcel(req.getFile());
+        JSONArray jsonArray = new JSONArray();
+        JSONObject root = new JSONObject();
+        JSONObject dataObj = new JSONObject();
+        dataObj.put("text", req.getFile().getOriginalFilename());
+        dataObj.put("id", UUID.randomUUID().toString());
+        dataObj.put("created", System.currentTimeMillis());
+        root.put("children", new JSONArray());
+        root.put("data", dataObj);
+
+        Workbook wb = getWorkBook(req.getFile());
+        Sheet sheet = wb.getSheetAt(0); // 此处默认获取第一页
+        // 获取每行中的字段
+        for (int j = 1; j <= sheet.getLastRowNum(); j++) { // 从第二行开始遍历
+            Row row = sheet.getRow(j); // 获取行
+            if (row == null) {//略过空行
+                continue;
+            }else{
+                // 获取单元格中的值并存到对象中
+
+                JSONObject node = new JSONObject();
+                JSONObject data = new JSONObject();
+                // 整行只有1个内容,则判定为目录
+                if (row.getLastCellNum() - row.getFirstCellNum() == 1) {
+                    data.put("text", row.getCell(row.getFirstCellNum()) == null ? "" : row.getCell(row.getFirstCellNum()).getStringCellValue());
+                    data.put("id", UUID.randomUUID().toString());
+                    data.put("created", System.currentTimeMillis());
+                    node.put("children", new JSONArray());
+                    node.put("data", data);
+                    JSONArray parent = getParentFromRoot(root, row.getFirstCellNum());
+                    parent.add(node);
+                }
+                // 当前cell不为空,且下一个cell也不为空,则判定为用例
+                else if (row.getLastCellNum() - row.getFirstCellNum() > 1) { // 此处判定为具体用例内容
+                    JSONObject caseExpection = new JSONObject();
+                    JSONObject caseExpectionData = new JSONObject();
+                    caseExpectionData.put("text", row.getCell(row.getFirstCellNum()+6) == null ? "" : row.getCell(row.getFirstCellNum()+6).getStringCellValue());
+                    caseExpectionData.put("id", UUID.randomUUID().toString());
+                    caseExpectionData.put("created", System.currentTimeMillis());
+                    caseExpectionData.put("resource", new ArrayList<String>(Arrays.asList("预期结果")));
+                    caseExpection.put("children", new JSONArray());
+                    caseExpection.put("data", caseExpectionData);
+                    JSONArray caseExpectionArr = new JSONArray();
+                    caseExpectionArr.add(caseExpection);
+
+                    JSONObject caseAction = new JSONObject();
+                    JSONObject caseActionData = new JSONObject();
+                    caseActionData.put("text", row.getCell(row.getFirstCellNum()+5) == null ? "" : row.getCell(row.getFirstCellNum()+5).getStringCellValue());
+                    caseActionData.put("id", UUID.randomUUID().toString());
+                    caseActionData.put("created", System.currentTimeMillis());
+                    caseActionData.put("resource", new ArrayList<String>(Arrays.asList("执行步骤")));
+                    caseAction.put("children", caseExpectionArr);
+                    caseAction.put("data", caseActionData);
+                    JSONArray caseActionArr = new JSONArray();
+                    caseActionArr.add(caseAction);
+
+                    JSONObject casePre = new JSONObject();
+                    JSONObject casePreData = new JSONObject();
+                    casePreData.put("text", row.getCell(row.getFirstCellNum()+4) == null ? "" : row.getCell(row.getFirstCellNum()+4).getStringCellValue());
+                    casePreData.put("id", UUID.randomUUID().toString());
+                    casePreData.put("created", System.currentTimeMillis());
+                    casePreData.put("resource", new ArrayList<String>(Arrays.asList("前置条件")));
+
+                    casePre.put("children", caseActionArr);
+                    casePre.put("data", casePreData);
+                    JSONArray casePreArr = new JSONArray();
+                    casePreArr.add(casePre);
+
+                    data.put("text", row.getCell(row.getFirstCellNum()).getStringCellValue());
+                    data.put("id", UUID.randomUUID().toString());
+                    data.put("created", System.currentTimeMillis());
+                    String priority = row.getCell(row.getFirstCellNum()+1) == null ? "" : row.getCell(row.getFirstCellNum()+1).getStringCellValue().trim();
+                    if (priority.equals("P0") || priority.equals("P1") || priority.equals("P2")) {
+                        data.put("priority", Integer.valueOf(priority.split("P")[1])+1);
+                    } // 非法字符的或者其他级别,则不添加priority字段
+                    data.put("resource", row.getCell(row.getFirstCellNum()+8) == null ? "" : row.getCell(row.getFirstCellNum()+8).getStringCellValue().trim().split(","));
+                    String note = "";
+                    note = note + "创建人: " + (row.getCell(row.getFirstCellNum()+2) == null ? "" : row.getCell(row.getFirstCellNum()+2).getStringCellValue()) + "\n";
+                    note = note + "用例描述: " + (row.getCell(row.getFirstCellNum()+3) == null ? "" : row.getCell(row.getFirstCellNum()+3).getStringCellValue()) + "\n";
+                    note = note + "备注: " + (row.getCell(row.getFirstCellNum()+7) == null ? "" : row.getCell(row.getFirstCellNum()+7).getStringCellValue()) + "\n";
+                    note = note + "用例是否自动化自动化: " + (row.getCell(row.getFirstCellNum()+9) == null ? "" : row.getCell(row.getFirstCellNum()+9).getStringCellValue()) + "\n";
+                    note = note + "用例关联接口: " + (row.getCell(row.getFirstCellNum()+10) == null ? "" : row.getCell(row.getFirstCellNum()+10).getStringCellValue()) + "\n";
+                    note = note + "用例测试类型: " + (row.getCell(row.getFirstCellNum()+11) == null ? "" : row.getCell(row.getFirstCellNum()+11).getStringCellValue()) + "\n";
+                    note = note + "用例关联项目: " + (row.getCell(row.getFirstCellNum()+12) == null ? "" : row.getCell(row.getFirstCellNum()+12).getStringCellValue()) + "\n";
+                    data.put("note", note);
+
+                    node.put("children", casePreArr);
+                    node.put("data", data);
+
+                    JSONArray parent = getParentFromRoot(root, row.getFirstCellNum());
+                    parent.add(node);
+                }
+
+            }
+        }
+        jsonArray.add(root);
+        CaseCreateReq caseCreateReq = buildCaseCreateReq(req, jsonArray);
+        return caseService.insertOrDuplicateCase(caseCreateReq);
+
+    }
+
+    private JSONArray getParentFromRoot(JSONObject root, short dirIndex) {
+        JSONObject tmp = root;
+        while (dirIndex > 0) {
+            tmp = tmp.getJSONArray("children").getJSONObject(tmp.getJSONArray("children").size()-1);
+            dirIndex --;
+        }
+        return tmp.getJSONArray("children");
+    }
+
+    private void checkExcel(MultipartFile file) throws Exception {
+        // 判断文件是否存在
+        if (null == file) {
+            throw new FileNotFoundException("文件不存在！");
+        }
+        // 获得文件名
+        String fileName = file.getOriginalFilename();
+        // 判断文件是否是excel文件
+        if (!fileName.endsWith("xls") && !fileName.endsWith("xlsx")) {
+            throw new IOException(fileName + "不是excel文件");
+        }
+    }
+
+    private Workbook getWorkBook(MultipartFile file) {
+        // 获得文件名
+        String fileName = file.getOriginalFilename();
+        // 创建Workbook工作薄对象，表示整个excel
+        Workbook workbook = null;
+        try {
+            // 获取excel文件的io流
+            InputStream is = file.getInputStream();
+            // 根据文件后缀名不同(xls和xlsx)获得不同的Workbook实现类对象
+            if (fileName.endsWith("xls")) {
+                // 2003
+                workbook = new HSSFWorkbook(is);
+            } else if (fileName.endsWith("xlsx")) {
+                // 2007
+                workbook = new XSSFWorkbook(is);
+            }
+        } catch (IOException e) {
+
+        }
+        return workbook;
+    }
 
     @Override
     public ExportXmindResp exportXmindFile(Long id, String userAgent) throws Exception {
