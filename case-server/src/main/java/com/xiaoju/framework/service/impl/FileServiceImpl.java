@@ -318,15 +318,15 @@ public class FileServiceImpl implements FileService {
         root.addElement("file-entry")
                 .addAttribute("full-path","content.xml")
                 .addAttribute("media-type","text/xml");
-        root.addElement("file-entry")
-                .addAttribute("full-path","content.xml")
-                .addAttribute("media-type","text/xml");
-        root.addElement("file-entry")
-                .addAttribute("full-path","content.xml")
-                .addAttribute("media-type","text/xml");
-        root.addElement("file-entry")
-                .addAttribute("full-path","content.xml")
-                .addAttribute("media-type","text/xml");
+
+        File attachmentDir = new File(path + "/attachments");
+        if (attachmentDir.exists()) {
+            for (File file: Objects.requireNonNull(attachmentDir.listFiles())) {
+                root.addElement("file-entry")
+                        .addAttribute("full-path","attachments/" + file.getName())
+                        .addAttribute("media-type","image/png");;
+            }
+        }
 
         String targetPath = path + "/META-INF";
 
