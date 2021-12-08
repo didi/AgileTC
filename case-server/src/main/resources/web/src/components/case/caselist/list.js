@@ -38,7 +38,7 @@ class Lists extends React.Component {
       iterationFilter: '', // 需求筛选最终选择
       createrFilter: '', // 创建人筛选最终选择
       nameFilter: '', // 用例名称筛选最终选择
-      xmindFile: null, // 保存上传的file文件，单文件    };
+      caseFile: null, // 保存上传的file文件，单文件    };
       checked: false,
       requirementIds: [],
       requirementObj: [],

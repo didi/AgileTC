@@ -47,7 +47,7 @@ class CaseModal extends React.Component {
       show: this.props.show,
       iterationList: [], // 需求列表
       nameFilter: '', // 用例名称筛选最终选择
-      xmindFile: null, // 保存上传的file文件，单文件
+      caseFile: null, // 保存上传的file文件，单文件
       productId: this.props.productId,
       requirementId: this.props.requirementId,
       operate: title,
@@ -148,14 +148,19 @@ class CaseModal extends React.Component {
       description: values.description,
     };
 
-    // 判断是否上传了xmind文件
-    let xmindFile = this.state.xmindFile;
+    // 判断是否上传了用例集文件
+    let caseFile = this.state.caseFile;
 
     let url = `${this.props.doneApiPrefix}/case/create`;
-    if (xmindFile) {
-      url = `${this.props.doneApiPrefix}/file/import`;
+    if (caseFile) {
+      if (/(?:xmind)$/i.test(caseFile.name)) {
+        url = `${this.props.doneApiPrefix}/file/import`;
+      } else if (/(?:xls|xlsx)$/i.test(caseFile.name)) {
+        url = `${this.props.doneApiPrefix}/file/importExcel`;
+      } 
+    
       params = new FormData();
-      params.append('file', xmindFile);
+      params.append('file', caseFile);
       params.append('creator', getCookies('username'));
       params.append('title', values.case);
       params.append('productLineId', Number(this.props.productId));
@@ -234,22 +239,22 @@ class CaseModal extends React.Component {
       return <TreeNode {...item} />;
     });
   render() {
-    const { xmindFile, data, show, operate, bizIds } = this.state;
+    const { caseFile, data, show, operate, bizIds } = this.state;
     const { getFieldDecorator } = this.props.form;
     const props = {
-      accept: '.xmind',
+      accept: '.xmind,.xls,.xlsx',
       onRemove: file => {
-        this.setState(state => ({ xmindFile: null }));
+        this.setState(state => ({ caseFile: null }));
       },
       beforeUpload: file => {
-        this.setState(state => ({ xmindFile: file }));
+        this.setState(state => ({ caseFile: file }));
         const isLt2M = file.size / 1024 / 1024 <= 100;
         if (!isLt2M) {
           message.error('用例集文件大小不能超过100M');
         }
         return false;
       },
-      fileList: xmindFile ? [xmindFile] : [],
+      fileList: caseFile ? [caseFile] : [],
     };
     let title = '';
     switch (operate) {
@@ -330,11 +335,11 @@ class CaseModal extends React.Component {
 
         {operate == 'add' && (
           <Row style={{ marginBottom: '20px' }}>
-            <Col span={6}>导入本地xmind:</Col>
+            <Col span={6}>导入用例文件:</Col>
             <Col span={16} className="dragger">
               <div className="div-flex-child-1">
                 <Dragger {...props}>
-                  {xmindFile === null ? (
+                  {caseFile === null ? (
                     <Icon
                       type="plus-circle"
                       style={{ color: '#447CE6', fontSize: '24px' }}
@@ -358,7 +363,7 @@ class CaseModal extends React.Component {
                     上传文件（非必传）
                   </span>
                   <span className="span-text span-text-light">
-                    仅支持.xmind扩展名文件...
+                    支持.xmind和excel文件，excel请按照模板填写...
                   </span>
                 </div>
               </div>
