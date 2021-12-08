@@ -113,16 +113,6 @@ public class CaseControllerTests extends CaseServerTest {
 
 
 
-		// 测试detail接口 get方法 没找到该接口
-//		caseController.getCaseDetail(2620L);
-//		MvcResult mvcResultDetail = mockMvc.perform(MockMvcRequestBuilders.get("/api/case/detail")
-//				.accept(MediaType.APPLICATION_JSON).param("id", "2620"))
-//				.andExpect(MockMvcResultMatchers.status().isOk())
-//				.andDo(MockMvcResultHandlers.print())
-//				.andReturn();
-//		System.out.print(mvcResultDetail);
-
-
 		// 测试listCreators接口 get方法
 		caseController.listCreators(0, 1L);
 		MvcResult mvcResultCreators = mockMvc.perform(MockMvcRequestBuilders.get("/api/case/listCreators")
