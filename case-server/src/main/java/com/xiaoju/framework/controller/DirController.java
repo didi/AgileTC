@@ -117,4 +117,9 @@ public class DirController {
                                       @RequestParam @NotNull(message = "渠道为空") Integer channel) {
         return Response.success(dirService.getDirTree(productLineId, channel));
     }
+
+    @GetMapping("/getId")
+    public String getId(String parentId, Long productLineId, Integer channel, String text) {
+        return dirService.getId(parentId, productLineId, channel, text);
+    }
 }

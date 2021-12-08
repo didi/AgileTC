@@ -1,7 +1,9 @@
 package com.xiaoju.framework.entity.request.record;
 
 import com.xiaoju.framework.entity.request.ParamValidate;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.util.StringUtils;
 
 /**
@@ -11,6 +13,8 @@ import org.springframework.util.StringUtils;
  * @date 2020/10/27
  */
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class RecordAddReq implements ParamValidate {
 
     private Long caseId;

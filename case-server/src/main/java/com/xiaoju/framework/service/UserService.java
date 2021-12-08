@@ -13,4 +13,5 @@ public interface UserService {
     Integer register(UserRegisterReq req, HttpServletRequest request, HttpServletResponse response);
     Integer login(UserLoginReq req, HttpServletRequest request, HttpServletResponse response);
     Integer logout(HttpServletRequest request, HttpServletResponse response);
+    Integer logoff(String Username);
 }

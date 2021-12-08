@@ -3,6 +3,7 @@ package com.xiaoju.framework.entity.request.cases;
 import com.xiaoju.framework.entity.request.ParamValidate;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -14,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
  */
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class FileImportReq implements ParamValidate {
 
     private MultipartFile file;

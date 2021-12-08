@@ -49,4 +49,9 @@ public class UserController {
     public Response<?> logout(HttpServletRequest request,HttpServletResponse response) {
         return Response.success(userService.logout(request, response));
     }
+
+    @PostMapping("/logoff")
+    public Response<?> logoff(String Username) {
+        return Response.success(userService.logoff(Username));
+    }
 }

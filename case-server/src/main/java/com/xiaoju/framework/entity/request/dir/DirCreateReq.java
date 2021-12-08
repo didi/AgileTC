@@ -3,6 +3,7 @@ package com.xiaoju.framework.entity.request.dir;
 import com.xiaoju.framework.entity.request.ParamValidate;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.util.StringUtils;
 
 /**
@@ -13,6 +14,7 @@ import org.springframework.util.StringUtils;
  */
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class DirCreateReq implements ParamValidate {
 
     /**

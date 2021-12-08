@@ -1,6 +1,8 @@
 package com.xiaoju.framework.entity.persistent;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.Date;
 
@@ -11,6 +13,8 @@ import java.util.Date;
  * @date 2019/11/05
  */
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class CaseBackup {
     private Long id;
     private Long caseId;

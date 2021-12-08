@@ -74,6 +74,7 @@ public class UserServiceImpl implements UserService {
         //3.将新用户设置到cookie中去
         CookieUtils.setCookie(request, response, "username", req.getUsername(), 60 * 60 * 24, null, false);
 
+
         return null;
     }
 
@@ -107,4 +108,11 @@ public class UserServiceImpl implements UserService {
 
         return null;
     }
+
+    @Override
+    public Integer logoff(String username){
+        // 4.注销该用户
+        return userMapper.deleteByUserName(username);
+    }
+
 }

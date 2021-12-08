@@ -3,6 +3,7 @@ package com.xiaoju.framework.entity.request.dir;
 import com.xiaoju.framework.entity.request.ParamValidate;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.util.StringUtils;
 
 import static com.xiaoju.framework.constants.BizConstant.UNSORTED_BIZ_ID;
@@ -15,6 +16,7 @@ import static com.xiaoju.framework.constants.BizConstant.UNSORTED_BIZ_ID;
  */
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class DirRenameReq implements ParamValidate {
 
     private String id;

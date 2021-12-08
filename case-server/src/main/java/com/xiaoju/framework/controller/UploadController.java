@@ -69,6 +69,7 @@ public class UploadController {
                                       Long productLineId, String title, String description, Integer channel, String requirementId, HttpServletRequest request) {
         FileImportReq req = new FileImportReq(file, creator, productLineId, title, description, channel, requirementId, bizId);
         req.validate();
+
         try {
             return Response.success(fileService.importXmindFile(req, request, uploadPath));
         } catch (CaseServerException e) {

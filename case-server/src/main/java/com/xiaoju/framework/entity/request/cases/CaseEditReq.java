@@ -3,7 +3,9 @@ package com.xiaoju.framework.entity.request.cases;
 import com.xiaoju.framework.constants.BizConstant;
 import com.xiaoju.framework.constants.SystemConstant;
 import com.xiaoju.framework.entity.request.ParamValidate;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.util.StringUtils;
 
 import java.util.Arrays;
@@ -15,6 +17,8 @@ import java.util.Arrays;
  * @date 2020/9/4
  */
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class CaseEditReq implements ParamValidate {
 
     /**
@@ -56,7 +60,6 @@ public class CaseEditReq implements ParamValidate {
      * 非必填 描述
      */
     private String description;
-
 
 
     @Override

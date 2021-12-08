@@ -4,6 +4,7 @@ import com.xiaoju.framework.constants.BizConstant;
 import com.xiaoju.framework.entity.request.ParamValidate;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.util.StringUtils;
 
 /**
@@ -14,6 +15,7 @@ import org.springframework.util.StringUtils;
  */
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class DirDeleteReq implements ParamValidate {
 
     private String parentId;

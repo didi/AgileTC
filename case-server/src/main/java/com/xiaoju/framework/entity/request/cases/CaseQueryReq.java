@@ -1,6 +1,8 @@
 package com.xiaoju.framework.entity.request.cases;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 用例 筛选与查询
@@ -9,6 +11,8 @@ import lombok.Data;
  * @date 2020/8/12
  */
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class CaseQueryReq {
 
     private Long id;
@@ -46,6 +50,102 @@ public class CaseQueryReq {
         this.bizId = bizId;
         this.lineId = lineId;
         this.pageNum = pageNum;
+        this.pageSize = pageSize;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Integer getCaseType() {
+        return caseType;
+    }
+
+    public void setCaseType(Integer caseType) {
+        this.caseType = caseType;
+    }
+
+    public Long getLineId() {
+        return lineId;
+    }
+
+    public void setLineId(Long lineId) {
+        this.lineId = lineId;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getCreator() {
+        return creator;
+    }
+
+    public void setCreator(String creator) {
+        this.creator = creator;
+    }
+
+    public String getRequirementId() {
+        return requirementId;
+    }
+
+    public void setRequirementId(String requirementId) {
+        this.requirementId = requirementId;
+    }
+
+    public String getBeginTime() {
+        return beginTime;
+    }
+
+    public void setBeginTime(String beginTime) {
+        this.beginTime = beginTime;
+    }
+
+    public String getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(String endTime) {
+        this.endTime = endTime;
+    }
+
+    public Integer getChannel() {
+        return channel;
+    }
+
+    public void setChannel(Integer channel) {
+        this.channel = channel;
+    }
+
+    public String getBizId() {
+        return bizId;
+    }
+
+    public void setBizId(String bizId) {
+        this.bizId = bizId;
+    }
+
+    public Integer getPageNum() {
+        return pageNum;
+    }
+
+    public void setPageNum(Integer pageNum) {
+        this.pageNum = pageNum;
+    }
+
+    public Integer getPageSize() {
+        return pageSize;
+    }
+
+    public void setPageSize(Integer pageSize) {
         this.pageSize = pageSize;
     }
 }

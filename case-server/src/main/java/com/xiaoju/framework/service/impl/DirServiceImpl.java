@@ -52,11 +52,29 @@ public class DirServiceImpl implements DirService {
         DirNodeDto newDir = new DirNodeDto();
         newDir.setId(UUID.randomUUID().toString().substring(0,8));
         newDir.setText(request.getText());
+//        newDir.setId(dir.getId() + request.getText());
         newDir.setParentId(dir.getId());
         children.add(newDir);
 
         bizMapper.updateContent(request.getProductLineId(), JSONObject.toJSONString(root), request.getChannel());
         return root;
+    }
+
+
+    @Override
+    public String getId(String parentId, Long productLineId, Integer channel, String text){
+        DirNodeDto root = getDirTree(productLineId, channel);
+        DirNodeDto dir = getDir(parentId, root);
+        if(dir == null)
+            return null;
+        Iterator<DirNodeDto> iterator = dir.getChildren().iterator();
+        while (iterator.hasNext()) {
+            DirNodeDto next = iterator.next();
+            if (text.equals(next.getText())) {
+                return next.getId();
+            }
+        }
+        return null;
     }
 
     @Override
@@ -82,7 +100,6 @@ public class DirServiceImpl implements DirService {
     }
 
 
-
     @Override
     public DirNodeDto delDir(DirDeleteReq request) {
         DirNodeDto root = getDirTree(request.getProductLineId(), request.getChannel());
@@ -102,6 +119,8 @@ public class DirServiceImpl implements DirService {
         bizMapper.updateContent(request.getProductLineId(), JSONObject.toJSONString(root), request.getChannel());
         return root;
     }
+
+
 
     @Override
     public DirNodeDto getDir(String bizId, DirNodeDto root) {
