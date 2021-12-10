@@ -9,6 +9,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Created by didi on 2021/3/27.
@@ -74,7 +76,13 @@ public class CaseRoom extends Room {
         }
 
         // 广播有用户离开
-        broadcastRoomMessage(CaseMessageType.NOTIFY, "当前用户数:" + players.size() + "。用例编辑者 " + p.getClient().getClientName() + " 离开");
+        Set<String> names = new HashSet<>();
+        for (Client c : cs.values()) {
+            names.add(c.getClientName());
+        }
+        broadcastRoomMessage(CaseMessageType.NOTIFY, "当前用户数:" + players.size() + ",用户是:" + String.join(",", names));
+
+//        broadcastRoomMessage(CaseMessageType.NOTIFY, "当前用户数:" + players.size() + "。用例编辑者 " + p.getClient().getClientName() + " 离开");
         LOGGER.info(Thread.currentThread().getName() + ": 用例保存完成。");
 
     }

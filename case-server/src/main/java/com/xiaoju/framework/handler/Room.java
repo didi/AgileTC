@@ -131,7 +131,7 @@ public abstract class Room {
         Player p = new Player(this, client);
 
         // 通知消息
-        broadcastRoomMessage(CaseMessageType.NOTIFY, "当前用户数： " + (players.size() + 1) + "。新用户是：" + client.getClientName());
+//        broadcastRoomMessage(CaseMessageType.NOTIFY, "当前用户数:" + (players.size() + 1) + ",用户是:" + client.getClientName());
 
         players.add(p);
         cs.put(client.getSession(), client);
@@ -145,7 +145,13 @@ public abstract class Room {
 
         // 发送当前用户数
         String content = String.valueOf(players.size());
-        p.sendRoomMessageSync(CaseMessageType.NOTIFY, "当前用户数：" + content);
+        Set<String> names = new HashSet<>();
+//        p.sendRoomMessageSync(CaseMessageType.NOTIFY, "当前用户数:" + content + ",用户是:" + client.getClientName());
+//        broadcastRoomMessage(CaseMessageType.NOTIFY, "当前用户数:" + content + ",用户是:" + client.getClientName());
+        for (Client c : cs.values()) {
+            names.add(c.getClientName());
+        }
+        broadcastRoomMessage(CaseMessageType.NOTIFY, "当前用户数:" + content + ",用户是:" + String.join(",", names));
 
         return p;
     }
