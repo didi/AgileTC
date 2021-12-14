@@ -1,9 +1,7 @@
 package com.xiaoju.framework.entity.request.record;
 
 import com.xiaoju.framework.entity.request.ParamValidate;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * 任务 删除
@@ -12,8 +10,6 @@ import lombok.NoArgsConstructor;
  * @date 2020/10/28
  */
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
 public class RecordDeleteReq implements ParamValidate {
 
     private Long id;

@@ -14,8 +14,8 @@ import org.springframework.util.StringUtils;
  * @date 2020/9/11
  */
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 public class DirDeleteReq implements ParamValidate {
 
     private String parentId;

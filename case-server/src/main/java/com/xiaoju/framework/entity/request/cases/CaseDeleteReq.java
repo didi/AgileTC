@@ -1,9 +1,7 @@
 package com.xiaoju.framework.entity.request.cases;
 
 import com.xiaoju.framework.entity.request.ParamValidate;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * 用例 逻辑删除
@@ -12,8 +10,6 @@ import lombok.NoArgsConstructor;
  * @date 2020/9/7
  */
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
 public class CaseDeleteReq implements ParamValidate {
 
     private Long id;
