@@ -1,5 +1,6 @@
 package com.xiaoju.framework.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.xiaoju.framework.constants.BizConstant;
 import com.xiaoju.framework.constants.enums.StatusCode;
@@ -8,6 +9,7 @@ import com.xiaoju.framework.entity.dto.DirNodeDto;
 import com.xiaoju.framework.entity.exception.CaseServerException;
 import com.xiaoju.framework.entity.request.dir.DirCreateReq;
 import com.xiaoju.framework.entity.request.dir.DirDeleteReq;
+import com.xiaoju.framework.entity.request.dir.DirMoveReq;
 import com.xiaoju.framework.entity.request.dir.DirRenameReq;
 import com.xiaoju.framework.entity.response.dir.DirTreeResp;
 import com.xiaoju.framework.mapper.BizMapper;
@@ -170,6 +172,32 @@ public class DirServiceImpl implements DirService {
         }
         Set<String> caseIds = dir.getCaseIds();
         return caseIds.stream().map(Long::valueOf).collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean moveDir(DirMoveReq req) {
+        Biz biz = bizMapper.selectOne(req.getProductLineId(), req.getChannel());
+        if (biz == null) {
+            throw new CaseServerException("目录节点获取为空", StatusCode.INTERNAL_ERROR);
+        }
+        DirNodeDto dataObj = JSONObject.parseObject(biz.getContent(), DirNodeDto.class);
+
+        // DFS
+        DirMoveDFS dfs = new DirMoveDFS(req.getFromId(), req.getToId());
+        dfs.findNodeAndDelete(dataObj);
+
+        if (dfs.getToObj() == null || dfs.getFromObj() == null) {
+            throw new CaseServerException("被迁移的文件夹或者要迁移的文件夹不存在", StatusCode.INTERNAL_ERROR);
+        }
+
+        // 剪下来的节点塞到要迁移到的地方去
+        dfs.getFromObj().setParentId(dfs.getToObj().getId());
+        dfs.getToObj().getChildren().add(dfs.getFromObj());
+
+        biz.setContent(JSON.toJSONString(dataObj));
+        bizMapper.update(biz);
+        return true;
     }
 
     /**

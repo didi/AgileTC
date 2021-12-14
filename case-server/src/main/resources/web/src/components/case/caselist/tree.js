@@ -263,8 +263,8 @@ class FileTree extends React.Component {
         });
         getTreeList();
       } else {
-        this.editNode(null, this.state.treeData)
-        this.setState({treeData: this.state.treeData})
+        this.editNode(null, this.state.treeData);
+        this.setState({ treeData: this.state.treeData });
         message.error(res.msg);
       }
     });
@@ -448,6 +448,42 @@ class FileTree extends React.Component {
       this.props.getCaseList(caseIds);
     });
   };
+  onDrop = info => {
+    const dropNode = info.node.props;
+    const dragNode = info.dragNode.props;
+    // console.log(info);
+    if (dragNode.eventKey === '-1') {
+      message.error('未分类用例集不可移动！');
+    } else if (dropNode.eventKey === '-1') {
+      message.error('未分类用例集下不可有其他文件！');
+    } else {
+      const fromId = dragNode.eventKey;
+      let toId = '';
+      if (dropNode.dragOver) {
+        toId = dropNode.eventKey;
+      } else {
+        toId = dropNode.dataRef.parentId;
+      }
+      this.moveFolder({
+        productLineId: this.props.productLineId,
+        fromId,
+        toId,
+        channel: 1,
+      });
+    }
+  };
+  moveFolder = params => {
+    const url = `${this.props.doneApiPrefix}/dir/move`;
+    request(url, { method: 'POST', body: params }).then((res = {}) => {
+      if (res.code === 200) {
+        message.success('移动文件夹成功！');
+        this.props.getTreeList();
+      } else {
+        message.error(res.msg);
+      }
+    });
+  };
+
   render() {
     const { treeSelect, expandedKeys, autoExpandParent, treeData } = this.state;
     return (
@@ -464,6 +500,8 @@ class FileTree extends React.Component {
               onChange={this.onChange}
             />
             <DirectoryTree
+              draggable
+              onDrop={this.onDrop}
               multiple
               selectedKeys={treeSelect ? [treeSelect] : []}
               onExpand={this.onExpand}

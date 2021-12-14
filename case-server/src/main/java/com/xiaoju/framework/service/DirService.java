@@ -3,6 +3,7 @@ package com.xiaoju.framework.service;
 import com.xiaoju.framework.entity.dto.DirNodeDto;
 import com.xiaoju.framework.entity.request.dir.DirCreateReq;
 import com.xiaoju.framework.entity.request.dir.DirDeleteReq;
+import com.xiaoju.framework.entity.request.dir.DirMoveReq;
 import com.xiaoju.framework.entity.request.dir.DirRenameReq;
 import com.xiaoju.framework.entity.response.dir.DirTreeResp;
 
@@ -75,4 +76,12 @@ public interface DirService {
      * @return case-id-list
      */
     List<Long> getCaseIds(Long productLineId, String bizId, Integer channel);
+
+    /**
+     * 移动文件夹
+     *
+     * @param req 请求体
+     * @return true 成功，实际上没什么用
+     */
+    boolean moveDir(DirMoveReq req);
 }

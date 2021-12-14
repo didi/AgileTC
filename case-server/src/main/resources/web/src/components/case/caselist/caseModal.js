@@ -15,6 +15,7 @@ import {
 } from 'antd';
 const { Dragger } = Upload;
 import './index.scss';
+import caseTemplate from './testcase-template.xlsx'
 const initData = `{"root":{"data":{"id":"bv8nxhi3c800","created":1562059643204,"text":"中心主题"},"children":[]},"template":"default","theme":"fresh-blue","version":"1.4.43","base":0}`;
 const formItemLayout = {
   labelCol: { span: 6 },
@@ -363,7 +364,9 @@ class CaseModal extends React.Component {
                     上传文件（非必传）
                   </span>
                   <span className="span-text span-text-light">
-                    支持.xmind和excel文件，excel请按照模板填写...
+                    支持.xmind和excel文件，excel请按照<a href={caseTemplate} download="testcase-template.xlsx">
+                      模板
+                    </a>填写...
                   </span>
                 </div>
               </div>

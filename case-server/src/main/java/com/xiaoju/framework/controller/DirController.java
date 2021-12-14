@@ -4,6 +4,7 @@ import com.xiaoju.framework.constants.enums.StatusCode;
 import com.xiaoju.framework.entity.exception.CaseServerException;
 import com.xiaoju.framework.entity.request.dir.DirCreateReq;
 import com.xiaoju.framework.entity.request.dir.DirDeleteReq;
+import com.xiaoju.framework.entity.request.dir.DirMoveReq;
 import com.xiaoju.framework.entity.request.dir.DirRenameReq;
 import com.xiaoju.framework.entity.response.controller.Response;
 import com.xiaoju.framework.service.DirService;
@@ -116,5 +117,28 @@ public class DirController {
     public Response<?> getDirCardTree(@RequestParam @NotNull(message = "业务线id为空") Long productLineId,
                                       @RequestParam @NotNull(message = "渠道为空") Integer channel) {
         return Response.success(dirService.getDirTree(productLineId, channel));
+    }
+
+    /**
+     * 移动文件夹，会文件夹下及其子文件夹全部移动
+     * 不允许移动root文件夹 -- 通过传参校验
+     * 不允许从父文件夹移动到子文件夹 -- 通过dfs路径计算
+     * 不允许移动不存在的文件夹，或者移动到不存在的文件夹 -- 通过dfs埋点
+     *
+     * @param req 请求体
+     * @return 响应体
+     */
+    @PostMapping(value = "/move")
+    public Response<?> moveDir(@RequestBody DirMoveReq req) {
+        req.validate();
+        try {
+            return Response.success(dirService.moveDir(req));
+        } catch (CaseServerException e) {
+            throw new CaseServerException(e.getLocalizedMessage(), e.getStatus());
+        } catch (Exception e) {
+            LOGGER.error("[Dir move]move dir failed. params={} e={} ", req.toString(), e.getMessage());
+            e.printStackTrace();
+            return Response.build(StatusCode.SERVER_BUSY_ERROR);
+        }
     }
 }
