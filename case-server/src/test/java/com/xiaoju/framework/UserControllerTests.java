@@ -49,7 +49,7 @@ public class UserControllerTests extends CaseServerTest {
 		// 测试register接口 post方法
 		UserRegisterReq userRegisterReq = new UserRegisterReq();
 
-		userRegisterReq.setUsername("nimeng5");
+		userRegisterReq.setUsername("nimeng2");
 		userRegisterReq.setPassword("123456");
 
 
@@ -57,14 +57,15 @@ public class UserControllerTests extends CaseServerTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(JSONObject.toJSONString(userRegisterReq)))
 				.andExpect(MockMvcResultMatchers.status().isOk())
+				.andExpect(MockMvcResultMatchers.jsonPath("$.code").value("200"))
+				.andExpect(MockMvcResultMatchers.jsonPath("$.length()").value(3))
+				.andExpect(MockMvcResultMatchers.jsonPath("$.data").isEmpty())
 				.andDo(MockMvcResultHandlers.print())
 				.andReturn();
 
-		System.out.print(mvcResultRegister);
-
 		// 测试login接口 post方法
 		UserLoginReq userLoginReq = new UserLoginReq();
-		userLoginReq.setUsername("nimeng5");
+		userLoginReq.setUsername("nimeng2");
 		userLoginReq.setPassword("123456");
 
 
@@ -72,13 +73,16 @@ public class UserControllerTests extends CaseServerTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(JSONObject.toJSONString(userLoginReq)))
 				.andExpect(MockMvcResultMatchers.status().isOk())
+				.andExpect(MockMvcResultMatchers.jsonPath("$.code").value("200"))
+				.andExpect(MockMvcResultMatchers.jsonPath("$.length()").value(3))
+				.andExpect(MockMvcResultMatchers.jsonPath("$.data").isEmpty())
 				.andDo(MockMvcResultHandlers.print())
 				.andReturn();
-		System.out.print(mvcResultLogin);
 
 
 		// 注销注册的用户
-		userController.logoff("nimeng5");
+		userController.logoff("nimeng2");
+		System.out.println("已将注册的用户从数据库中删除");
 	}
 
 }

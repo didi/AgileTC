@@ -6,8 +6,11 @@ import com.xiaoju.framework.entity.request.cases.CaseCreateReq;
 import com.xiaoju.framework.entity.request.cases.CaseDeleteReq;
 import com.xiaoju.framework.entity.request.cases.CaseEditReq;
 import com.xiaoju.framework.entity.request.ws.WsSaveReq;
+import org.assertj.core.api.Assertions;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -34,10 +37,7 @@ public class CaseControllerTests extends CaseServerTest {
 	@Test
 	public void exportTest1() throws Exception  {
 
-//		// 测试list接口 put方法
-		caseController.getCaseList(1, 1L, "-1", "done测试", "yimfeng", "", "111", "222", 1, 10);
-
-
+		// 测试list接口 put方法
 		MvcResult mvcResultList = mockMvc.perform(MockMvcRequestBuilders.get("/api/case/list")
 				.accept(MediaType.APPLICATION_JSON).param("channel", "1")
 				.accept(MediaType.APPLICATION_JSON).param("productLineId", "1")
@@ -50,10 +50,16 @@ public class CaseControllerTests extends CaseServerTest {
 				.accept(MediaType.APPLICATION_JSON).param("pageNum", "1")
 				.accept(MediaType.APPLICATION_JSON).param("pageSize", "10"))
 				.andExpect(MockMvcResultMatchers.status().isOk())
+				.andExpect(MockMvcResultMatchers.jsonPath("$.code").value("200"))
+				.andExpect(MockMvcResultMatchers.jsonPath("$.length()").value(3))
+				.andExpect(MockMvcResultMatchers.jsonPath("$.data").isNotEmpty())
 				.andDo(MockMvcResultHandlers.print())
 				.andReturn();
 
-		System.out.print(mvcResultList);
+		String contentList = mvcResultList.getResponse().getContentAsString();
+		JSONObject jsonList = JSONObject.parseObject(contentList);
+		System.out.println("data中的内容为 : " + jsonList.getString("data"));
+
 
 		// 测试create接口 post方法
 		CaseCreateReq caseCreateReq = new CaseCreateReq();
@@ -72,14 +78,21 @@ public class CaseControllerTests extends CaseServerTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(JSONObject.toJSONString(caseCreateReq)))
 				.andExpect(MockMvcResultMatchers.status().isOk())
+				.andExpect(MockMvcResultMatchers.jsonPath("$.code").value("200"))
+				.andExpect(MockMvcResultMatchers.jsonPath("$.length()").value(3))
+				.andExpect(MockMvcResultMatchers.jsonPath("$.data").isNotEmpty())
 				.andDo(MockMvcResultHandlers.print())
 				.andReturn();
 
-		System.out.print(mvcResultCreate);
+		String contentCreate = mvcResultCreate.getResponse().getContentAsString();
+		JSONObject jsonCreate = JSONObject.parseObject(contentCreate);
+		System.out.println("data中的内容为 : " + jsonCreate.getString("data"));
+
+		Long id = Long.valueOf(jsonCreate.getString("data"));
 
 		// 测试edit接口 post方法
 		CaseEditReq caseEditReq = new CaseEditReq();
-		caseEditReq.setId(2574L);
+		caseEditReq.setId(id);
 		caseEditReq.setCaseType(0);
 		caseEditReq.setTitle("done测试");
 		caseEditReq.setModifier("yimfeng");
@@ -89,67 +102,90 @@ public class CaseControllerTests extends CaseServerTest {
 		caseEditReq.setDescription("编辑用例集");
 
 
-//		caseController.editCase(caseEditReq);
 		MvcResult mvcResultEdit = mockMvc.perform(MockMvcRequestBuilders.post("/api/case/edit")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(JSONObject.toJSONString(caseEditReq)))
 				.andExpect(MockMvcResultMatchers.status().isOk())
+				.andExpect(MockMvcResultMatchers.jsonPath("$.code").value("200"))
+				.andExpect(MockMvcResultMatchers.jsonPath("$.length()").value(3))
+				.andExpect(MockMvcResultMatchers.jsonPath("$.data").isNotEmpty())
 				.andDo(MockMvcResultHandlers.print())
 				.andReturn();
-		System.out.println(mvcResultEdit);
 
-//
+		String contentEdit = mvcResultEdit.getResponse().getContentAsString();
+		JSONObject jsonEdit = JSONObject.parseObject(contentEdit);
+		System.out.println("data中的内容为 : " + jsonEdit.getString("data"));
+
+
 		// 测试delete接口 post方法
 		CaseDeleteReq caseDeleteReq = new CaseDeleteReq();
-		caseDeleteReq.setId(2625L);
-		caseController.deleteCase(caseDeleteReq);
+		caseDeleteReq.setId(id);
 		MvcResult mvcResultDelete = this.mockMvc.perform(MockMvcRequestBuilders.post("/api/case/delete")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(JSONObject.toJSONString(caseDeleteReq)))
 				.andExpect(MockMvcResultMatchers.status().isOk())
+				.andExpect(MockMvcResultMatchers.jsonPath("$.code").value("200"))
+				.andExpect(MockMvcResultMatchers.jsonPath("$.length()").value(3))
+				.andExpect(MockMvcResultMatchers.jsonPath("$.data").isNotEmpty())
 				.andDo(MockMvcResultHandlers.print())
 				.andReturn();
-		System.out.println(mvcResultDelete);
+
+		String contentDelete = mvcResultDelete.getResponse().getContentAsString();
+		JSONObject jsonDelete = JSONObject.parseObject(contentDelete);
+		System.out.println("data中的内容为 : " + jsonDelete.getString("data"));
 
 
 
 		// 测试listCreators接口 get方法
-		caseController.listCreators(0, 1L);
 		MvcResult mvcResultCreators = mockMvc.perform(MockMvcRequestBuilders.get("/api/case/listCreators")
 				.accept(MediaType.APPLICATION_JSON).param("caseType", "0")
 				.accept(MediaType.APPLICATION_JSON).param("productLineId", "1"))
 				.andExpect(MockMvcResultMatchers.status().isOk())
+				.andExpect(MockMvcResultMatchers.jsonPath("$.code").value("200"))
+				.andExpect(MockMvcResultMatchers.jsonPath("$.length()").value(3))
+				.andExpect(MockMvcResultMatchers.jsonPath("$.data").isNotEmpty())
 				.andDo(MockMvcResultHandlers.print())
 				.andReturn();
-		System.out.print(mvcResultCreators);
+
+		String contentCreators = mvcResultCreators.getResponse().getContentAsString();
+		JSONObject jsonCreators = JSONObject.parseObject(contentCreators);
+		System.out.println("data中的内容为 : " + jsonCreators.getString("data"));
 
 
 		// 测试CastInfo接口 get方法
-		caseController.getCaseGeneralInfo(2483L);
 		MvcResult mvcResultInfo = mockMvc.perform(MockMvcRequestBuilders.get("/api/case/getCaseInfo")
 				.accept(MediaType.APPLICATION_JSON).param("id", "2483"))
 				.andExpect(MockMvcResultMatchers.status().isOk())
+				.andExpect(MockMvcResultMatchers.jsonPath("$.code").value("200"))
+				.andExpect(MockMvcResultMatchers.jsonPath("$.length()").value(3))
+				.andExpect(MockMvcResultMatchers.jsonPath("$.data").isNotEmpty())
 				.andDo(MockMvcResultHandlers.print())
 				.andReturn();
-		System.out.print(mvcResultInfo);
+
+		String contentInfo = mvcResultInfo.getResponse().getContentAsString();
+		JSONObject jsonInfo = JSONObject.parseObject(contentInfo);
+		System.out.println("data中的内容为 : " + jsonInfo.getString("data"));
 
 
 		// 测试update接口 post方法
 		WsSaveReq wsSaveReq = new WsSaveReq();
-		wsSaveReq.setId(2494L);
+		wsSaveReq.setId(id);
 		wsSaveReq.setCaseContent("{\"root\":{\"data\":{\"created\":1562059643204,\"id\":\"bv8nxhi3c800\",\"text\":\"中心主题\"},\"children\":[]},\"template\":\"default\",\"theme\":\"fresh-blue\",\"version\":\"1.4.43\",\"base\":1}");
 		wsSaveReq.setModifier("yimfeng");
 		wsSaveReq.setRecordId(null);
-		caseController.updateWsCase(wsSaveReq);
 		MvcResult mvcResultUpdate = mockMvc.perform(MockMvcRequestBuilders.post("/api/case/update")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(JSONObject.toJSONString(wsSaveReq)))
 				.andExpect(MockMvcResultMatchers.status().isOk())
+				.andExpect(MockMvcResultMatchers.jsonPath("$.code").value("200"))
+				.andExpect(MockMvcResultMatchers.jsonPath("$.length()").value(3))
+				.andExpect(MockMvcResultMatchers.jsonPath("$.data").isEmpty())
 				.andDo(MockMvcResultHandlers.print())
 				.andReturn();
-		System.out.print(mvcResultUpdate);
 
-
+		String contentUpdate = mvcResultUpdate.getResponse().getContentAsString();
+		JSONObject jsonUpdate = JSONObject.parseObject(contentUpdate);
+		System.out.println("data中的内容为 : " + jsonUpdate.getString("data"));
 	}
 
 }

@@ -42,30 +42,32 @@ public class DirControllerTests extends CaseServerTest {
 				.accept(MediaType.APPLICATION_JSON).param("productLineId", "1")
 				.accept(MediaType.APPLICATION_JSON).param("channel", "1"))
 				.andExpect(MockMvcResultMatchers.status().isOk())
+				.andExpect(MockMvcResultMatchers.jsonPath("$.code").value("200"))
+				.andExpect(MockMvcResultMatchers.jsonPath("$.length()").value(3))
+				.andExpect(MockMvcResultMatchers.jsonPath("$.data").isNotEmpty())
 				.andDo(MockMvcResultHandlers.print())
 				.andReturn();
 
-		System.out.print(mvcResultList);
+		String contentList = mvcResultList.getResponse().getContentAsString();
+		JSONObject jsonList = JSONObject.parseObject(contentList);
+		System.out.println("data中的内容为 : " + jsonList.getString("data"));
 
  		// 测试add接口, post方法
-		DirCreateReq dirCreateReq = new DirCreateReq();
-		dirCreateReq.setParentId("root");
-		dirCreateReq.setProductLineId(1L);
-		dirCreateReq.setText("测试节点");
-		dirCreateReq.setChannel(1);
-
+		DirCreateReq dirCreateReq = new DirCreateReq("root", 1L, "测试节点", 1);
 
 		MvcResult mvcResultAdd = mockMvc.perform(MockMvcRequestBuilders.post("/api/dir/add")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(JSONObject.toJSONString(dirCreateReq)))
 				.andExpect(MockMvcResultMatchers.status().isOk())
+				.andExpect(MockMvcResultMatchers.jsonPath("$.code").value("200"))
+				.andExpect(MockMvcResultMatchers.jsonPath("$.length()").value(3))
+				.andExpect(MockMvcResultMatchers.jsonPath("$.data").isNotEmpty())
 				.andDo(MockMvcResultHandlers.print())
 				.andReturn();
 
-		String contentImp = mvcResultAdd.getResponse().getContentAsString();
-		System.out.print(contentImp);
-
-		System.out.print(mvcResultAdd);
+		String contentAdd = mvcResultAdd.getResponse().getContentAsString();
+		JSONObject jsonAdd = JSONObject.parseObject(contentAdd);
+		System.out.println("data中的内容为 : " + jsonAdd.getString("data"));
 
 
 		// 通过其他信息获得id
@@ -73,37 +75,41 @@ public class DirControllerTests extends CaseServerTest {
 		System.out.println("id的数据为：" + id);
 
 		// 测试rename接口, post方法
-		DirRenameReq dirRenameReq = new DirRenameReq();
-		dirRenameReq.setId(id);
-		dirRenameReq.setProductLineId(1L);
-		dirRenameReq.setText("1234567");
-		dirRenameReq.setChannel(1);
-
+		DirRenameReq dirRenameReq = new DirRenameReq(id, 1L, "1234567", 1);
 
 		MvcResult mvcResultRename = mockMvc.perform(MockMvcRequestBuilders.post("/api/dir/rename")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(JSONObject.toJSONString(dirRenameReq)))
 				.andExpect(MockMvcResultMatchers.status().isOk())
+				.andExpect(MockMvcResultMatchers.jsonPath("$.code").value("200"))
+				.andExpect(MockMvcResultMatchers.jsonPath("$.length()").value(3))
+				.andExpect(MockMvcResultMatchers.jsonPath("$.data").isNotEmpty())
 				.andDo(MockMvcResultHandlers.print())
 				.andReturn();
 
-		System.out.print(mvcResultRename);
+
+		String contentRename = mvcResultRename.getResponse().getContentAsString();
+		JSONObject jsonRename = JSONObject.parseObject(contentRename);
+		System.out.println("data中的内容为 : " + jsonRename.getString("data"));
+
 
 		// 测试delete接口,post方法
-		DirDeleteReq dirDeleteReq = new DirDeleteReq();
-		dirDeleteReq.setParentId("root");
-		dirDeleteReq.setProductLineId(1L);
-		dirDeleteReq.setDelId(id);
-		dirDeleteReq.setChannel(1);
+		DirDeleteReq dirDeleteReq = new DirDeleteReq("root", 1L, id, 1);
 
-		MvcResult mvcResultdelete = mockMvc.perform(MockMvcRequestBuilders.post("/api/dir/delete")
+		MvcResult mvcResultDelete = mockMvc.perform(MockMvcRequestBuilders.post("/api/dir/delete")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(JSONObject.toJSONString(dirDeleteReq)))
 				.andExpect(MockMvcResultMatchers.status().isOk())
+				.andExpect(MockMvcResultMatchers.jsonPath("$.code").value("200"))
+				.andExpect(MockMvcResultMatchers.jsonPath("$.length()").value(3))
+				.andExpect(MockMvcResultMatchers.jsonPath("$.data").isNotEmpty())
 				.andDo(MockMvcResultHandlers.print())
 				.andReturn();
 
-		System.out.print(mvcResultdelete);
+
+		String contentDelete = mvcResultDelete.getResponse().getContentAsString();
+		JSONObject jsonDelete = JSONObject.parseObject(contentDelete);
+		System.out.println("data中的内容为 : " + jsonDelete.getString("data"));
 
 		// 测试cardTree接口，get方法
 		dirController.getDirTree(1L, 1);
@@ -111,9 +117,14 @@ public class DirControllerTests extends CaseServerTest {
 				.accept(MediaType.APPLICATION_JSON).param("productLineId", "1")
 				.accept(MediaType.APPLICATION_JSON).param("channel", "1"))
 				.andExpect(MockMvcResultMatchers.status().isOk())
+				.andExpect(MockMvcResultMatchers.jsonPath("$.code").value("200"))
+				.andExpect(MockMvcResultMatchers.jsonPath("$.length()").value(3))
+				.andExpect(MockMvcResultMatchers.jsonPath("$.data").isNotEmpty())
 				.andDo(MockMvcResultHandlers.print())
 				.andReturn();
 
-		System.out.print(mvcResultDirTree);
+		String contentDirTree = mvcResultDirTree.getResponse().getContentAsString();
+		JSONObject jsonDirTree = JSONObject.parseObject(contentDirTree);
+		System.out.println("data中的内容为 : " + jsonDirTree.getString("data"));
 	}
 }

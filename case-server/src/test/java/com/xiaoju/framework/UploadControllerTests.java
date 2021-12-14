@@ -71,6 +71,8 @@ public class UploadControllerTests extends CaseServerTest {
 		MvcResult mvcResultUpload = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/file/uploadAttachment")
 				.file(picMultipartFile))
 				.andExpect(MockMvcResultMatchers.status().isOk())
+				.andExpect(MockMvcResultMatchers.jsonPath("$.data").isNotEmpty())
+				.andExpect(MockMvcResultMatchers.jsonPath("$.length()").value(2))
 				.andDo(MockMvcResultHandlers.print())
 				.andReturn();
 
