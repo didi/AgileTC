@@ -64,8 +64,8 @@ public class WebSocketFilter extends FilterRegistrationBean<WsFilter> {
         private void authenticateByCookie(HttpServletRequest req) {
             if (!authorityFlag) return;
             String username = CookieUtils.getCookieValue(req, "username");
-            // 查询用户对应角色权限
-            List<String> authorityContent = userService.getUserRoleAuthority(username);
+            // 获取用户对应权限的路径匹配列表
+            List<String> authorityContent = userService.getUserAuthorityContent(username);
 
             String pathInfo = req.getPathInfo();
             String path;

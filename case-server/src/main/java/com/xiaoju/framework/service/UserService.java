@@ -16,10 +16,10 @@ public interface UserService {
     Integer logout(HttpServletRequest request, HttpServletResponse response);
 
     /**
-     * 获取用户对应角色权限集
+     * 获取用户对应权限的路径匹配列表
      *
      * @param username 用户名称
-     * @return 角色权限集
+     * @return 对应权限的路径匹配列表
      */
-    List<String> getUserRoleAuthority(String username);
+    List<String> getUserAuthorityContent(String username);
 }

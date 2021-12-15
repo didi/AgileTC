@@ -140,7 +140,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<String> getUserRoleAuthority(String username) {
+    public List<String> getUserAuthorityContent(String username) {
         User user = userMapper.selectByUserName(username);
         if (Objects.isNull(user)) {
             LOGGER.info("用户名不存在，username: {}", username);
