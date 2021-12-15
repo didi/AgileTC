@@ -125,15 +125,13 @@ public class FileServiceImpl implements FileService {
         // 获取每行中的字段
         for (int j = 1; j <= sheet.getLastRowNum(); j++) { // 从第二行开始遍历
             Row row = sheet.getRow(j); // 获取行
-            if (row == null) {//略过空行
-                continue;
-            }else{
-                // 获取单元格中的值并存到对象中
-
-                JSONObject node = new JSONObject();
-                JSONObject data = new JSONObject();
-                // 整行只有1个内容,则判定为目录
-                if (row.getLastCellNum() - row.getFirstCellNum() == 1) {
+            JSONObject node = new JSONObject();
+            JSONObject data = new JSONObject();
+            int count = checkCurrentRowIsCaseDetail(row);
+            switch (count) {
+                case 0: // 空行
+                    break;
+                case 1: { // 目录
                     data.put("text", row.getCell(row.getFirstCellNum()) == null ? "" : row.getCell(row.getFirstCellNum()).getStringCellValue());
                     data.put("id", UUID.randomUUID().toString());
                     data.put("created", System.currentTimeMillis());
@@ -141,9 +139,9 @@ public class FileServiceImpl implements FileService {
                     node.put("data", data);
                     JSONArray parent = getParentFromRoot(root, row.getFirstCellNum());
                     parent.add(node);
+                    break;
                 }
-                // 当前cell不为空,且下一个cell也不为空,则判定为用例
-                else if (row.getLastCellNum() - row.getFirstCellNum() > 1) { // 此处判定为具体用例内容
+                case 2: { // 用例内容
                     JSONObject caseExpection = new JSONObject();
                     JSONObject caseExpectionData = new JSONObject();
                     caseExpectionData.put("text", row.getCell(row.getFirstCellNum()+6) == null ? "" : row.getCell(row.getFirstCellNum()+6).getStringCellValue());
@@ -201,9 +199,12 @@ public class FileServiceImpl implements FileService {
 
                     JSONArray parent = getParentFromRoot(root, row.getFirstCellNum());
                     parent.add(node);
+                    break;
                 }
-
+                default:
+                    break;
             }
+
         }
         jsonArray.add(root);
         CaseCreateReq caseCreateReq = buildCaseCreateReq(req, jsonArray);
@@ -218,6 +219,24 @@ public class FileServiceImpl implements FileService {
             dirIndex --;
         }
         return tmp.getJSONArray("children");
+    }
+
+    // 0: 空行; 1:目录; 2:用例内容
+    private int checkCurrentRowIsCaseDetail(Row row) {
+        if (row == null) { // 表示空行
+            return 0;
+        }
+
+        int count = 0;
+        for (int i = row.getFirstCellNum(); i < row.getLastCellNum(); i ++) {
+            if (null != row.getCell(i) && row.getCell(i).getStringCellValue().trim().length() != 0) {
+//                System.out.println("-----" + row.getCell(i).getStringCellValue());
+                count ++;
+            }
+        }
+
+        return count > 1 ? 2 : count;
+
     }
 
     private void checkExcel(MultipartFile file) throws Exception {
