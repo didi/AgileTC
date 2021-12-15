@@ -15,6 +15,7 @@ import com.xiaoju.framework.util.CookieUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -36,6 +37,9 @@ public class UserServiceImpl implements UserService {
      * <br/>PS:用户登陆刷新对应角色权限
      */
     private final Map<String, List<String>> roleAuthority = new HashMap<>();
+
+    @Value("${authority.flag}")
+    private Boolean authorityFlag;
 
     @Resource
     private UserMapper userMapper;
@@ -88,15 +92,18 @@ public class UserServiceImpl implements UserService {
         //3.将新用户设置到cookie中去
         CookieUtils.setCookie(request, response, "username", req.getUsername(), 60 * 60 * 24, null, false);
 
-        //4.主动刷新对应权限信息缓存
-        String authorityName = dbuser.getAuthorityName();
-        if (StringUtils.isEmpty(authorityName)) {
-            authorityName = SystemConstant.DEFAULT_AUTHORITY_NAME;
-        }
-        Authority authority = authorityMapper.selectByAuthorityName(authorityName);
-        if (Objects.nonNull(authority)) {
-            String[] authorityContentArray = authority.getAuthorityContent().split(SystemConstant.COMMA);
-            roleAuthority.put(authority.getAuthorityName(), Arrays.asList(authorityContentArray));
+        //4.开启权限时，主动刷新对应权限信息缓存
+        if (authorityFlag) {
+            String authorityName = dbuser.getAuthorityName();
+            if (StringUtils.isEmpty(authorityName)) {
+                authorityName = SystemConstant.DEFAULT_AUTHORITY_NAME;
+            }
+            Authority authority = authorityMapper.selectByAuthorityName(authorityName);
+            if (Objects.nonNull(authority)) {
+                String[] authorityContentArray = authority.getAuthorityContent().split(SystemConstant.COMMA);
+                roleAuthority.put(authority.getAuthorityName(), Arrays.asList(authorityContentArray));
+                LOGGER.info("刷新权限信息，authorityName: {}", authorityName);
+            }
         }
         return null;
     }
@@ -136,11 +143,14 @@ public class UserServiceImpl implements UserService {
     public List<String> getUserRoleAuthority(String username) {
         User user = userMapper.selectByUserName(username);
         if (Objects.isNull(user)) {
-            LOGGER.info("用户名不存在，username: " + username);
+            LOGGER.info("用户名不存在，username: {}", username);
             throw new SecurityException("认证失败");
         }
         String authorityName = user.getAuthorityName();
-        List<String> authorityContent = roleAuthority.get(StringUtils.isEmpty(authorityName)?SystemConstant.DEFAULT_AUTHORITY_NAME:authorityName);
+        if (StringUtils.isEmpty(authorityName)) {
+            authorityName = SystemConstant.DEFAULT_AUTHORITY_NAME;
+        }
+        List<String> authorityContent = roleAuthority.get(authorityName);
         // 缓存中不存在，则查询数据库，添加到缓存中
         if (Objects.isNull(authorityContent)) {
             // 通过权限名称查询权限
