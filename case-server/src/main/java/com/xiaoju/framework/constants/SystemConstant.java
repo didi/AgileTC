@@ -20,4 +20,6 @@ public class SystemConstant {
 
     public static final String HTTP_USER_AGENT = "User-Agent";
 
+    public static final String DEFAULT_AUTHORITY_NAME = "ROLE_USER";
+
 }

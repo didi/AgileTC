@@ -1,23 +1,28 @@
 package com.xiaoju.framework.service.impl;
 
+import com.xiaoju.framework.constants.SystemConstant;
 import com.xiaoju.framework.constants.enums.StatusCode;
+import com.xiaoju.framework.entity.dto.Authority;
 import com.xiaoju.framework.entity.dto.User;
 import com.xiaoju.framework.entity.exception.CaseServerException;
 import com.xiaoju.framework.entity.request.auth.UserLoginReq;
 import com.xiaoju.framework.entity.request.auth.UserRegisterReq;
+import com.xiaoju.framework.mapper.AuthorityMapper;
 import com.xiaoju.framework.mapper.UserMapper;
 import com.xiaoju.framework.service.UserService;
 import com.xiaoju.framework.util.CodecUtils;
 import com.xiaoju.framework.util.CookieUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.Date;
+import java.util.*;
 
 /**
  * Created by didi on 2021/4/22.
@@ -26,8 +31,17 @@ import java.util.Date;
 public class UserServiceImpl implements UserService {
     private static final Logger LOGGER = LoggerFactory.getLogger(UserServiceImpl.class);
 
+    /**
+     * 保存对应权限的路径匹配列表
+     * <br/>PS:用户登陆刷新对应角色权限
+     */
+    private final Map<String, List<String>> roleAuthority = new HashMap<>();
+
     @Resource
     private UserMapper userMapper;
+
+    @Resource
+    private AuthorityMapper authorityMapper;
 
     @Override
     public Integer register(UserRegisterReq req, HttpServletRequest request, HttpServletResponse response) {
@@ -74,6 +88,16 @@ public class UserServiceImpl implements UserService {
         //3.将新用户设置到cookie中去
         CookieUtils.setCookie(request, response, "username", req.getUsername(), 60 * 60 * 24, null, false);
 
+        //4.主动刷新对应权限信息缓存
+        String authorityName = dbuser.getAuthorityName();
+        if (StringUtils.isEmpty(authorityName)) {
+            authorityName = SystemConstant.DEFAULT_AUTHORITY_NAME;
+        }
+        Authority authority = authorityMapper.selectByAuthorityName(authorityName);
+        if (Objects.nonNull(authority)) {
+            String[] authorityContentArray = authority.getAuthorityContent().split(SystemConstant.COMMA);
+            roleAuthority.put(authority.getAuthorityName(), Arrays.asList(authorityContentArray));
+        }
         return null;
     }
 
@@ -106,5 +130,30 @@ public class UserServiceImpl implements UserService {
         }
 
         return null;
+    }
+
+    @Override
+    public List<String> getUserRoleAuthority(String username) {
+        User user = userMapper.selectByUserName(username);
+        if (Objects.isNull(user)) {
+            LOGGER.info("用户名不存在，username: " + username);
+            throw new CaseServerException("用户名不存在", StatusCode.INTERNAL_ERROR);
+        }
+        String authorityName = user.getAuthorityName();
+        List<String> authorityContent = roleAuthority.get(StringUtils.isEmpty(authorityName)?SystemConstant.DEFAULT_AUTHORITY_NAME:authorityName);
+        // 缓存中不存在，则查询数据库，添加到缓存中
+        if (Objects.isNull(authorityContent)) {
+            // 通过权限名称查询权限
+            Authority authority = authorityMapper.selectByAuthorityName(authorityName);
+            String[] authorityContentArray = authority.getAuthorityContent().split(SystemConstant.COMMA);
+            authorityContent = Arrays.asList(authorityContentArray);
+            // 添加权限名称到缓存中
+            roleAuthority.put(authority.getAuthorityName(), Arrays.asList(authorityContentArray));
+        }
+        // 数据库搜不到，则直接使用默认权限
+        if (CollectionUtils.isEmpty(authorityContent)) {
+            authorityContent = roleAuthority.get(SystemConstant.DEFAULT_AUTHORITY_NAME);
+        }
+        return authorityContent;
     }
 }
