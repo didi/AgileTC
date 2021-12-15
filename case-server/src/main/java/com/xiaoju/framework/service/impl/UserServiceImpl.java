@@ -137,7 +137,7 @@ public class UserServiceImpl implements UserService {
         User user = userMapper.selectByUserName(username);
         if (Objects.isNull(user)) {
             LOGGER.info("用户名不存在，username: " + username);
-            throw new CaseServerException("用户名不存在", StatusCode.INTERNAL_ERROR);
+            throw new SecurityException("认证失败");
         }
         String authorityName = user.getAuthorityName();
         List<String> authorityContent = roleAuthority.get(StringUtils.isEmpty(authorityName)?SystemConstant.DEFAULT_AUTHORITY_NAME:authorityName);
