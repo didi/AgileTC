@@ -15,8 +15,8 @@ import static com.xiaoju.framework.constants.BizConstant.UNSORTED_BIZ_ID;
  * @date 2020/9/11
  */
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 public class DirRenameReq implements ParamValidate {
 
     private String id;

@@ -58,6 +58,7 @@ public class CaseEditReq implements ParamValidate {
     private String description;
 
 
+
     @Override
     public void validate() {
         if (id == null || id <= 0) {

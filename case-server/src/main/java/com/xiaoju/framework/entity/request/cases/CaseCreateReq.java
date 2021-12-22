@@ -76,7 +76,6 @@ public class CaseCreateReq implements ParamValidate {
      */
     private String description;
 
-
     @Override
     public void validate() {
         // 复制操作才需要id

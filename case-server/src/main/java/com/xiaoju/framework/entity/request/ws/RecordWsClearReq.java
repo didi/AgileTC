@@ -1,7 +1,6 @@
 package com.xiaoju.framework.entity.request.ws;
 
-import com.xiaoju.framework.entity.request.ParamValidate;
-import lombok.Data;
+import com.xiaoju.framework.entity.request.ParamValidate;import lombok.Data;
 import org.springframework.util.StringUtils;
 
 /**
