@@ -13,10 +13,18 @@
     id, authority_name, authority_desc, authority_content, gmt_created, gmt_updated
   </sql>
   <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
-    select 
+    select
     <include refid="Base_Column_List" />
     from authority
     where id = #{id,jdbcType=BIGINT}
+  </select>
+  <select id="selectByAuthorityName" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from authority
+    where authority_name = #{authorityName,jdbcType=VARCHAR}
+    ORDER BY id DESC
+    LIMIT 1
   </select>
   <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
     delete from authority
