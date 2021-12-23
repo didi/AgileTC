@@ -31,11 +31,13 @@ public class CaseQueryReq {
 
     private String bizId;
 
+    private String caseKeyWords;
+
     private Integer pageNum;
 
     private Integer pageSize;
 
-    public CaseQueryReq(Integer caseType, String title, String creator, String reqIds, String beginTime, String endTime, Integer channel, String bizId, Long lineId, Integer pageNum, Integer pageSize) {
+    public CaseQueryReq(Integer caseType, String title, String creator, String reqIds, String beginTime, String endTime, Integer channel, String bizId, Long lineId, String caseKeyWords, Integer pageNum, Integer pageSize) {
         this.caseType = caseType;
         this.title = title;
         this.creator = creator;
@@ -45,6 +47,7 @@ public class CaseQueryReq {
         this.channel = channel;
         this.bizId = bizId;
         this.lineId = lineId;
+        this.caseKeyWords = caseKeyWords;
         this.pageNum = pageNum;
         this.pageSize = pageSize;
     }

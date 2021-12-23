@@ -71,7 +71,8 @@ public interface TestCaseMapper {
                           @Param("beginTime") Date beginTime,
                           @Param("endTime") Date endTime,
                           @Param("channel") Integer channel,
-                          @Param("productLineId") Long productLineId);
+                          @Param("productLineId") Long productLineId,
+                          @Param("caseKeyWords") String caseKeyWords);
 
     /**
      * 查找创建人

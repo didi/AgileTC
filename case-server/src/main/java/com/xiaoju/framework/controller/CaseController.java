@@ -50,13 +50,14 @@ public class CaseController {
                                    @RequestParam(required = false)  String title,
                                    @RequestParam(required = false)  String creator,
                                    @RequestParam(required = false)  String requirementId,
+                                   @RequestParam(required = false)  String caseKeyWords,
                                    @RequestParam(required = false)  String beginTime,
                                    @RequestParam(required = false)  String endTime,
                                    @RequestParam(defaultValue = "1") Integer pageNum,
                                    @RequestParam(defaultValue = "10") Integer pageSize) {
         return Response.success(caseService.getCaseList(
                 new CaseQueryReq(0, title, creator, requirementId, beginTime,
-                        endTime, channel, bizId, productLineId, pageNum, pageSize)));
+                        endTime, channel, bizId, productLineId, caseKeyWords, pageNum, pageSize)));
     }
 
     /**
