@@ -55,8 +55,63 @@ CREATE TABLE `test_case` (
   `module_node_id` bigint(20) NOT NULL DEFAULT '0' COMMENT '模块节点id',
   `requirement_id` varchar(1000) NOT NULL DEFAULT '0' COMMENT '需求id',
   `smk_case_id` bigint(20) NOT NULL DEFAULT '0' COMMENT '冒烟case的id',
-  `channel` int(11) NOT NULL DEFAULT '0' COMMENT '渠道标志 0-done 1-oe',
+  `channel` int(11) NOT NULL DEFAULT '0' COMMENT '渠道标志 现默认1',
   PRIMARY KEY (`id`),
   KEY `idx_productline_isdelete` (`product_line_id`,`is_delete`),
   KEY `idx_requirement_id` (`requirement_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2207 DEFAULT CHARSET=utf8 COMMENT='测试用例';
+
+## 请执行以下SQL，新建了一张文件夹表，同时给test_case增加文件夹字段，exec_record增加执行个数统计的兜底字段
+# 增加文件夹表
+create table biz
+(
+    id           bigint auto_increment comment '文件夹主键'
+        primary key,
+    product_line_id      bigint    default 0                 not null comment '业务线名称',
+    content              mediumtext                          not null comment '文件数内容',
+    channel              int(1)    default 0                 not null comment '渠道',
+    is_delete            int(1)    default 0                 not null comment '逻辑删除',
+    gmt_created          timestamp default CURRENT_TIMESTAMP not null comment '创建时间',
+    gmt_modified         timestamp default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间'
+)
+    comment '文件夹';
+
+alter table test_case add column biz_id varchar(500) default '-1' not null comment '关联的文件夹id';
+
+# 操作记录字段增加失败、阻塞、忽略字段
+alter table exec_record
+    add column fail_count int(10) default 0 not null comment '失败个数' after success_count,
+    add column block_count int(10) default 0 not null comment '阻塞个数' after success_count,
+    add column ignore_count int(10) default 0 not null comment '不执行个数' after success_count;
+
+# 增加用户信息表
+CREATE TABLE `user` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键id',
+  `username` varchar(255) NOT NULL DEFAULT '' COMMENT '用户名',
+  `password` varchar(1023) NOT NULL DEFAULT '' COMMENT '密码',
+  `salt` varchar(1023) NOT NULL DEFAULT '' COMMENT '盐',
+  `is_delete` int(1) NOT NULL DEFAULT '0' COMMENT '是否删除',
+  `channel` int(1) NOT NULL DEFAULT '0' COMMENT '渠道',
+  `product_line_id` bigint(20) NOT NULL DEFAULT '0' COMMENT '业务线',
+  `gmt_created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '注册时间',
+  `gmt_updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=677 DEFAULT CHARSET=utf8 COMMENT='用户信息';
+
+alter table user add column authority_name varchar(63) default '' after salt;
+
+# 增加权限信息表
+CREATE TABLE `authority` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键id',
+  `authority_name` varchar(63) NOT NULL DEFAULT ''COMMENT '权限名称，ROLE_开头，全大写',
+  `authority_desc` varchar(255) NOT NULL DEFAULT ''COMMENT '权限描述',
+  `authority_content` varchar(1023) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '权限内容，可访问的url，多个时用,隔开',
+  `gmt_created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `gmt_updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='权限信息';
+
+INSERT INTO `authority` (id,authority_name,authority_desc,authority_content) VALUES (1, 'ROLE_USER', '普通用户', '/api/dir/list,/api/record/list,/api/record/getRecordInfo,/api/user/**,/api/case/list*');
+INSERT INTO `authority` (id,authority_name,authority_desc,authority_content) VALUES (2, 'ROLE_ADMIN', '管理员', '/api/dir/list,/api/backup/**,/api/record/**,/api/file/**,/api/user/**,/api/case/**');
+INSERT INTO `authority` (id,authority_name,authority_desc,authority_content) VALUES (3, 'ROLE_SA', '超级管理员','/api/**');
+

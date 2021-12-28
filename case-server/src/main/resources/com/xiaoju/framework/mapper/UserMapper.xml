@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xiaoju.framework.mapper.UserMapper">
+  <resultMap id="BaseResultMap" type="com.xiaoju.framework.entity.dto.User">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="username" jdbcType="VARCHAR" property="username" />
+    <result column="password" jdbcType="VARCHAR" property="password" />
+    <result column="salt" jdbcType="VARCHAR" property="salt" />
+    <result column="authority_name" jdbcType="VARCHAR" property="authorityName" />
+    <result column="is_delete" jdbcType="INTEGER" property="isDelete" />
+    <result column="channel" jdbcType="INTEGER" property="channel" />
+    <result column="product_line_id" jdbcType="BIGINT" property="productLineId" />
+    <result column="gmt_created" jdbcType="TIMESTAMP" property="gmtCreated" />
+    <result column="gmt_updated" jdbcType="TIMESTAMP" property="gmtUpdated" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, username, password, salt, authority_name, is_delete, channel, product_line_id, gmt_created, gmt_updated
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from user
+    where id = #{id,jdbcType=BIGINT}
+  </select>
+  <select id="selectByUserName" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from user
+    where username = #{username,jdbcType=VARCHAR}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+    delete from user
+    where id = #{id,jdbcType=BIGINT}
+  </delete>
+  <insert id="insert" parameterType="com.xiaoju.framework.entity.dto.User">
+    insert into user (id, username, password, 
+      salt, authority_name, is_delete, channel,
+      product_line_id, gmt_created, gmt_updated
+      )
+    values (#{id,jdbcType=BIGINT}, #{username,jdbcType=VARCHAR}, #{password,jdbcType=VARCHAR}, 
+      #{salt,jdbcType=VARCHAR}, #{authorityName,jdbcType=VARCHAR}, #{isDelete,jdbcType=INTEGER}, #{channel,jdbcType=INTEGER},
+      #{productLineId,jdbcType=BIGINT}, #{gmtCreated,jdbcType=TIMESTAMP}, #{gmtUpdated,jdbcType=TIMESTAMP}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="com.xiaoju.framework.entity.dto.User">
+    insert into user
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="username != null">
+        username,
+      </if>
+      <if test="password != null">
+        password,
+      </if>
+      <if test="salt != null">
+        salt,
+      </if>
+      <if test="authorityName != null">
+        authority_name,
+      </if>
+      <if test="isDelete != null">
+        is_delete,
+      </if>
+      <if test="channel != null">
+        channel,
+      </if>
+      <if test="productLineId != null">
+        product_line_id,
+      </if>
+      <if test="gmtCreated != null">
+        gmt_created,
+      </if>
+      <if test="gmtUpdated != null">
+        gmt_updated,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=BIGINT},
+      </if>
+      <if test="username != null">
+        #{username,jdbcType=VARCHAR},
+      </if>
+      <if test="password != null">
+        #{password,jdbcType=VARCHAR},
+      </if>
+      <if test="salt != null">
+        #{salt,jdbcType=VARCHAR},
+      </if>
+      <if test="authorityName != null">
+        authority_name,
+      </if>
+      <if test="isDelete != null">
+        #{isDelete,jdbcType=INTEGER},
+      </if>
+      <if test="channel != null">
+        #{channel,jdbcType=INTEGER},
+      </if>
+      <if test="productLineId != null">
+        #{productLineId,jdbcType=BIGINT},
+      </if>
+      <if test="gmtCreated != null">
+        #{gmtCreated,jdbcType=TIMESTAMP},
+      </if>
+      <if test="gmtUpdated != null">
+        #{gmtUpdated,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.xiaoju.framework.entity.dto.User">
+    update user
+    <set>
+      <if test="username != null">
+        username = #{username,jdbcType=VARCHAR},
+      </if>
+      <if test="password != null">
+        password = #{password,jdbcType=VARCHAR},
+      </if>
+      <if test="salt != null">
+        salt = #{salt,jdbcType=VARCHAR},
+      </if>
+      <if test="authorityName != null">
+        authority_name,
+      </if>
+      <if test="isDelete != null">
+        is_delete = #{isDelete,jdbcType=INTEGER},
+      </if>
+      <if test="channel != null">
+        channel = #{channel,jdbcType=INTEGER},
+      </if>
+      <if test="productLineId != null">
+        product_line_id = #{productLineId,jdbcType=BIGINT},
+      </if>
+      <if test="gmtCreated != null">
+        gmt_created = #{gmtCreated,jdbcType=TIMESTAMP},
+      </if>
+      <if test="gmtUpdated != null">
+        gmt_updated = #{gmtUpdated,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.xiaoju.framework.entity.dto.User">
+    update user
+    set username = #{username,jdbcType=VARCHAR},
+      password = #{password,jdbcType=VARCHAR},
+      salt = #{salt,jdbcType=VARCHAR},
+      authority_name = #{authorityName,jdbcType=VARCHAR},
+      is_delete = #{isDelete,jdbcType=INTEGER},
+      channel = #{channel,jdbcType=INTEGER},
+      product_line_id = #{productLineId,jdbcType=BIGINT},
+      gmt_created = #{gmtCreated,jdbcType=TIMESTAMP},
+      gmt_updated = #{gmtUpdated,jdbcType=TIMESTAMP}
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+</mapper>

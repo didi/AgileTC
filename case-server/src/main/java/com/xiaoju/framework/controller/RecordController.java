@@ -1,162 +1,137 @@
 package com.xiaoju.framework.controller;
 
-import com.xiaoju.framework.entity.TestCase;
-import com.xiaoju.framework.service.ExecRecordService;
-import com.xiaoju.framework.util.ErrorCode;
-import com.xiaoju.framework.util.PageResult;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
-import org.springframework.scheduling.annotation.EnableAsync;
+import com.xiaoju.framework.constants.enums.StatusCode;
+import com.xiaoju.framework.entity.exception.CaseServerException;
+import com.xiaoju.framework.entity.request.record.RecordAddReq;
+import com.xiaoju.framework.entity.request.record.RecordDeleteReq;
+import com.xiaoju.framework.entity.request.record.RecordUpdateReq;
+import com.xiaoju.framework.entity.request.ws.RecordWsClearReq;
+import com.xiaoju.framework.entity.response.controller.Response;
+import com.xiaoju.framework.service.RecordService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
-import com.xiaoju.framework.util.Response;
-import com.xiaoju.framework.entity.ExecRecord;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
-
-import javax.servlet.http.HttpServletRequest;
+import javax.annotation.Resource;
+import javax.validation.constraints.NotNull;
 
 /**
- * Created by didi on 2019/9/29.
+ * 执行任务
+ *
+ * @author didi
+ * @date 2020/11/20
  */
-@Api(description = "execRecord接口")
-@Slf4j
 @RestController
-@RequestMapping(value = "/api/execRecord")
-@EnableAsync
+@RequestMapping(value = "/api/record")
 public class RecordController {
-    @Autowired
-    ExecRecordService execRecordService;
-    @Autowired
-    private HttpServletRequest request;
 
-    @ApiOperation("查询执行记录列表")
-    @ApiImplicitParam(name = "caseId", value = "caseId", required = true,paramType = "query",dataType = "long")
-    @RequestMapping(value = "/getRecordByCaseId", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public Response<List<ExecRecord>> getRecordByCaseId(@RequestParam(value = "caseId") Long caseId) {
-        List<ExecRecord> execRecordList =execRecordService.getRecordByCaseId(caseId);
-        return Response.success(execRecordList);
+    private static final Logger LOGGER = LoggerFactory.getLogger(RecordController.class);
+
+    @Resource
+    RecordService recordService;
+
+    /**
+     * 列表 - 根据用例下获取所有执行任务
+     *
+     * @param caseId 用例集id
+     * @return 响应体
+     */
+    @GetMapping(value = "/list")
+    public Response<?> getRecordList(@RequestParam @NotNull(message = "用例id为空") Long caseId) {
+        return Response.success(recordService.getListByCaseId(caseId));
     }
 
-    @ApiOperation("根据需求id查询执行记录列表")
-    @ApiImplicitParam(name = "requirementId", value = "requirementId", required = true,paramType = "query",dataType = "long")
-    @RequestMapping(value = "/getRecordByRequirementId", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public Response<PageResult<ExecRecord>> getRecordByRequirementId(@RequestParam(value = "requirementId",required = true) Long requirementId,
-                                                         @RequestParam(value = "pageNum",defaultValue = "1") Integer pageNum,
-                                                         @RequestParam(value = "pageSize",defaultValue = "20") Integer pageSize,
-                                                         @RequestParam(value = "channel",required = false,defaultValue = "0") Integer channel){
-        PageResult<ExecRecord> PageExecRecordList =execRecordService.getRecordByRequirementId(requirementId,pageNum,pageSize,channel);
-
-        return Response.success(PageExecRecordList);
+    /**
+     * 列表 - 新增执行任务
+     *
+     * @param req 前端传参
+     * @return 响应体
+     */
+    @PostMapping(value = "/create")
+    public Response<Long> createRecord(@RequestBody RecordAddReq req) {
+        req.validate();
+        try {
+            return Response.success(recordService.addRecord(req));
+        } catch (CaseServerException e) {
+            throw new CaseServerException(e.getLocalizedMessage(), e.getStatus());
+        } catch (Exception e) {
+            LOGGER.error("[新增record出错]入参={}, 原因={}", req.toString(), e.getMessage());
+            e.printStackTrace();
+            return Response.build(StatusCode.SERVER_BUSY_ERROR);
+        }
     }
 
-    @ApiOperation("查询执行记录的内容")
-    @ApiImplicitParam(name = "id", value = "id", required = true,paramType = "query",dataType = "long")
-    @RequestMapping(value = "/getContentById", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public Response<ExecRecord> getRecordContentById(@RequestParam(value = "id") Long id) {
-        ExecRecord execRecord =execRecordService.getRecordById(id);
-        return Response.success(execRecord);
+    /**
+     * 列表 - 修改执行任务
+     *
+     * @param req 请求体
+     * @return 响应体
+     */
+    @PostMapping(value = "/edit")
+    public Response<?> editRecord(@RequestBody RecordUpdateReq req) {
+        req.validate();
+        try {
+            recordService.editRecord(req);
+            return Response.success();
+        } catch (CaseServerException e) {
+            throw new CaseServerException(e.getLocalizedMessage(), e.getStatus());
+        } catch (Exception e) {
+            LOGGER.error("[列表页面-更新record属性出错]入参={}, 原因={}", req.toString(), e.getMessage());
+            e.printStackTrace();
+            return Response.build(StatusCode.SERVER_BUSY_ERROR);
+        }
     }
 
-    @ApiOperation("查询当前新增记录可用的环境")
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "caseId", value = "caseId", required = true,paramType = "query",dataType = "long"),
-            @ApiImplicitParam(name = "creator", value = "creator", required = true,paramType = "query",dataType = "string")
-    })
-    @RequestMapping(value = "/getEnv", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public Response<List<Integer>> getEnv(@RequestParam(value = "caseId") Long caseId,@RequestParam(value = "creator") String creator) {
-        List<Integer> envList =execRecordService.getEnv(caseId,creator);
-        return Response.success(envList);
+    /**
+     * 列表 - 删除执行任务
+     *
+     * @param req 请求体
+     * @return 响应体
+     */
+    @PostMapping(value = "/delete")
+    public Response<?> deleteRecord(@RequestBody RecordDeleteReq req) {
+        req.validate();
+        try {
+            recordService.delete(req.getId());
+            return Response.success("删除成功");
+        } catch (CaseServerException e) {
+            throw new CaseServerException(e.getLocalizedMessage(), e.getStatus());
+        } catch (Exception e) {
+            LOGGER.error("[删除record错误]入参={}, 原因={}", req.toString(), e.getMessage());
+            e.printStackTrace();
+            return Response.build(StatusCode.SERVER_BUSY_ERROR);
+        }
     }
 
-    @ApiOperation("新增执行记录")
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "caseId", value = "caseId", required = true,paramType = "query",dataType = "long"),
-            @ApiImplicitParam(name = "creator", value = "creator", required = true,paramType = "query",dataType = "string"),
-            //@ApiImplicitParam(name = "env", value = "env", required = true,paramType = "query",dataType = "int")
-            //圈选记录条件不能为空
-            //@ApiImplicitParam(name = "chooseContent", value = "chooseContent", required = true,paramType = "query",dataType = "string")
-    })
-    @RequestMapping(value = "/addRecord", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public Response<Long> addRecord(@RequestBody ExecRecord execRecord) {
-        String username = request.getHeader("oe-username");
-        if(username != null) {
-            execRecord.setCreator(username);
+    /**
+     * 脑图 - 清理json中所有的执行记录
+     *
+     * @param req 请求体
+     * @return 响应体
+     */
+    @PostMapping(value = "/clear")
+    public Response<?> clearRecord(@RequestBody RecordWsClearReq req) {
+        req.validate();
+        try {
+            return Response.success(recordService.wsClearRecord(req));
+        } catch (CaseServerException e) {
+            throw new CaseServerException(e.getLocalizedMessage(), e.getStatus());
+        } catch (Exception e) {
+            LOGGER.error("[协同页面-清除record执行记录出错]入参={}, 原因={}", req.toString(), e.getMessage());
+            e.printStackTrace();
+            return Response.build(StatusCode.SERVER_BUSY_ERROR);
         }
-        execRecord =  execRecordService.addRecord(execRecord);
-        return Response.success(execRecord.getId());
     }
 
-    @ApiOperation("修改执行记录")
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "id", value = "recordId", required = true,paramType = "query",dataType = "long"),
-    })
-    @RequestMapping(value = "/update", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public Response<ExecRecord> updateTestCase(@RequestBody ExecRecord execRecord) {
-        if (execRecord == null || execRecord.getId() == null)
-            return Response.build(ErrorCode.COMMON_NO_PARAM, "请指定要修改的记录");
-        execRecord = execRecordService.modifyTestRecord(execRecord);
-        return Response.success(execRecord);
-
-    }
-
-    @ApiOperation("清除执行记录执行结果")
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "id", value = "recordId", required = true,paramType = "query",dataType = "long"),
-    })
-    @RequestMapping(value = "/clearResult", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public Response<ExecRecord> clearRecord(@RequestBody ExecRecord execRecord) {
-        if (execRecord == null || execRecord.getId() == null)
-            return Response.build(ErrorCode.COMMON_NO_PARAM, "请指定要修改的记录");
-
-        String username = request.getHeader("oe-username");
-        if(username != null) {
-            execRecord.setModifier(username);
-        }
-
-        execRecord = execRecordService.clearRecord(execRecord);
-        return Response.success(execRecord);
-
-    }
-
-    @ApiOperation("逻辑删除记录")
-    @RequestMapping(value = "/softdelete", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public Response<?> deleteRecordSoft(@RequestBody ExecRecord execRecord) {
-        if (execRecord == null || execRecord.getId()==null){
-            return Response.build(ErrorCode.COMMON_NO_PARAM, "删除记录id不能为空");
-        }
-        int ret = execRecordService.deleteRecordById(execRecord.getId());
-        return Response.success();
-    }
-
-    @ApiOperation("编辑记录信息")
-    @RequestMapping(value = "/EditRecord", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public Response<?> editRecord(@RequestBody ExecRecord execRecord){
-        if (execRecord == null || execRecord.getId()==null){
-            return Response.build(ErrorCode.COMMON_NO_PARAM, "记录id不能为空");
-        }
-        String username = request.getHeader("oe-username");
-        if(username != null) {
-            execRecord.setModifier(username);
-        }
-        if (execRecord == null || execRecord.getModifier()==null){
-            return Response.build(ErrorCode.COMMON_NO_PARAM, "修改者不能为空");
-        }
-        if (execRecord == null || execRecord.getTitle()==null){
-            return Response.build(ErrorCode.COMMON_NO_PARAM, "记录名称不能为空");
-        }
-        if (execRecord == null || execRecord.getChooseContent()==null){
-            return Response.build(ErrorCode.COMMON_NO_PARAM, "圈选内容不能为空");
-        }
-        execRecordService.editRecord(execRecord);
-        return Response.success();
+    /**
+     * 脑图 - 获取该任务用例上方的统计信息
+     *
+     * @param id 执行任务id
+     * @return 响应体
+     */
+    @GetMapping(value = "/getRecordInfo")
+    public Response<?> getRecordGeneralInfo(@RequestParam @NotNull(message = "任务id为空") Long id) {
+        return Response.success(recordService.getGeneralInfo(id));
     }
 
 }

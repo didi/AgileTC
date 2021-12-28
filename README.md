@@ -1,46 +1,102 @@
-#### AgileTC
+English | [简体中文](./README_zh-CN.md)
+
+## AgileTC
+
 ![image](https://dpubstatic.udache.com/static/dpubimg/RQnYIFAwEd/logo.png)
-#### 简介
 
->AgileTC是一套敏捷的测试用例管理平台，支持测试用例管理、执行计划管理、进度计算、多人实时协同等能力，方便测试人员对用例进行管理和沉淀。产品以脑图方式编辑可快速上手，用例关联需求形成流程闭环，并支持组件化引用，可在各个平台嵌入使用，是测试人员的贴心助手！
+[![License](https://img.shields.io/badge/license-Apache%202-4EB1BA.svg)](https://www.apache.org/licenses/LICENSE-2.0.html)[![GitHub issues](https://img.shields.io/github/issues/didi/AgileTC.svg)](https://github.com/didi/AgileTC/issues)
 
-#### 功能描述
+### Introduction
 
-##### 测试用例集管理
->AgileTC能够将用例集与需求关联，支持xmind/xmind zen的导入/导出，具备丰富的搜索能力，如根据用例集名称、创建人、管理需求和创建时间进行搜索。
+AgileTC - A Test case management platform with ability of multi real-time collaboration base on mind map.
 
-##### 用例编辑
->AgileTC支持多人实时协同编辑用例集，其中一个人的修改，会实时同步到打开相同用例的其他客户端，实现更加高效的测试集编写和测试执行协同。支持用例优先级和自定义标签标记。服务端和客户端增加了定时巡检探活机制保障连接稳定性。支持连接异常（如浏览器异常退出或系统故障等）场景下，自动保存用例集。
+### Project Description:
 
-##### 测试任务管理
->用户可以根据用例中的优先级和标签圈选测试用例，组合成自身需要的测试任务。用户可以在测试任务中标记用例测试状态，并查看测试任务的整体进展。
+With the rapid business iteration, the efficiency requirements for each link of the project process are getting higher and higher. Many QAs have begun to choose to use offline brain maps to write and execute use cases for testing, but they are also facing more and more problems:
+1. Confusion and no precipitation: There are many kinds of brain map software, and the format is not uniform; each module responsible person maintains it independently, which is prone to use case redundancy and missing, and there is no global perspective use case;
+2. Low collaboration efficiency: unable to perceive test progress and results; use case changes need to be communicated verbally.
 
-##### 如何使用
-##### 环境依赖
-- mac/linux/windows 
-- java 1.8 
-- mysql 服务端 
+The industry's more reliable use case management platforms, such as test-link, QC, Zen Tao, etc., all adopt traditional use case management methods, similar to excel operating experience, and the test case writing process is more cumbersome, which is similar to the mind map management method commonly used in current business It does not match, nor does it meet the demands of current business rapid iteration. Therefore, we need a complete test case management system to meet daily test requirements.
 
-##### 下载
-```
-git clone https://github.com/didi/AgileTC.git 
-或者 直接Download ZIP
-```
+AgileTC is an agile online test case management platform that supports general capabilities such as test case collection management, use case hierarchical management, task management, schedule calculation, and multi-person implementation collaboration. It is suitable for software testing/developer use case writing, use case review, test task management and other scenarios.
 
-##### 准备
-- 创建依赖数据库，application-dev.properties中配置数据库名称为case_manager create database case_manager 
-- 利用sql中的脚本配置对应表。创建脚本路径：case-server/sql/case-server.sql 
-- 修改application-dev.properties中spring.datasource的配置。默认数据库端口号为3306 
-- 安装xmind jar包。 mvn install:install-file -Dfile=org.xmind.core_3.5.2.201505201101.jar -DgroupId=com.xmind -DartifactId=sdk-Java -Dversion=201505201101 -Dpackaging=jar
+### Function
 
-##### 运行
-- mvn spring-boot:run 
-- 浏览器打开 http://localhost:8094/case/caseList/1
+#### Test case set management
 
-#### 整体架构
-![整体架构](https://dpubstatic.udache.com/static/dpubimg/f1f36dbd-d85a-452e-85d6-47738aa3f459.png)
+AgileTC can associate use case sets with requirements, supports the import/export of xmind/xmind zen, and has rich search capabilities, such as searching based on use case set name, creator, management requirements, and creation time
 
-#### 联系我们
-群成员超200，需要扫描二维码添加客服，邀请入群
+#### Use case edit
+
+AgileTC supports real-time collaborative editing of use case sets by multiple people. One person's modification will be synchronized to other clients that open the same use case in real time, realizing more efficient test set writing and test execution collaboration. Support use case priority and custom labeling. The server and client have added a regular inspection and detection mechanism to ensure the stability of the connection. Support the automatic saving of the use case set in the scenario of abnormal connection (such as abnormal browser exit or system failure, etc.).
+
+#### Test task management
+
+Users can circle the test cases according to their priority and tags, and combine them into the test tasks they need. The user can mark the test status of the use case in the test task and view the overall progress of the test task.
+
+#### Use Case Set Service
+
+* Complex search
+* Import and Export
+* Demand correlation
+* Addition, deletion and modification of use case set
+
+#### Mission service
+
+* Demand binding
+* Circle selection example
+* Task execution
+* Schedule calculation
+* Task addition, deletion and modification
+
+#### Use case service
+
+* Multi-person real-time collaboration
+* Regular inspections
+* history record
+
+#### Folder service
+
+* Use case set classification management
+
+### Start method
+
+#### Environmental dependence
+
+- linux/mac/windows
+- java 1.8
+- mysql
+
+#### Download
+
+* git clone https://github.com/didi/AgileTC.git 
+  Or download ZIP directly
+
+#### Prepare
+
+* If you use the master branch, if you have done secondary development on this branch, please first pull the sub-branch to save the current content, and then pull the remote master
+* Create a dependent database, the configuration database name in application-dev.properties is case_manager create database case_manager
+* Use the script in sql to configure the corresponding table. Create script path: case-server/sql/case-server.sql
+  * Please note that if you have used this platform and created a database before December 15, 2020, please execute all the statements following create table Biz {} in case-server.sql
+  * If you are a new user and have not used this platform, please execute all the statements in case-server.sql once
+* Modify the configuration of spring.datasource in properties
+
+#### Run
+
+* mvn spring-boot:run
+* Browser open http://localhost:8094/case/caseList/1
+
+#### Contact us
+
+Group members exceed 200, you need to scan the QR code to add customer service and invite to join the group
 
 ![image](https://dpubstatic.udache.com/static/dpubimg/1caac875-675a-4078-a946-6680f30553ef.png)
+
+
+
+
+
+
+
+
+

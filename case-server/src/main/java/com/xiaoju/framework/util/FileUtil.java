@@ -1,8 +1,17 @@
 package com.xiaoju.framework.util;
 
+
+import com.xiaoju.framework.constants.enums.StatusCode;
+import com.xiaoju.framework.entity.exception.CaseServerException;
+import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.io.*;
 import java.nio.charset.Charset;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Enumeration;
+import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
@@ -26,18 +35,23 @@ public class FileUtil {
         if(!pathFile.exists()){
             pathFile.mkdirs();
         }
-        ZipFile zip = null;
         try {
-
-            zip = new ZipFile(zipFile, Charset.forName("gbk"));//防止中文目录，乱码
+            ZipFile zip = new ZipFile(zipFile, Charset.forName("gbk"));
             for(Enumeration entries = zip.entries(); entries.hasMoreElements();){
                 ZipEntry entry = (ZipEntry)entries.nextElement();
                 String zipEntryName = entry.getName();
                 InputStream in = zip.getInputStream(entry);
                 //指定解压后的文件夹+当前zip文件的名称
                 String outPath = (descDir+zipEntryName).replace("/", File.separator);
-                //判断路径是否存在,不存在则创建文件路径
+
+                //判断路径是否存在，不存在则创建文件路径，同时添加检验
+                String canonicalDescDirPath = pathFile.getCanonicalPath();
                 File file = new File(outPath.substring(0, outPath.lastIndexOf(File.separator)));
+                String CanonicalDescFile = file.getCanonicalPath() + File.separator;
+                if(!CanonicalDescFile.startsWith(canonicalDescDirPath + File.separator)){
+                    throw new ArithmeticException("Entry is outside of the target dir: " + zipEntryName);
+                }
+
                 if(!file.exists()){
                     file.mkdirs();
                 }
@@ -60,7 +74,7 @@ public class FileUtil {
             //必须关闭，要不然这个zip文件一直被占用着，要删删不掉，改名也不可以，移动也不行，整多了，系统还崩了。
             zip.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new CaseServerException("解压文件失败：" + e.getMessage(), StatusCode.FILE_IMPORT_ERROR);
         }
         return flag;
     }
@@ -68,55 +82,42 @@ public class FileUtil {
     /**
      * 压缩文件
      * @param sourcePath 要压缩的文件夹
-     * @param destPath 压缩文件放的地方
+     * @param destPath 压缩文件
      * @return 压缩文件
      */
-    public static String compressZip(String sourcePath, String destPath) {
-        File resourcesFile = new File(sourcePath);     //源文件
-        File targetFile = new File(destPath);           //目的
-        //如果目的路径不存在，则新建
-        if(!targetFile.exists()){
-            targetFile.mkdirs();
-        }
-
-        String targetName = "mm"+".xmind";   //目的压缩文件名
+    public static void compressZip(String sourcePath, String destPath) {
+        File resourcesFile = new File(sourcePath);
         FileOutputStream outputStream = null;
         try {
-            outputStream = new FileOutputStream(destPath+"\\"+targetName);
+            outputStream = new FileOutputStream(destPath);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
         ZipOutputStream out = new ZipOutputStream(new BufferedOutputStream(outputStream));
-
         try {
             createCompressedFile(out, resourcesFile, "");
             out.close();
         } catch (Exception e) {
             e.printStackTrace();
+            throw new CaseServerException("压缩文件失败：" + e.getMessage(), StatusCode.FILE_EXPORT_ERROR);
         }
-
-        return "";
     }
 
     public static void createCompressedFile(ZipOutputStream out,File file,String dir) throws Exception{
-        //如果当前的是文件夹，则进行进一步处理
         if(file.isDirectory()){
             //得到文件列表信息
             File[] files = file.listFiles();
             //将文件夹添加到下一级打包目录
             out.putNextEntry(new ZipEntry(dir+"/"));
-
             dir = dir.length() == 0 ? "" : dir +"/";
-
             //循环将文件夹中的文件打包
             for(int i = 0 ; i < files.length ; i++){
-                createCompressedFile(out, files[i], dir + files[i].getName());         //递归处理
+                createCompressedFile(out, files[i], dir + files[i].getName());
             }
         }
-        else{   //当前的是文件，打包处理
+        else{
             //文件输入流
             FileInputStream fis = new FileInputStream(file);
-
             out.putNextEntry(new ZipEntry(dir));
             //进行写操作
             int j =  0;
@@ -126,26 +127,6 @@ public class FileUtil {
             }
             //关闭输入流
             fis.close();
-        }
-    }
-
-
-
-    /** 删除文件夹*/
-    public static void delete(File file) {
-
-        if(!file.exists()) return;
-
-        if(file.isFile() || file.list()==null) {
-            file.delete();
-            System.out.println("删除了"+file.getName());
-        }else {
-            File[] files = file.listFiles();
-            for(File a:files) {
-                delete(a);
-            }
-            file.delete();
-            System.out.println("删除了"+file.getName());
         }
     }
 
@@ -169,8 +150,28 @@ public class FileUtil {
             return jsonStr;
         } catch (IOException e) {
             e.printStackTrace();
-            return null;
+            throw new CaseServerException("读取json文件失败：" + e.getMessage(), StatusCode.FILE_IMPORT_ERROR);
         }
     }
 
+    // fileUrlPath
+    public static String fileUpload(String path, MultipartFile file) {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd/");
+        String format = sdf.format(new Date());
+        File folder = new File(path + format);// 文件夹的名字
+        if (!folder.isDirectory()) { // 如果文件夹为空，则新建文件夹
+            folder.mkdirs();
+        }
+        // 对上传的文件重命名，避免文件重名
+        String oldName = StringUtils.isEmpty(file.getOriginalFilename()) ? file.getName() : file.getOriginalFilename(); // 获取文件的名字
+        String newName = UUID.randomUUID().toString()
+                + oldName.substring(oldName.lastIndexOf("."), oldName.length()); // 生成新的随机的文件名字
+        try {
+            file.transferTo(new File(folder, newName));
+
+            return format + newName;
+        } catch (IOException e) {
+            throw new CaseServerException("图片上传失败：" + e.getMessage(), StatusCode.FILE_IMPORT_ERROR);
+        }
+    }
 }

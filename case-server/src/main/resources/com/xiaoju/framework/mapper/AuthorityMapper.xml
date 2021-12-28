@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xiaoju.framework.mapper.AuthorityMapper">
+  <resultMap id="BaseResultMap" type="com.xiaoju.framework.entity.dto.Authority">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="authority_name" jdbcType="VARCHAR" property="authorityName" />
+    <result column="authority_desc" jdbcType="VARCHAR" property="authorityDesc" />
+    <result column="authority_content" jdbcType="VARCHAR" property="authorityContent" />
+    <result column="gmt_created" jdbcType="TIMESTAMP" property="gmtCreated" />
+    <result column="gmt_updated" jdbcType="TIMESTAMP" property="gmtUpdated" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, authority_name, authority_desc, authority_content, gmt_created, gmt_updated
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from authority
+    where id = #{id,jdbcType=BIGINT}
+  </select>
+  <select id="selectByAuthorityName" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from authority
+    where authority_name = #{authorityName,jdbcType=VARCHAR}
+    ORDER BY id DESC
+    LIMIT 1
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+    delete from authority
+    where id = #{id,jdbcType=BIGINT}
+  </delete>
+  <insert id="insert" parameterType="com.xiaoju.framework.entity.dto.Authority">
+    insert into authority (id, authority_name, authority_desc, 
+      authority_content, gmt_created, gmt_updated
+      )
+    values (#{id,jdbcType=BIGINT}, #{authorityName,jdbcType=VARCHAR}, #{authorityDesc,jdbcType=VARCHAR}, 
+      #{authorityContent,jdbcType=VARCHAR}, #{gmtCreated,jdbcType=TIMESTAMP}, #{gmtUpdated,jdbcType=TIMESTAMP}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="com.xiaoju.framework.entity.dto.Authority">
+    insert into authority
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="authorityName != null">
+        authority_name,
+      </if>
+      <if test="authorityDesc != null">
+        authority_desc,
+      </if>
+      <if test="authorityContent != null">
+        authority_content,
+      </if>
+      <if test="gmtCreated != null">
+        gmt_created,
+      </if>
+      <if test="gmtUpdated != null">
+        gmt_updated,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=BIGINT},
+      </if>
+      <if test="authorityName != null">
+        #{authorityName,jdbcType=VARCHAR},
+      </if>
+      <if test="authorityDesc != null">
+        #{authorityDesc,jdbcType=VARCHAR},
+      </if>
+      <if test="authorityContent != null">
+        #{authorityContent,jdbcType=VARCHAR},
+      </if>
+      <if test="gmtCreated != null">
+        #{gmtCreated,jdbcType=TIMESTAMP},
+      </if>
+      <if test="gmtUpdated != null">
+        #{gmtUpdated,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.xiaoju.framework.entity.dto.Authority">
+    update authority
+    <set>
+      <if test="authorityName != null">
+        authority_name = #{authorityName,jdbcType=VARCHAR},
+      </if>
+      <if test="authorityDesc != null">
+        authority_desc = #{authorityDesc,jdbcType=VARCHAR},
+      </if>
+      <if test="authorityContent != null">
+        authority_content = #{authorityContent,jdbcType=VARCHAR},
+      </if>
+      <if test="gmtCreated != null">
+        gmt_created = #{gmtCreated,jdbcType=TIMESTAMP},
+      </if>
+      <if test="gmtUpdated != null">
+        gmt_updated = #{gmtUpdated,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.xiaoju.framework.entity.dto.Authority">
+    update authority
+    set authority_name = #{authorityName,jdbcType=VARCHAR},
+      authority_desc = #{authorityDesc,jdbcType=VARCHAR},
+      authority_content = #{authorityContent,jdbcType=VARCHAR},
+      gmt_created = #{gmtCreated,jdbcType=TIMESTAMP},
+      gmt_updated = #{gmtUpdated,jdbcType=TIMESTAMP}
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+</mapper>

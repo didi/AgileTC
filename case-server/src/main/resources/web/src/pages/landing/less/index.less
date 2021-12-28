@@ -1,0 +1,49 @@
+:global(.ant-dropdown).dropStyle {
+  :global(.ant-dropdown-menu) {
+    padding: 0;
+    background-color: #3377ff;
+    border-radius: 0;
+  }
+  :global(.ant-dropdown-menu-item) {
+    width: auto;
+    padding: 0;
+    color: #fff;
+    span,
+    a {
+      display: block;
+      height: 50px;
+      margin: 0;
+      padding: 0 15px;
+      color: #fff;
+      line-height: 50px;
+    }
+  }
+  :global(.ant-dropdown-menu-item):hover,
+  :global(.ant-dropdown-menu-item-active) {
+    background-color: rgba(26, 29, 36, 0.5);
+  }
+}
+.user {
+  display: flex;
+  align-items: center;
+  float: right;
+  height: 32px;
+  margin-top: 16px;
+  padding: 0 10px;
+  color: #ffff;
+  background: #3377ff;
+  border-radius: 4px;
+  cursor: pointer;
+  .userIcon,
+  .dowm {
+    font-size: large;
+  }
+  .username {
+    margin: 0 10px;
+    white-space: nowrap;
+  }
+}
+.loginCss {
+  float: right;
+  color: #fff;
+}

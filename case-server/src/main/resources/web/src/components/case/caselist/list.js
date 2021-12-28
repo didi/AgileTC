@@ -8,7 +8,6 @@ import {
   Pagination,
   message,
   Modal,
-  Divider,
   Checkbox,
   Icon,
   Menu,
@@ -27,7 +26,7 @@ const getCookies = getQueryString.getCookie;
 import debounce from 'lodash/debounce';
 class Lists extends React.Component {
   static contextTypes = {
-    router: PropTypes.object.isRequired,
+    router: PropTypes.object,
   };
   constructor(props) {
     super(props);
@@ -39,7 +38,7 @@ class Lists extends React.Component {
       iterationFilter: '', // 需求筛选最终选择
       createrFilter: '', // 创建人筛选最终选择
       nameFilter: '', // 用例名称筛选最终选择
-      xmindFile: null, // 保存上传的file文件，单文件    };
+      caseFile: null, // 保存上传的file文件，单文件    };
       checked: false,
       requirementIds: [],
       requirementObj: [],
@@ -62,8 +61,6 @@ class Lists extends React.Component {
   componentWillReceiveProps(nextProps) {
     if (this.props.list != nextProps.list) {
       this.setState({ list: nextProps.list }, () => {
-        this.getRequirementsById(nextProps.list || []);
-
         this.setState({
           loading: nextProps.loading,
           current: this.props.current,
@@ -71,17 +68,14 @@ class Lists extends React.Component {
           iterationFilter: this.props.iterationFilter,
           createrFilter: this.props.createrFilter,
           nameFilter: this.props.nameFilter,
+          expendKeys: [],
         });
       });
     }
   }
   delOk = record => {
-    let { type } = this.props;
-
-    let url = '/case/softdelete';
-    if (type === 'oe') {
-      url = `${this.props.doneApiPrefix}/case/softdelete`;
-    }
+    let { getTreeList } = this.props;
+    let url = `${this.props.doneApiPrefix}/case/delete`;
 
     let params = {
       id: record.id,
@@ -92,8 +86,8 @@ class Lists extends React.Component {
     }).then(res => {
       if (res.code === 200) {
         message.success('删除成功');
-        this.props.getCaseList(this.state.current, '', '', '', '');
-
+        // this.props.getCaseList(this.state.current, '', '', '', '');
+        getTreeList();
         this.setState({ checked: false });
       } else {
         message.error(res.msg);
@@ -102,57 +96,26 @@ class Lists extends React.Component {
     });
   };
 
-  getRequirementsById = list => {
-    // let requirementIds = [];
-    // requirementIds = Array.from(
-    //   new Set(list.map(item => item.requirementId).filter(item => item)),
-    // );
-    // request(`${this.props.oeApiPrefix}/business-lines/requirements`, {
-    //   method: 'GET',
-    //   params: { requirementIds: requirementIds.join(',') || ' ' },
-    // }).then(res => {
-    //   this.setState({ requirementObj: res.data || [], loading: false });
-    // });
-  };
-
   onChangeCheckbox = e => {
-    console.log(e.target.checked);
     this.setState({ checked: e.target.checked });
   };
-  seeSmkCase = record => {
-    this.context.router.history.push(
-      `/case/caseManager/${this.props.productId}/${record.id}/undefined/2`,
-    );
-    message.info(record);
-  };
-  onDownloadCase = record => {
-    let a = document.createElement('a');
-    a.href = `${baseUrl}/file/export?id=${record.id}`;
-    a.target = '_blank';
-    a.click();
-  };
-  setColumns = () => {
-    // const { type } = this.props.type;
 
+  setColumns = () => {
     const columns = [
       {
         title: '用例集ID',
         dataIndex: 'id',
         key: 'id',
-
-        width: 100,
-        render: text => <div>{text}</div>,
+        width: '8%',
+        render: text => <div style={{ minWidth: '70px' }}>{text}</div>,
       },
       {
         title: '用例集名称',
         dataIndex: 'title',
         key: 'title',
-        width: 200,
+        width: '25%',
         render: (text, record) => {
-          let url = `/case/caseManager/${this.props.productId}/${record.id}/undefined/0`;
-          if (this.props.type == 'oe') {
-            url = `${this.props.baseUrl}/caseManager/${this.props.productId}/${record.id}/undefined/0`;
-          }
+          let url = `${this.props.baseUrl}/caseManager/${this.props.productId}/${record.id}/undefined/0`;
           return <Link to={url}>{text}</Link>;
         },
       },
@@ -160,24 +123,25 @@ class Lists extends React.Component {
         title: '关联需求',
         dataIndex: 'requirementId',
         key: 'requirementId',
-        width: 200,
+        width: '20%',
+        render: text => <div style={{ minWidth: '200px' }}>{text}</div>,
       },
       {
         title: '最近更新人',
         dataIndex: 'modifier',
-        width: 120,
+        width: '10%',
         key: 'modifier',
       },
       {
         title: '创建人',
         dataIndex: 'creator',
-        width: 120,
+        width: '7%',
         key: 'creator',
       },
       {
         title: '创建时间',
         dataIndex: 'gmtCreated',
-        width: 180,
+        width: '15%',
         key: 'gmtCreated',
         render: text => {
           return (
@@ -191,7 +155,7 @@ class Lists extends React.Component {
       {
         title: '操作',
         dataIndex: 'handle',
-        width: 300,
+        width: '15%',
         key: 'handle',
         render: (text, record) => {
           const { projectLs, requirementLs } = this.props.options;
@@ -261,51 +225,48 @@ class Lists extends React.Component {
               <Dropdown
                 overlay={
                   <Menu>
-                    <Menu.Item disabled={creator !== recordCreator}>
-                      {(creator !== recordCreator && (
-                        <Tooltip title={`只允许创建者：${creator} 删除`}>
-                          <span>删除</span>
-                        </Tooltip>
-                      )) || (
-                        <a
-                          onClick={() => {
-                            Modal.confirm({
-                              title: '确认删除用例集吗',
-                              content: (
-                                <span>
-                                  当前正在删除&nbsp;&nbsp;
-                                  <span style={{ color: 'red' }}>
-                                    {record.title}
-                                  </span>
-                                  &nbsp;&nbsp;用例集，并且删除用例集包含的{' '}
-                                  <span style={{ color: 'red' }}>
-                                    {record.recordNum}
-                                  </span>{' '}
-                                  个测试任务与测试结果等信息，此操作不可撤销
-                                  <br />
-                                  <br />
-                                  <Checkbox onChange={this.onChangeCheckbox}>
-                                    我明白以上操作
-                                  </Checkbox>
+                    <Menu.Item>
+                      <a
+                        onClick={() => {
+                          Modal.confirm({
+                            title: '确认删除用例集吗',
+                            content: (
+                              <span>
+                                当前正在删除&nbsp;&nbsp;
+                                <span style={{ color: 'red' }}>
+                                  {record.title}
                                 </span>
-                              ),
-                              onOk: e => {
-                                if (this.state.checked) {
-                                  this.delOk(record);
-                                  Modal.destroyAll();
-                                } else {
-                                  message.info('请先勾选我已明白以上操作');
-                                }
-                              },
-                              icon: <Icon type="exclamation-circle" />,
-                              cancelText: '取消',
-                              okText: '删除',
-                            });
-                          }}
-                        >
-                          删除
-                        </a>
-                      )}
+                                &nbsp;&nbsp;用例集，并且删除用例集包含的{' '}
+                                <span style={{ color: 'red' }}>
+                                  {record.recordNum}
+                                </span>{' '}
+                                个测试任务与测试结果等信息，此操作不可撤销
+                                <br />
+                                <br />
+                                <Checkbox onChange={this.onChangeCheckbox}>
+                                  我明白以上操作
+                                </Checkbox>
+                              </span>
+                            ),
+                            onOk: e => {
+                              if (this.state.checked) {
+                                this.delOk(record);
+                                Modal.destroyAll();
+                              } else {
+                                message.info('请先勾选我已明白以上操作');
+                              }
+                            },
+                            icon: <Icon type="exclamation-circle" />,
+                            cancelText: '取消',
+                            okText: '删除',
+                          });
+                        }}
+                      >
+                        删除
+                      </a>
+                    </Menu.Item>
+                    <Menu.Item>
+                      <a href={`/history/${record.id}`}>历史版本</a>
                     </Menu.Item>
                     <Menu.Item>
                       <a
@@ -322,18 +283,6 @@ class Lists extends React.Component {
                   <Icon type="ellipsis" />
                 </a>
               </Dropdown>
-
-              {(type !== 'oe' && <Divider type="vertical" />) || null}
-              {(type !== 'oe' && (
-                <a
-                  onClick={text => {
-                    this.seeSmkCase(record);
-                  }}
-                >
-                  查看冒烟case
-                </a>
-              )) ||
-                null}
             </span>
           );
         },
@@ -367,7 +316,6 @@ class Lists extends React.Component {
     this.getRecordList(record.caseId || record.id);
     this.setState({
       taskVisible: false,
-
       expendKeys: [record.caseId || record.id],
     });
   };
@@ -397,19 +345,13 @@ class Lists extends React.Component {
   };
   // 获取case信息
   getCaseInfo = (priority, resource) => {
-    const { record } = this.state;
-    let url = '/case/countByCondition';
-    if (this.props.type === 'oe') {
-      url = `${this.props.doneApiPrefix}/case/countByCondition`;
-    }
+    const { record, titleModeTask } = this.state;
+    let url = `${this.props.doneApiPrefix}/case/countByCondition`;
+
     request(url, {
-      method: 'POST',
-      body: {
-        caseId: Number(
-          this.state.titleModeTask === '编辑测试任务'
-            ? record.caseId
-            : record.id,
-        ),
+      method: 'GET',
+      params: {
+        caseId: titleModeTask === '编辑测试任务' ? record.caseId : record.id,
         priority,
         resource: resource || [],
       },
@@ -476,27 +418,36 @@ class Lists extends React.Component {
       },
       {
         title: '通过率',
-        dataIndex: 'passRate',
-        key: 'passRate',
-        align: 'center',
-        render: text => <span className="table-operation">{text}%</span>,
-      },
-      {
-        title: '已测用例集',
-        dataIndex: 'passCount',
-        key: 'passCount',
+        dataIndex: 'successNum',
+        key: 'successNum',
         align: 'center',
         render: (text, record) => (
           <span className="table-operation">
-            {text} / {record.totalCount}
+            {parseInt((text / record.totalNum) * 100)}%
           </span>
         ),
       },
       {
-        title: '创建时间',
-        dataIndex: 'gmtCreated',
-        key: 'gmtCreated',
-        render: (text, record) => moment(text).format('YYYY-MM-DD HH:mm:ss'),
+        title: '已测用例集',
+        dataIndex: 'executeNum',
+        key: 'executeNum',
+        align: 'center',
+        render: (text, record) => (
+          <span className="table-operation">
+            {text} / {record.totalNum}
+          </span>
+        ),
+      },
+      {
+        title: '期望时间',
+        dataIndex: 'expectStartTime',
+        key: 'expectStartTime',
+        render: (text, record) =>
+          text
+            ? `${moment(text).format('YYYY-MM-DD')} 至 ${moment(
+                record.expectEndTime,
+              ).format('YYYY-MM-DD')}`
+            : '',
       },
       {
         title: '操作',
@@ -507,10 +458,7 @@ class Lists extends React.Component {
           let recordCreator = record.creator.match(/\(([^)]*)\)/)
             ? record.creator.match(/\(([^)]*)\)/)[1]
             : record.creator;
-          let url = `/case/caseManager/${this.props.productId}/${record.caseId}/${record.id}/3`;
-          if (this.props.type == 'oe') {
-            url = `${this.props.baseUrl}/caseManager/${this.props.productId}/${record.caseId}/${record.id}/3`;
-          }
+          let url = `${this.props.baseUrl}/caseManager/${this.props.productId}/${record.caseId}/${record.id}/3`;
 
           return (
             <span>
@@ -533,50 +481,37 @@ class Lists extends React.Component {
                 </a>
               </Tooltip>
               <Tooltip title={`删除任务`}>
-                {(creator !== recordCreator && (
-                  <Tooltip title={`只允许创建者：${recordCreator}删除`}>
-                    <span>
-                      <a
-                        className="icon-bg border-a-redius-right margin-3-right"
-                        disabled={creator !== recordCreator}
-                      >
-                        <Icon type="delete" />
-                      </a>
-                    </span>
-                  </Tooltip>
-                )) || (
-                  <a
-                    onClick={() => {
-                      Modal.confirm({
-                        title: '确认删除测试任务吗',
-                        content: (
-                          <span>
-                            这将删除该测试任务下所有的测试与测试结果等信息，并且不可撤销。{' '}
-                            <br />
-                            <Checkbox onChange={this.onChangeCheckbox}>
-                              我明白以上操作
-                            </Checkbox>
-                          </span>
-                        ),
-                        onOk: e => {
-                          if (this.state.checked) {
-                            this.deleteRecordList(record);
+                <a
+                  onClick={() => {
+                    Modal.confirm({
+                      title: '确认删除测试任务吗',
+                      content: (
+                        <span>
+                          这将删除该测试任务下所有的测试与测试结果等信息，并且不可撤销。{' '}
+                          <br />
+                          <Checkbox onChange={this.onChangeCheckbox}>
+                            我明白以上操作
+                          </Checkbox>
+                        </span>
+                      ),
+                      onOk: e => {
+                        if (this.state.checked) {
+                          this.deleteRecordList(record);
 
-                            Modal.destroyAll();
-                          } else {
-                            message.info('请先勾选我已明白以上操作');
-                          }
-                        },
-                        icon: <Icon type="exclamation-circle" />,
-                        cancelText: '取消',
-                        okText: '删除',
-                      });
-                    }}
-                    className="icon-bg border-a-redius-right margin-3-right"
-                  >
-                    <Icon type="delete" />
-                  </a>
-                )}
+                          Modal.destroyAll();
+                        } else {
+                          message.info('请先勾选我已明白以上操作');
+                        }
+                      },
+                      icon: <Icon type="exclamation-circle" />,
+                      cancelText: '取消',
+                      okText: '删除',
+                    });
+                  }}
+                  className="icon-bg border-a-redius-right margin-3-right"
+                >
+                  <Icon type="delete" />
+                </a>
               </Tooltip>
             </span>
           );
@@ -594,6 +529,7 @@ class Lists extends React.Component {
               pagination={false}
               loading={this.state.extendLoading.get(item.id)}
               rowKey="id"
+              size="middle"
             />
           ) ||
             null)}
@@ -655,12 +591,8 @@ class Lists extends React.Component {
     }
   };
   getRecordList = id => {
-    let { type } = this.props;
+    let url = `${this.props.doneApiPrefix}/record/list`;
 
-    let url = `/execRecord/getRecordByCaseId`;
-    if (type === 'oe') {
-      url = `${this.props.doneApiPrefix}/execRecord/getRecordByCaseId`;
-    }
     request(url, { method: 'GET', params: { caseId: id } }).then(res => {
       if (res.code == 200) {
         let { list } = this.state;
@@ -674,7 +606,7 @@ class Lists extends React.Component {
           }
         });
 
-        this.setState({ list: list }, () => {
+        this.setState({ list }, () => {
           let extendLoading = this.state.extendLoading.set(id, false);
 
           this.setState({
@@ -682,23 +614,22 @@ class Lists extends React.Component {
           });
         });
       } else {
-        message.error(response.msg);
+        message.error(res.msg);
       }
     });
   };
 
-  // /execRecord/softdelete
+  // /record/delete
   deleteRecordList = record => {
-    let { type } = this.props;
+    let url = `${this.props.doneApiPrefix}/record/delete`;
 
-    let url = `/execRecord/softdelete`;
-    if (type === 'oe') {
-      url = `${this.props.doneApiPrefix}/execRecord/softdelete`;
-    }
     request(url, { method: 'POST', body: { id: record.id } }).then(res => {
       if (res.code == 200) {
         this.getRecordList(record.caseId);
         this.setState({ checked: false });
+        message.success(res.data);
+      } else {
+        message.error(res.msg);
       }
     });
   };
@@ -750,6 +681,7 @@ class Lists extends React.Component {
           onExpand={this.onExpand}
           expandedRowKeys={expendKeys}
           rowKey="id"
+          size="middle"
           loading={loading}
           pagination={false}
           expandIcon={props => {

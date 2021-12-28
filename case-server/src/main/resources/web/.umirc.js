@@ -29,9 +29,9 @@ const proxy =
   NODE_ENV !== 'production'
     ? {
         '/api': {
-          target: `http://localhost:8081`, // 测试环境
+          target: `http://localhost:8094`, // 测试环境
           changeOrigin: true,
-          pathRewrite: { '^/api': '' },
+          // pathRewrite: { '^/api': '' },
         },
       }
     : {};
@@ -164,22 +164,40 @@ export default {
       },
     ],
   ],
+  disableRedirectHoist: true,
   routes: [
     {
       path: '/',
       component: '../layouts/index.js',
       routes: [
         {
-          path: '/case/caseList/:product_id',
+          exact: true,
+          path: '/',
+          component: './landing/index.jsx',
+        },
+        {
+          path: '/case/caseList/:productLineId',
           component: './casepage/index.js',
         },
         {
-          path: '/caseManager/:product_id/:caseId/:itemid/:iscore',
+          path: '/caseManager/:productLineId/:caseId/:itemid/:iscore',
           component: './testTask/index.js',
         },
         {
-          path: '/test/:productId/:requirementId',
-          component: './testTaskList/index.js',
+          path: '/login',
+          component: './landing/login.jsx',
+        },
+        {
+          path: '/history/:caseId',
+          component: './contrast/index.jsx',
+        },
+        {
+          path: '/caseManager/historyContrast/:caseId1/:caseId2',
+          component: './contrast/seeResult.js',
+        },
+        {
+          path: '*',
+          redirect: '/',
         },
       ],
     },
