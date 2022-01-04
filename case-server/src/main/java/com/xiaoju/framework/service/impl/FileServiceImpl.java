@@ -306,8 +306,11 @@ public class FileServiceImpl implements FileService {
 
         JSONArray jsonArray = new JSONArray();
         String fileXml = "content.xml";
-        String picXml = "attachments"; // 存放图片的文件夹
-        String picName = (fileName + picXml).replace("/", File.separator);
+        String picXml1 = "attachments"; // 存放图片的文件夹1
+        String picXml2 = "resources"; // 获得图片的文件夹2
+        LOGGER.info("fileName为：" + fileName);
+        String picName1 = (fileName + picXml1).replace("/", File.separator);
+        String picName2 = (fileName + picXml2).replace("/", File.separator);
         fileName = (fileName + fileXml).replace("/", File.separator);
         File file = new File(fileName);
         if(!file.exists()) // 判断文件是否存在
@@ -320,7 +323,7 @@ public class FileServiceImpl implements FileService {
         String eleName = childElement.getName();
         if(eleName.equalsIgnoreCase("sheet"))
         {
-            jsonArray = TreeUtil.importDataByXml(request, childElement, picName, requests, uploadPath);
+            jsonArray = TreeUtil.importDataByXml(request, childElement, picName1, picName2, requests, uploadPath);
         }
         return buildCaseCreateReq(request, jsonArray);
     }
