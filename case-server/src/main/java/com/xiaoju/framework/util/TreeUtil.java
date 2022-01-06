@@ -3,6 +3,7 @@ package com.xiaoju.framework.util;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.xiaoju.framework.constants.enums.ProgressEnum;
 import com.xiaoju.framework.entity.request.cases.FileImportReq;
 import com.xiaoju.framework.entity.xmind.*;
@@ -218,6 +219,36 @@ public class TreeUtil {
 
 
         return res;
+    }
+
+    //获取指定节点路径
+    public static boolean getNodePath(JsonNode root, String nodeId, List<Integer> path) {
+        if (root == null) return false;
+
+        String currentid = root.get("data").get("id").asText();
+
+        if (currentid.equals(nodeId)) {
+            return true;
+        }
+
+        JsonNode children = root.get("children");
+
+        if(children.size() == 0) {
+            return false;
+        }
+
+        for (int i = 0; i < children.size(); i++) {
+            path.add(i);
+            boolean ret = getNodePath(children.get(i), nodeId, path);
+            if (ret) {
+                System.out.println("找到了");
+                return true;
+            } else {
+                path.remove(path.size()-1);
+            }
+        }
+
+        return false;
     }
 
 

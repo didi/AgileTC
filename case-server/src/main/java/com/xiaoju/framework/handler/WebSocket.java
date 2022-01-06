@@ -242,6 +242,10 @@ public class WebSocket {
                                     player.handleCtrlMessage(session.getId() + "|" + messageContent);
                                 }
                                 break;
+
+                            case '4': // 操作命令信息，前端传入nodeid和内容等信息，msgType|msgCode|nodeId|msgContent
+                                player.handleEditInst(messageContent.substring(1));
+                                break;
                             default:
                                 LOGGER.error(Thread.currentThread().getName() + ": 这个消息类型不符合预期：" + message.trim());
                                 break;

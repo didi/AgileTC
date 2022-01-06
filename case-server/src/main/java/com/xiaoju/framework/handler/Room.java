@@ -13,6 +13,8 @@ import com.xiaoju.framework.mapper.TestCaseMapper;
 import com.xiaoju.framework.service.CaseBackupService;
 import com.xiaoju.framework.service.RecordService;
 import com.xiaoju.framework.util.BitBaseUtil;
+import com.xiaoju.framework.util.JsonNodeOp;
+import com.xiaoju.framework.util.PairWise;
 import org.apache.poi.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -183,6 +185,44 @@ public abstract class Room {
         for (Player p : players) {
             p.sendRoomMessageSync(type, content);
         }
+    }
+
+    private void internalHandleEditInst(String msg) {
+        LOGGER.info("接收到来自客户端信息:" + msg);
+        int msgCodeIndex = msg.indexOf('|');
+        String msgCode = msg.substring(0, msgCodeIndex);
+        String msgBack = msg.substring(msgCodeIndex + 1);
+        int nodeIdIndex = msgBack.indexOf('|');
+        String nodeId = msgBack.substring(0, nodeIdIndex);
+        String content = msgBack.substring(nodeIdIndex + 1);
+
+        switch (msgCode) {
+            case "pariwise" :
+                LOGGER.info("用户输入：" + content);
+                List<String> pairWiseCases = PairWise.solution(content);
+                if (pairWiseCases.size() == 0) {
+                    LOGGER.error("未生成用例。");
+                    break;
+                }
+                
+                LOGGER.info("生成case：" + pairWiseCases);
+                LOGGER.info("nodeid：" + nodeId);
+                String caseContent = (testCaseContent==null?testCase.getCaseContent():testCaseContent);
+                ArrayNode patch = JsonNodeOp.generatePatch(caseContent, nodeId, pairWiseCases);
+
+                try {
+                    JsonNode target = JsonPatch.apply(patch, jsonMapper.readTree(caseContent));
+                    LOGGER.info("发送的patch：" + patch.toString());
+                    testCaseContent = target.toString();
+                    leavebroadcastMessageForHttp(patch.toString());
+                } catch (Exception e) {
+                    LOGGER.error("服务端合并patch异常：", e);
+                }
+                break;
+            default:
+                break;
+        }
+
     }
 
     private void internalHandleMessage(Player p, String msg,
@@ -528,6 +568,10 @@ public abstract class Room {
          */
         public void handleMessage(String msg, long msgId) {
             room.internalHandleMessage(this, msg, msgId);
+        }
+
+        public void handleEditInst(String msg) {
+            room.internalHandleEditInst(msg);
         }
 
         public void handleCtrlMessage(String msg) {
