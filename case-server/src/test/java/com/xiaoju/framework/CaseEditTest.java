@@ -52,8 +52,8 @@ public class CaseEditTest extends CaseServerTest {
 
 		try {
 			do {
-				session.getBasicRemote().sendText("0pong pong pong"); // 发送ping信号
-				Thread.sleep(10000);
+				session.getBasicRemote().sendText("0pong pong pong"); // 发送pong信号
+				Thread.sleep(5000);
 			} while(true) ;
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -80,7 +80,7 @@ public class CaseEditTest extends CaseServerTest {
 			// 添加数据
 			String caseContent1 = "1{\"case\": {\"root\": {\"data\": {\"id\": \"bv8nxhi3c800\",\"created\": 1562059643204,\"text\": \"websocket\"},\"children\": [{\"data\": {\"id\": \"ch3l66s9zlc0\",\"created\": 1641979547721,\"text\": \"分支主题\"},\"children\": []}]},\"template\": \"default\",\"theme\": \"fresh-blue\",\"version\": \"1.4.43\",\"base\": 2,\"right\": 1},\"patch\": [[{\"op\": \"add\",\"path\": \"/root/children/0\",\"value\": {\"data\": {\"id\": \"ch3l66s9zlc0\",\"created\": 1641979547721,\"text\": \"分支主题\"},\"children\": []}}]]}";
 			session.getBasicRemote().sendText(caseContent1); // 新增节点分为两步，首先创建一个分支主题
-			Thread.sleep(1000);
+			Thread.sleep(5000);
 			String caseContent2 = "1{\"case\":{\"root\":{\"data\":{\"id\":\"bv8nxhi3c800\",\"created\":1562059643204,\"text\":\"websocket\"},\"children\":[{\"data\":{\"id\":\"ch3lialqzkg0\",\"created\":1641980496404,\"text\":\"新增节点\"},\"children\":[]}]},\"template\":\"default\",\"theme\":\"fresh-blue\",\"version\":\"1.4.43\",\"base\":3,\"right\":1},\"patch\":[[{\"op\":\"replace\",\"path\":\"/root/children/0/data/text\",\"value\":\"新增节点\"}]]}";
 			session.getBasicRemote().sendText(caseContent2); // 修改分支主题的数据
 			Thread.sleep(5000);
@@ -108,7 +108,7 @@ public class CaseEditTest extends CaseServerTest {
 		try{
 			String caseContent = "1{\"case\":{\"root\":{\"data\":{\"id\":\"bv8nxhi3c800\",\"created\":1562059643204,\"text\":\"websocket\"},\"children\":[]},\"template\":\"default\",\"theme\":\"fresh-blue\",\"version\":\"1.4.43\",\"base\":4,\"right\":1},\"patch\":[[{\"op\":\"remove\",\"path\":\"/root/children/0\"}]]}"; // 将新增节点删除
 			session.getBasicRemote().sendText(caseContent);
-			Thread.sleep(10000);
+			Thread.sleep(5000);
 			session.close();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -132,7 +132,7 @@ public class CaseEditTest extends CaseServerTest {
 		try{
 			String caseContent = "1{\"case\":{\"root\":{\"data\":{\"id\":\"bv8nxhi3c800\",\"created\":1562059643204,\"text\":\"case\"},\"children\":[]},\"template\":\"default\",\"theme\":\"fresh-blue\",\"version\":\"1.4.43\",\"base\":5,\"right\":1},\"patch\":[[{\"op\":\"replace\",\"path\":\"/root/data/text\",\"value\":\"case\"}]]}";  // 将websocket修改为case
 			session.getBasicRemote().sendText(caseContent);
-			Thread.sleep(10000);
+			Thread.sleep(5000);
 			session.close();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -158,7 +158,7 @@ public class CaseEditTest extends CaseServerTest {
 			Thread.sleep(5000);
 			String caseContent2 = "1{\"case\":{\"root\":{\"data\":{\"id\":\"bv8nxhi3c800\",\"created\":1562059643204,\"text\":\"case\",\"note\":\"# test\\n1111\"},\"children\":[]},\"template\":\"default\",\"theme\":\"fresh-blue\",\"version\":\"1.4.43\",\"base\":10,\"right\":1},\"patch\":[[{\"op\":\"replace\",\"path\":\"/root/data/note\",\"value\":\"# test\\n1111\"}]]}";
 			session.getBasicRemote().sendText(caseContent2);
-			Thread.sleep(10000);
+			Thread.sleep(5000);
 			session.close();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -252,29 +252,7 @@ public class CaseEditTest extends CaseServerTest {
 		try{
 			String caseContent = "1{\"case\":{\"root\":{\"data\":{\"id\":\"bv8nxhi3c800\",\"created\":1562059643204,\"text\":\"case\",\"note\":\"# test\\n1111\",\"image\":\"http://localhost:8094/2022/01/13/1511cca7-b9b0-4a54-b99e-7fe45a906dc5.png\",\"imageSize\":{\"width\":200,\"height\":142},\"priority\":1,\"resource\":[\"前置条件\"],\"hyperlink\":\"www.baidu.com\"},\"children\":[]},\"template\":\"default\",\"theme\":\"fresh-blue\",\"version\":\"1.4.43\",\"base\":10,\"right\":1},\"patch\":[[{\"op\":\"add\",\"path\":\"/root/data/hyperlink\",\"value\":\"www.baidu.com\"}]]}";
 			session.getBasicRemote().sendText(caseContent);
-			Thread.sleep(10000);
-			session.close();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
-	// redo操作
-	@Test
-	public void redo() {
-		Session session = null;
-		try {
-			WebSocketContainer container = ContainerProvider.getWebSocketContainer();
-			URI uri = URI.create(url);
-			session = container.connectToServer(this, uri);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		try{
-			String caseContent = "1redo";
-			session.getBasicRemote().sendText(caseContent);
-			Thread.sleep(10000);
+			Thread.sleep(5000);
 			session.close();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -299,7 +277,36 @@ public class CaseEditTest extends CaseServerTest {
 			String caseContent2 = "1undo";
 			Thread.sleep(5000);
 			session.getBasicRemote().sendText(caseContent2); // 发送undo消息
-			Thread.sleep(10000);
+			Thread.sleep(5000);
+			session.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+
+	// redo操作
+	@Test
+	public void redo() {
+		Session session = null;
+		try {
+			WebSocketContainer container = ContainerProvider.getWebSocketContainer();
+			URI uri = URI.create(url);
+			session = container.connectToServer(this, uri);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		try{
+			String caseContent1 = "1{\"case\":{\"root\":{\"data\":{\"id\":\"bv8nxhi3c800\",\"created\":1562059643204,\"text\":\"case\"},\"children\":[]},\"template\":\"default\",\"theme\":\"fresh-blue\",\"version\":\"1.4.43\",\"base\":5,\"right\":1},\"patch\":[[{\"op\":\"replace\",\"path\":\"/root/data/text\",\"value\":\"case\"}]]}";  // 将websocket修改为case
+			session.getBasicRemote().sendText(caseContent1); // 发送删除消息
+			Thread.sleep(5000);
+			String caseContent2 = "1undo";
+			session.getBasicRemote().sendText(caseContent2); // 发送undo消息
+			Thread.sleep(5000);
+			String caseContent3 = "1redo";
+			session.getBasicRemote().sendText(caseContent3); // 发送redo消息
+			Thread.sleep(5000);
 			session.close();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -323,7 +330,7 @@ public class CaseEditTest extends CaseServerTest {
 		try{
 			String caseContent = "2lock";
 			session.getBasicRemote().sendText(caseContent);
-			Thread.sleep(10000);
+			Thread.sleep(5000);
 			session.close();
 		} catch (Exception e) {
 			e.printStackTrace();
