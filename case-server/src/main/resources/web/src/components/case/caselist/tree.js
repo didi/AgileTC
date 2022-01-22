@@ -25,7 +25,7 @@ class FileTree extends React.Component {
     getTreeList: PropTypes.func.isRequired,
     treeData: PropTypes.array.isRequired,
   };
-  expandedKeys = [];
+  // expandedKeys = [];
   dataList = [];
   constructor() {
     super();
@@ -33,7 +33,7 @@ class FileTree extends React.Component {
       treeData: [],
       levelId: '',
       levelText: '',
-      expandedKeys: ['1'], //展开树节点
+      expandedKeys: ['root'], //展开树节点
       searchValue: '',
       autoExpandParent: true,
       dataList: [],
@@ -47,7 +47,7 @@ class FileTree extends React.Component {
   }
   componentDidMount() {
     this.setState({ treeData: this.props.treeData }, () => {
-      this.initTreeExpandedKeys(true);
+      this.initTreeExpandedKeys(false);
     });
   }
   componentWillReceiveProps(nextProps) {
@@ -486,7 +486,7 @@ class FileTree extends React.Component {
 
   render() {
     const { treeSelect, expandedKeys, autoExpandParent, treeData } = this.state;
-    return (
+    return treeData?.length > 0 ? (
       <ResizePanel direction="e" style={{ flexGrow: '1' }}>
         <div className="sidebar">
           <div>
@@ -524,7 +524,7 @@ class FileTree extends React.Component {
           </div>
         </div>
       </ResizePanel>
-    );
+    ) : null;
   }
 }
 export default FileTree;
