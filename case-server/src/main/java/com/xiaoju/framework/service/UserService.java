@@ -14,6 +14,7 @@ public interface UserService {
     Integer register(UserRegisterReq req, HttpServletRequest request, HttpServletResponse response);
     Integer login(UserLoginReq req, HttpServletRequest request, HttpServletResponse response);
     Integer logout(HttpServletRequest request, HttpServletResponse response);
+    Integer logoff(String Username);
 
     /**
      * 获取用户对应权限的路径匹配列表

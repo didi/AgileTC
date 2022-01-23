@@ -140,6 +140,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public Integer logoff(String username){
+        // 4.注销该用户
+        return userMapper.deleteByUserName(username);
+    }
+
     public List<String> getUserAuthorityContent(String username) {
         User user = userMapper.selectByUserName(username);
         if (Objects.isNull(user)) {

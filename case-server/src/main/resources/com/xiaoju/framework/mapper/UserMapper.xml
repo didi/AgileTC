@@ -32,6 +32,10 @@
     delete from user
     where id = #{id,jdbcType=BIGINT}
   </delete>
+  <delete id="deleteByUserName" parameterType="java.lang.String">
+    delete from user
+    where username = #{id,jdbcType=VARCHAR}
+  </delete>
   <insert id="insert" parameterType="com.xiaoju.framework.entity.dto.User">
     insert into user (id, username, password, 
       salt, authority_name, is_delete, channel,

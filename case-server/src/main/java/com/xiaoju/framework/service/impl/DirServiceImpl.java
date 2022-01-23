@@ -61,6 +61,23 @@ public class DirServiceImpl implements DirService {
         return root;
     }
 
+
+    @Override
+    public String getId(String parentId, Long productLineId, Integer channel, String text){
+        DirNodeDto root = getDirTree(productLineId, channel);
+        DirNodeDto dir = getDir(parentId, root);
+        if(dir == null)
+            return null;
+        Iterator<DirNodeDto> iterator = dir.getChildren().iterator();
+        while (iterator.hasNext()) {
+            DirNodeDto next = iterator.next();
+            if (text.equals(next.getText())) {
+                return next.getId();
+            }
+        }
+        return null;
+    }
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public DirNodeDto renameDir(DirRenameReq request) {

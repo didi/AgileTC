@@ -498,7 +498,7 @@ public class TreeUtil {
 
 
     //导入xml内容
-    public static JSONArray importDataByXml(FileImportReq request, Element e, String fileName, HttpServletRequest requests, String uploadPath) throws IOException {
+    public static JSONArray importDataByXml(FileImportReq request, Element e, String fileName1, String fileName2, HttpServletRequest requests, String uploadPath) throws IOException {
         JSONArray jsonArray = new JSONArray();
         List<Element> elementList = e.elements();
         if(elementList.size() == 0)
@@ -527,6 +527,14 @@ public class TreeUtil {
                         String path = element.attributeValue("src");
 
                         // 将文件传入到temp文件下，因此需要将文件进行转换，将file文件类型转化为MultipartFile类型，然后进行上传
+                        File file = null;
+                        File file1 = new File(fileName1 + "/" + path.split("/")[1]);
+                        File file2 = new File(fileName2 + "/" + path.split("/")[1]);
+                        if(file1.exists())
+                            file = file1;
+                        else
+                            file = file2;
+                        LOGGER.info("file为：" + file);
                         File file = new File(fileName + path.split(":")[1]);
                         try {
                             if (StringUtils.isEmpty(element.attributeValue("width")) || StringUtils.isEmpty(element.attributeValue("height"))) {
@@ -569,7 +577,7 @@ public class TreeUtil {
                         {
                             if(childEle.getName().equalsIgnoreCase("topics"))
                             {
-                                JSONArray jsonArray1 = importDataByXml(request, childEle, fileName, requests, uploadPath);
+                                JSONArray jsonArray1 = importDataByXml(request, childEle, fileName1, fileName2, requests, uploadPath);
                                 if(jsonArray1.size()>0){
                                     childrenNext.addAll(jsonArray1);
                                 }
@@ -597,22 +605,22 @@ public class TreeUtil {
 
     }
 
-     //根据xml文件获取优先级
-     private static Integer getPriorityByElement(Element element)
-     {
-         Integer priorityId = 0;
-         Map<String, Integer> priorityIds = getAllPriority();
-         List<Element> markers = element.elements();
-         if (markers != null && markers.size() > 0) {
-             for (Element mark : markers) {
-                 String markId = mark.attributeValue("marker-id");
-                 if (priorityIds.containsKey(markId)) {
-                     priorityId = priorityIds.get(markId);
-                 }
-             }
-         }
-         return priorityId;
-     }
+    //根据xml文件获取优先级
+    private static Integer getPriorityByElement(Element element)
+    {
+        Integer priorityId = 0;
+        Map<String, Integer> priorityIds = getAllPriority();
+        List<Element> markers = element.elements();
+        if (markers != null && markers.size() > 0) {
+            for (Element mark : markers) {
+                String markId = mark.attributeValue("marker-id");
+                if (priorityIds.containsKey(markId)) {
+                    priorityId = priorityIds.get(markId);
+                }
+            }
+        }
+        return priorityId;
+    }
 
     //根据content.json文件获取优先级
     private static Integer getPriorityByJsonArray(JSONArray markers)
@@ -656,17 +664,17 @@ public class TreeUtil {
     }
 
     //获取所有优先级
-     private static Map<String, Integer> getAllPriority(){
-         Map<String, Integer> priorityIds = new HashMap<>();
-         priorityIds.put("priority-1", 1);
-         priorityIds.put("priority-2", 2);
-         priorityIds.put("priority-3", 3);
-         priorityIds.put("priority-4", 3);
-         priorityIds.put("priority-5", 3);
-         priorityIds.put("priority-6", 3);
-         priorityIds.put("priority-7", 3);
-         priorityIds.put("priority-8", 3);
-         priorityIds.put("priority-9", 3);
-         return priorityIds;
-     }
+    private static Map<String, Integer> getAllPriority(){
+        Map<String, Integer> priorityIds = new HashMap<>();
+        priorityIds.put("priority-1", 1);
+        priorityIds.put("priority-2", 2);
+        priorityIds.put("priority-3", 3);
+        priorityIds.put("priority-4", 3);
+        priorityIds.put("priority-5", 3);
+        priorityIds.put("priority-6", 3);
+        priorityIds.put("priority-7", 3);
+        priorityIds.put("priority-8", 3);
+        priorityIds.put("priority-9", 3);
+        return priorityIds;
+    }
 }

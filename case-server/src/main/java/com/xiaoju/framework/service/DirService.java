@@ -25,6 +25,9 @@ public interface DirService {
      */
     DirNodeDto addDir(DirCreateReq request);
 
+
+    // 通过其他三个信息找到delid值
+    String getId(String parentId, Long productLineId, Integer channel, String text);
     /**
      * 重命名文件夹
      *
