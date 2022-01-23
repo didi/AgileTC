@@ -242,6 +242,9 @@
     <if test="channel!= null ">
       and channel = #{channel,jdbcType=INTEGER}
     </if>
+    <if test="caseKeyWords != null and caseKeyWords != ''">
+      and case_content like concat('%', #{caseKeyWords,jdbcType=INTEGER}, '%')
+    </if>
     and product_line_id = #{productLineId}
     and id in
     <foreach collection="caseIds" item="caseId" index="index" open="(" close=")" separator=",">

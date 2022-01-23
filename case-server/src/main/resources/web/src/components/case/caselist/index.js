@@ -116,6 +116,7 @@ class CaseLists extends React.Component {
     createrFilter,
     iterationFilter,
     choiseDate = [],
+    caseKeyWords,
   ) => {
     const { caseIds } = this.state;
     request(`${this.props.doneApiPrefix}/case/list`, {
@@ -132,6 +133,7 @@ class CaseLists extends React.Component {
         beginTime: choiseDate.length > 0 ? `${choiseDate[0]} 00:00:00` : '',
         endTime: choiseDate.length > 0 ? `${choiseDate[1]}  23:59:59` : '',
         bizId: caseIds ? caseIds : 'root',
+        caseKeyWords: caseKeyWords || '',
       },
     }).then(res => {
       if (res.code === 200) {

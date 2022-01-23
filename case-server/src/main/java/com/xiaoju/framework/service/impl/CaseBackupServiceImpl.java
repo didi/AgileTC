@@ -15,12 +15,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.io.IOException;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static com.flipkart.zjsonpatch.DiffFlags.ADD_ORIGINAL_VALUE_ON_REPLACE;
 
@@ -40,6 +41,8 @@ public class CaseBackupServiceImpl implements CaseBackupService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public synchronized CaseBackup insertBackup(CaseBackup caseBackup) {
+        LOGGER.info(Thread.currentThread().getName() + ": 备份保存当前用例。");
+
         // 此处可以与最新的内容比对，如果一致，则不更新backup表，减少版本数量
         List<CaseBackup> caseBackups = caseBackupMapper.selectByCaseId(caseBackup.getCaseId(), null, null);
 
@@ -50,6 +53,7 @@ public class CaseBackupServiceImpl implements CaseBackupService {
             if (caseBackups.size() > 0 &&
                     JsonDiff.asJson(jsonMapper.readTree(caseBackups.get(0).getCaseContent()),
                             jsonMapper.readTree(caseBackup.getCaseContent())).size() == 0 &&
+                    (!StringUtils.isEmpty(caseBackups.get(0).getRecordContent())) &&
                     JsonDiff.asJson(jsonMapper.readTree(caseBackups.get(0).getRecordContent()),
                             jsonMapper.readTree(caseBackup.getRecordContent())).size() == 0) {
                 LOGGER.info("当前内容已经保存过了，不再重复保存。");
@@ -205,5 +209,9 @@ public class CaseBackupServiceImpl implements CaseBackupService {
             return null;
         }
         return TimeUtil.transferStrToDateInSecond(time);
+    }
+
+    public int insertEditInfo(CaseBackup caseBackup) {
+        return caseBackupMapper.insert(caseBackup);
     }
 }

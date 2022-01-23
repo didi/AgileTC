@@ -205,7 +205,6 @@ public class WebSocket {
                                 break;
 
                             case '1': // 处理编辑消息，包括对信息的编辑以及撤销等操作
-                                LOGGER.info(Thread.currentThread().getName() + ": 收到消息... onMessage: " + message.trim());
                                 if (player != null) {
                                     //todo：此处分隔符待优化
                                     LOGGER.info(Thread.currentThread().getName() + ": 消息内部处理中...");
@@ -242,6 +241,10 @@ public class WebSocket {
                                 if (player != null) {
                                     player.handleCtrlMessage(session.getId() + "|" + messageContent);
                                 }
+                                break;
+
+                            case '4': // 操作命令信息，前端传入nodeid和内容等信息，msgType|msgCode|nodeId|msgContent
+                                player.handleEditInst(messageContent.substring(1));
                                 break;
                             default:
                                 LOGGER.error(Thread.currentThread().getName() + ": 这个消息类型不符合预期：" + message.trim());

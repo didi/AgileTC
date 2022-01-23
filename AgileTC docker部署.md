@@ -23,6 +23,7 @@ MYSQL_USER=agile
 MYSQL_PASSWORD=agile
 MYSQL_ROOT_PASSWORD=agile
 TZ=Asia/Shanghai
+AUTH_FLAG=false
 ```
 
 ###### 二. docker-compose.yml 文件
@@ -32,7 +33,7 @@ vim docker-compose.yml
 version: '3'
 services:
   case-server:
-    image: yestodayhadrain/case-server:latest
+    image: yestodayhadrain/case-server:v1.0.6
     container_name: agileTC-caseserver
     env_file:
       - ./agile.env

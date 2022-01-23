@@ -3,10 +3,15 @@ package com.xiaoju.framework.util;
 
 import com.xiaoju.framework.constants.enums.StatusCode;
 import com.xiaoju.framework.entity.exception.CaseServerException;
+import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
 import java.nio.charset.Charset;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Enumeration;
+import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
@@ -42,7 +47,7 @@ public class FileUtil {
                 //判断路径是否存在，不存在则创建文件路径，同时添加检验
                 String canonicalDescDirPath = pathFile.getCanonicalPath();
                 File file = new File(outPath.substring(0, outPath.lastIndexOf(File.separator)));
-                String CanonicalDescFile = file.getCanonicalPath() + "/";
+                String CanonicalDescFile = file.getCanonicalPath() + File.separator;
                 if(!CanonicalDescFile.startsWith(canonicalDescDirPath + File.separator)){
                     throw new ArithmeticException("Entry is outside of the target dir: " + zipEntryName);
                 }
@@ -146,6 +151,27 @@ public class FileUtil {
         } catch (IOException e) {
             e.printStackTrace();
             throw new CaseServerException("读取json文件失败：" + e.getMessage(), StatusCode.FILE_IMPORT_ERROR);
+        }
+    }
+
+    // fileUrlPath
+    public static String fileUpload(String path, MultipartFile file) {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd/");
+        String format = sdf.format(new Date());
+        File folder = new File(path + format);// 文件夹的名字
+        if (!folder.isDirectory()) { // 如果文件夹为空，则新建文件夹
+            folder.mkdirs();
+        }
+        // 对上传的文件重命名，避免文件重名
+        String oldName = StringUtils.isEmpty(file.getOriginalFilename()) ? file.getName() : file.getOriginalFilename(); // 获取文件的名字
+        String newName = UUID.randomUUID().toString()
+                + oldName.substring(oldName.lastIndexOf("."), oldName.length()); // 生成新的随机的文件名字
+        try {
+            file.transferTo(new File(folder, newName));
+
+            return format + newName;
+        } catch (IOException e) {
+            throw new CaseServerException("图片上传失败：" + e.getMessage(), StatusCode.FILE_IMPORT_ERROR);
         }
     }
 }

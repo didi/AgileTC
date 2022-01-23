@@ -73,8 +73,7 @@ create table biz
     is_delete            int(1)    default 0                 not null comment '逻辑删除',
     gmt_created          timestamp default CURRENT_TIMESTAMP not null comment '创建时间',
     gmt_modified         timestamp default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间'
-)
-    comment '文件夹';
+) CHARSET=utf8  COMMENT='文件夹';
 
 alter table test_case add column biz_id varchar(500) default '-1' not null comment '关联的文件夹id';
 

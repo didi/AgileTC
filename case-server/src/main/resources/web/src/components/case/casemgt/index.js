@@ -167,12 +167,15 @@ export default class CaseMgt extends React.Component {
     const { recordDetail, casedetail } = this.state;
     let readOnly = false;
     let progressShow = false;
+    let addFactor = false;
     if (iscore === '0' || iscore === '1') {
       readOnly = false;
       progressShow = false;
+      addFactor = true;
     } else {
       readOnly = true;
       progressShow = true;
+      addFactor = false;
     }
     return (
       <div style={{ position: 'relative', minHeight: '80vh' }}>
@@ -376,6 +379,7 @@ export default class CaseMgt extends React.Component {
               theme: ['classic-compact', 'fresh-blue', 'fresh-green-compat'],
               template: ['default', 'right', 'fish-bone'],
               noteTemplate: '# test',
+              addFactor,
             }}
             baseUrl=""
             uploadUrl="/api/file/uploadAttachment"

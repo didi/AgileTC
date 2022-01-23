@@ -7,11 +7,14 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.flipkart.zjsonpatch.JsonDiff;
 import com.flipkart.zjsonpatch.JsonPatch;
+import com.xiaoju.framework.entity.persistent.CaseBackup;
 import com.xiaoju.framework.entity.persistent.TestCase;
 import com.xiaoju.framework.mapper.TestCaseMapper;
 import com.xiaoju.framework.service.CaseBackupService;
 import com.xiaoju.framework.service.RecordService;
 import com.xiaoju.framework.util.BitBaseUtil;
+import com.xiaoju.framework.util.JsonNodeOp;
+import com.xiaoju.framework.util.PairWise;
 import org.apache.poi.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,6 +44,8 @@ public abstract class Room {
     private static final int TIMER_DELAY = 30;
     private TimerTask activeBroadcastTimerTask;
 
+    public static Boolean editInfoSaveToDB = true; // true:编辑信息保存到数据库; false:编辑信息保存到日志
+    public static Long roomId;
     private static final int MAX_PLAYER_COUNT = 10;
     public final List<Player> players = new ArrayList<>();
 
@@ -82,6 +87,7 @@ public abstract class Room {
     }
     // id 前面部分是case id；后面部分是record id
     public Room(Long id) {
+        this.roomId = id;
         long caseId = BitBaseUtil.getLow32(id);
         if (testCase != null) {
             return;
@@ -127,7 +133,7 @@ public abstract class Room {
         Player p = new Player(this, client);
 
         // 通知消息
-        broadcastRoomMessage(CaseMessageType.NOTIFY, "当前用户数： " + (players.size() + 1) + "。新用户是：" + client.getClientName());
+//        broadcastRoomMessage(CaseMessageType.NOTIFY, "当前用户数:" + (players.size() + 1) + ",用户是:" + client.getClientName());
 
         players.add(p);
         cs.put(client.getSession(), client);
@@ -141,7 +147,13 @@ public abstract class Room {
 
         // 发送当前用户数
         String content = String.valueOf(players.size());
-        p.sendRoomMessageSync(CaseMessageType.NOTIFY, "当前用户数：" + content);
+        Set<String> names = new HashSet<>();
+//        p.sendRoomMessageSync(CaseMessageType.NOTIFY, "当前用户数:" + content + ",用户是:" + client.getClientName());
+//        broadcastRoomMessage(CaseMessageType.NOTIFY, "当前用户数:" + content + ",用户是:" + client.getClientName());
+        for (Client c : cs.values()) {
+            names.add(c.getClientName());
+        }
+        broadcastRoomMessage(CaseMessageType.NOTIFY, "当前用户数:" + content + ",用户是:" + String.join(",", names));
 
         return p;
     }
@@ -175,9 +187,64 @@ public abstract class Room {
         }
     }
 
+    private void internalHandleEditInst(String msg) {
+        LOGGER.info("接收到来自客户端信息:" + msg);
+        int msgCodeIndex = msg.indexOf('|');
+        String msgCode = msg.substring(0, msgCodeIndex);
+        String msgBack = msg.substring(msgCodeIndex + 1);
+        int nodeIdIndex = msgBack.indexOf('|');
+        String nodeId = msgBack.substring(0, nodeIdIndex);
+        String content = msgBack.substring(nodeIdIndex + 1);
+
+        switch (msgCode) {
+            case "pariwise" :
+                LOGGER.info("用户输入：" + content);
+                List<String> pairWiseCases = PairWise.solution(content);
+                if (pairWiseCases.size() == 0) {
+                    LOGGER.error("未生成用例。");
+                    break;
+                }
+                
+                LOGGER.info("生成case：" + pairWiseCases);
+                LOGGER.info("nodeid：" + nodeId);
+                String caseContent = (testCaseContent==null?testCase.getCaseContent():testCaseContent);
+                ArrayNode patch = JsonNodeOp.generatePatch(caseContent, nodeId, pairWiseCases);
+
+                try {
+                    JsonNode target = JsonPatch.apply(patch, jsonMapper.readTree(caseContent));
+                    LOGGER.info("发送的patch：" + patch.toString());
+                    testCaseContent = target.toString();
+                    leavebroadcastMessageForHttp(patch.toString());
+                } catch (Exception e) {
+                    LOGGER.error("服务端合并patch异常：", e);
+                }
+                break;
+            default:
+                break;
+        }
+
+    }
+
     private void internalHandleMessage(Player p, String msg,
                                        long msgId) {
         p.setLastReceivedMessageId(msgId);
+
+        if (editInfoSaveToDB) {
+            CaseBackup caseBackup = new CaseBackup();
+            caseBackup.setCaseContent(msg);
+            caseBackup.setCaseId(p.getRoom().roomId);
+            caseBackup.setTitle("edit from session: " + p.getClient().getSession().getId());
+            caseBackup.setCreator(p.getClient().getClientName());
+            caseBackup.setIsDelete(2); // 对编辑信息的内容进行特殊标记
+            caseBackup.setRecordContent("");
+            int ret = caseBackupService.insertEditInfo(caseBackup);
+            if (ret < 1) {
+                LOGGER.error("编辑过程备份落库失败. casebackup id: " + caseBackup.getCaseId() + ", case content: " +
+                        caseBackup.getCaseContent());
+            }
+        } else {
+            LOGGER.info(Thread.currentThread().getName() + ": 收到消息... onMessage: " + msg.trim());
+        }
 
         //todo: testCase.apply(msg) 新增如上的方法.
         if (msg.endsWith("undo")) {
@@ -501,6 +568,10 @@ public abstract class Room {
          */
         public void handleMessage(String msg, long msgId) {
             room.internalHandleMessage(this, msg, msgId);
+        }
+
+        public void handleEditInst(String msg) {
+            room.internalHandleEditInst(msg);
         }
 
         public void handleCtrlMessage(String msg) {

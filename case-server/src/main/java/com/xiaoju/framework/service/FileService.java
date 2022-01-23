@@ -32,4 +32,14 @@ public interface FileService {
      * @throws Exception 任何可能的异常
      */
     ExportXmindResp exportXmindFile(Long id, String userAgent) throws Exception;
+
+    /**
+     * 导入excel文件生成case
+     *
+     * @param req 请求体
+     * @param request
+     * @return 生成的case-id
+     * @throws Exception 任何可能的异常
+     */
+    Long importExcelFile(FileImportReq req, HttpServletRequest request) throws Exception;
 }

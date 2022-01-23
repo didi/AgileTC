@@ -2,6 +2,12 @@ package com.xiaoju.framework.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.flipkart.zjsonpatch.JsonDiff;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.xiaoju.framework.constants.SystemConstant;
@@ -27,6 +33,7 @@ import com.xiaoju.framework.entity.response.cases.CaseListResp;
 import com.xiaoju.framework.entity.response.controller.PageModule;
 import com.xiaoju.framework.entity.response.dir.BizListResp;
 import com.xiaoju.framework.entity.response.dir.DirTreeResp;
+import com.xiaoju.framework.handler.Room;
 import com.xiaoju.framework.handler.WebSocket;
 import com.xiaoju.framework.mapper.BizMapper;
 import com.xiaoju.framework.mapper.ExecRecordMapper;
@@ -94,8 +101,8 @@ public class CaseServiceImpl implements CaseService {
         Date endTime = transferTime(request.getEndTime());
         PageHelper.startPage(request.getPageNum(), request.getPageSize());
         // select * from test_case where case_id in (request.getCaseIds()) [and ...any other condition];
-        List<TestCase> caseList = caseMapper.search(request.getCaseType(), caseIds, request.getTitle(),
-                request.getCreator(), request.getRequirementId(), beginTime, endTime, request.getChannel(), request.getLineId());
+        List<TestCase> caseList = caseMapper.search(request.getCaseType(), caseIds, request.getTitle(), request.getCreator(),
+                request.getRequirementId(), beginTime, endTime, request.getChannel(), request.getLineId(), request.getCaseKeyWords());
         List<RecordNumDto> recordNumDtos = recordMapper.getRecordNumByCaseIds(caseIds);
         Map<Long, Integer> recordMap = recordNumDtos.stream().collect(Collectors.toMap(RecordNumDto::getCaseId, RecordNumDto::getRecordNum));
 
@@ -247,6 +254,8 @@ public class CaseServiceImpl implements CaseService {
 //            throw new CaseServerException("用例ws链接已经断开，当前保存可能丢失，请刷新页面重建ws链接。", StatusCode.WS_UNKNOWN_ERROR);
 //        }
 
+        LOGGER.info(Thread.currentThread().getName() + ": http开始保存用例。");
+
         CaseBackup caseBackup = new CaseBackup();
         // 这里触发保存record
         if (!StringUtils.isEmpty(req.getRecordId())) {
@@ -292,21 +301,53 @@ public class CaseServiceImpl implements CaseService {
         } else {
             // 这里触发保存testcase
             synchronized (WebSocket.getRoomLock()) {
-                if (null == WebSocket.getRoom(false, BitBaseUtil.mergeLong(0l, Long.valueOf(req.getId())))) {
-                    TestCase testCase = caseMapper.selectOne(req.getId());
-                    String caseContent = testCase.getCaseContent();
+                TestCase testCase = caseMapper.selectOne(req.getId());
+//                String caseContent = testCase.getCaseContent();
+                JSONObject caseContentToSave = JSON.parseObject(req.getCaseContent());
+                JSONObject caseContentBase = JSON.parseObject(testCase.getCaseContent());
+//                if (caseContentToSave.getInteger("base") > caseContentBase.getInteger("base")) {
+//                    // 保存落库
+//
+//                } else {
+                    // 保存落库,且发送消息给其他客户端(如果有)
+                ObjectMapper jsonMapper = new ObjectMapper();
+                Room room = WebSocket.getRoom(false, BitBaseUtil.mergeLong(0l, Long.valueOf(req.getId())));
+                if (null != room && room.getTestCaseContent() != null) {
+                    try {
+                        JsonNode baseContent = jsonMapper.readTree(room.getTestCaseContent());
+                        JsonNode reqContent = jsonMapper.readTree(req.getCaseContent());
 
-                    JSONObject caseContentJson = JSON.parseObject(caseContent);
-                    JSONObject caseContentCurrent = JSON.parseObject(req.getCaseContent());
-                    testCase.setModifier(req.getModifier());
-                    if (caseContentJson.getInteger("base") < caseContentCurrent.getInteger("base")) {
-                        testCase.setCaseContent(req.getCaseContent());
+                        ArrayNode patches = (ArrayNode) JsonDiff.asJson(baseContent, reqContent);
+                        if (patches.size() > 1) { // 此处待验证
+                            JsonNodeFactory FACTORY = JsonNodeFactory.instance;
+                            ObjectNode basePatch = FACTORY.objectNode();
+                            basePatch.put("op", "replace");
+                            basePatch.put("path", "/base");
+                            basePatch.put("value", reqContent.get("base").asLong() + 1);
+                            patches.add(basePatch);
+                            room.leavebroadcastMessageForHttp(req.getCaseContent());
+                            room.setTestCaseContent(req.getCaseContent());
+                            LOGGER.info("非最后离开, 将变更补丁信息发送给其他用户. req内容是: ", reqContent.toString());
+                            LOGGER.info("room内容是: ", baseContent.toString());
+                        } else {
+                            LOGGER.info("内存中数据与待保存数据一致." + patches.toString());
+                        }
+                    } catch (Exception e) {
+                        LOGGER.error("http保存比较内容失败.", e);
                     }
-                    caseMapper.update(testCase);
-                    LOGGER.info("当前是最后一个退出, 落库保存用例.");
                 } else {
-                    LOGGER.info("当前不是最后一个退出, 不落库保存用例.");
+                    LOGGER.info("websocket实例已经退出或未编辑,无需发送消息.");
                 }
+//                }
+
+                testCase.setCaseContent(req.getCaseContent());
+                testCase.setGmtModified(new Date(System.currentTimeMillis()));
+                int ret = caseMapper.update(testCase);
+                if (ret < 1) {
+                    LOGGER.error(Thread.currentThread().getName() + ": 数据库用例内容更新失败。http save ret = " + ret);
+                    LOGGER.error("http应该保存的用例内容是：" + req.getCaseContent());
+                }
+
             }
             caseBackup.setCaseId(req.getId());
             caseBackup.setCaseContent(req.getCaseContent());
@@ -315,6 +356,9 @@ public class CaseServiceImpl implements CaseService {
         caseBackup.setCreator(req.getModifier());
         caseBackup.setExtra("");
         caseBackupService.insertBackup(caseBackup);
+
+        LOGGER.info(Thread.currentThread().getName() + ": http开始保存结束。");
+
     }
 
     /**

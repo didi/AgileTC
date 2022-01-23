@@ -22,6 +22,7 @@ class OeFilter extends React.Component {
       fetching: false,
       data: [],
       value: [],
+      caseKeyWords: '',
       requirementOe: [],
     };
     this.lastFetchId = 0;
@@ -39,6 +40,7 @@ class OeFilter extends React.Component {
         createrFilter: '',
         current: 1,
         value: [],
+        caseKeyWords: '',
       });
     }
   }
@@ -57,6 +59,7 @@ class OeFilter extends React.Component {
         createrFilter: '',
         current: 1,
         value: [],
+        caseKeyWords: '',
       },
       () => {
         const {
@@ -65,6 +68,7 @@ class OeFilter extends React.Component {
           createrFilter,
           iterationFilter,
           choiseDate,
+          caseKeyWords,
         } = this.state;
         this.props.getCaseList(
           current,
@@ -72,6 +76,7 @@ class OeFilter extends React.Component {
           createrFilter,
           iterationFilter,
           choiseDate,
+          caseKeyWords,
         );
       },
     );
@@ -84,6 +89,7 @@ class OeFilter extends React.Component {
         createrFilter,
         iterationFilter,
         choiseDate,
+        caseKeyWords,
       } = this.state;
       this.props.getCaseList(
         current,
@@ -91,6 +97,7 @@ class OeFilter extends React.Component {
         createrFilter,
         iterationFilter,
         choiseDate,
+        caseKeyWords,
       );
     });
   };
@@ -123,8 +130,13 @@ class OeFilter extends React.Component {
       fetching: false,
     });
   };
+  caseKeyWordsChange = value => {
+    this.setState({
+      caseKeyWords: value,
+    })
+  }
   render() {
-    const { choiseDate, value, fetching } = this.state;
+    const { choiseDate, value, fetching, caseKeyWords } = this.state;
     const { productMember, filterStatus, closeFilter } = this.props;
     return (
       <div className={`filter-case-modal-wrapper ${filterStatus}`}>
@@ -179,6 +191,16 @@ class OeFilter extends React.Component {
                 value={value}
                 placeholder="关联需求"
                 onChange={e => this.handleChange(e.target.value)}
+                style={{ width: '100%' }}
+              />
+            </div>
+          </Col>
+          <Col span={24} className="m-b-24">
+            <div className="filter-item">
+              <Input
+                value={caseKeyWords}
+                placeholder="用例关键词"
+                onChange={e => this.caseKeyWordsChange(e.target.value)}
                 style={{ width: '100%' }}
               />
             </div>
