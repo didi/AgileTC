@@ -332,15 +332,18 @@ public class CaseServiceImpl implements CaseService {
                         } else {
                             LOGGER.info("内存中数据与待保存数据一致." + patches.toString());
                         }
+
+                        TreeUtil.caseDFSValidate(reqContent.get("root"));
+                        testCase.setCaseContent(reqContent.toString());
+
                     } catch (Exception e) {
                         LOGGER.error("http保存比较内容失败.", e);
                     }
                 } else {
                     LOGGER.info("websocket实例已经退出或未编辑,无需发送消息.");
+                    testCase.setCaseContent(req.getCaseContent());
                 }
-//                }
 
-                testCase.setCaseContent(req.getCaseContent());
                 testCase.setGmtModified(new Date(System.currentTimeMillis()));
                 testCase.setModifier(req.getModifier());
                 int ret = caseMapper.update(testCase);

@@ -2,9 +2,12 @@ package com.xiaoju.framework.handler;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.xiaoju.framework.entity.persistent.CaseBackup;
 import com.xiaoju.framework.entity.persistent.TestCase;
 import com.xiaoju.framework.util.BitBaseUtil;
+import com.xiaoju.framework.util.TreeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,22 +53,26 @@ public class CaseRoom extends Room {
                 if (testCaseContent != null) {
                     TestCase testCaseBase = caseMapper.selectOne(testCase.getId());
 
-
-                    JSONObject caseContentToSave = JSON.parseObject(testCaseContent);
-                    JSONObject caseContentBase = JSON.parseObject(testCaseBase.getCaseContent());
-                    if (caseContentToSave.getInteger("base") > caseContentBase.getInteger("base")) {
-                        // 保存落库
-                        testCase.setCaseContent(testCaseContent);
-                        testCase.setGmtModified(new Date(System.currentTimeMillis()));
-                        testCase.setModifier(p.getClient().getClientName());
-                        int ret = caseMapper.update(testCase);
-                        if (ret < 1) {
-                            LOGGER.error(Thread.currentThread().getName() + ": 数据库用例内容更新失败。 ret = " + ret);
-                            LOGGER.error("应该保存的用例内容是：" + testCaseContent);
+                    try {
+                        JsonNode saveContent = jsonMapper.readTree(testCaseContent);
+                        JsonNode baseContent = jsonMapper.readTree(testCaseBase.getCaseContent());
+                        if (saveContent.get("base").asInt() > baseContent.get("base").asInt()) {
+                            // 保存落库
+                            TreeUtil.caseDFSValidate(saveContent.get("root"));
+                            testCase.setCaseContent(saveContent.toString());
+                            testCase.setGmtModified(new Date(System.currentTimeMillis()));
+                            testCase.setModifier(p.getClient().getClientName());
+                            int ret = caseMapper.update(testCase);
+                            if (ret < 1) {
+                                LOGGER.error(Thread.currentThread().getName() + ": 数据库用例内容更新失败。 ret = " + ret);
+                                LOGGER.error("应该保存的用例内容是：" + testCaseContent);
+                            }
+                        } else {
+                            // 不保存
+                            LOGGER.info(Thread.currentThread().getName() + "不落库." + testCaseContent );
                         }
-                    } else {
-                        // 不保存
-                        LOGGER.info(Thread.currentThread().getName() + "不落库." + testCaseContent );
+                    } catch (Exception e) {
+                        LOGGER.error("json parse error. ", e);
                     }
 
                 }

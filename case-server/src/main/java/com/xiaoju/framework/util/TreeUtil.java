@@ -4,11 +4,13 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.mysql.cj.xdevapi.JsonArray;
 import com.xiaoju.framework.constants.enums.ProgressEnum;
 import com.xiaoju.framework.entity.request.cases.FileImportReq;
 import com.xiaoju.framework.entity.xmind.*;
-import jdk.nashorn.internal.ir.ObjectNode;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.http.entity.ContentType;
@@ -143,6 +145,40 @@ public class TreeUtil {
             }
         }
         return currCount;
+    }
+
+    public static void caseDFSValidate(JsonNode rootData) {
+        if (rootData == null) return;
+        JsonNode currNode = rootData.get("data");
+        if (currNode.has("resource")) {
+            JsonNode resourceNode = currNode.get("resource");
+            if (resourceNode.isNull()) {
+                ((ObjectNode) currNode).remove("resource");
+                LOGGER.info("remove resource is null node. " + currNode.get("text"));
+            } else {
+                ArrayNode resources = ((ArrayNode) resourceNode);
+                int resourcesSize = resources.size();
+                for (int i = 0; i < resourcesSize; i++) {
+                    if (resources.get(i).isNull()) {
+
+                        resources.remove(i);
+                        i --;
+                        resourcesSize --;
+                        LOGGER.info("remove resource contain null node. " + currNode.get("text"));
+                    }
+                }
+            }
+        }
+
+        JsonNode childNodes = rootData.get("children");
+
+        if(childNodes == null || childNodes.size() == 0) {
+            return ;
+        }
+        for (int i = 0; i < childNodes.size(); i++) {
+            caseDFSValidate(childNodes.get(i));
+        }
+
     }
 
     // 获取指定优先级的内容，入参为root节点
@@ -674,5 +710,25 @@ public class TreeUtil {
          priorityIds.put("priority-8", 3);
          priorityIds.put("priority-9", 3);
          return priorityIds;
+     }
+
+     public static void main(String args[]) {
+        String str = "{\"id\":\"97f60c4b-391f-4cbd-baa8-2067346a9b3b\",\"resource\":[null,\"123\",null,\"xxx\", null]}";
+         ObjectMapper jsonMapper = new ObjectMapper();
+         try {
+             JsonNode node = jsonMapper.readTree(str);
+             ArrayNode resources = ((ArrayNode) node.get("resource"));
+             int resourcesSize = resources.size();
+             for (int i = 0; i < resourcesSize; i++) {
+                 if (resources.get(i).isNull()) {
+                     resources.remove(i);
+                     i --;
+                     resourcesSize --;
+                 }
+             }
+             System.out.println(resources);
+         } catch (Exception e) {
+
+         }
      }
 }
