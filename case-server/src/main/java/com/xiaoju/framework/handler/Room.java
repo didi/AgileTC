@@ -195,8 +195,11 @@ public abstract class Room {
         int nodeIdIndex = msgBack.indexOf('|');
         String nodeId = msgBack.substring(0, nodeIdIndex);
         String content = msgBack.substring(nodeIdIndex + 1);
+        String caseContent = (testCaseContent==null?testCase.getCaseContent():testCaseContent);
+        ArrayNode patch = FACTORY.arrayNode();
 
         switch (msgCode) {
+
             case "pariwise" :
                 LOGGER.info("用户输入：" + content);
                 List<String> pairWiseCases = PairWise.solution(content);
@@ -207,20 +210,24 @@ public abstract class Room {
                 
                 LOGGER.info("生成case：" + pairWiseCases);
                 LOGGER.info("nodeid：" + nodeId);
-                String caseContent = (testCaseContent==null?testCase.getCaseContent():testCaseContent);
-                ArrayNode patch = JsonNodeOp.generatePatch(caseContent, nodeId, pairWiseCases);
 
-                try {
-                    JsonNode target = JsonPatch.apply(patch, jsonMapper.readTree(caseContent));
-                    LOGGER.info("发送的patch：" + patch.toString());
-                    testCaseContent = target.toString();
-                    leavebroadcastMessageForHttp(patch.toString());
-                } catch (Exception e) {
-                    LOGGER.error("服务端合并patch异常：", e);
-                }
+                patch = JsonNodeOp.generatePatch(caseContent, nodeId, pairWiseCases);
+
                 break;
             default:
                 break;
+        }
+
+        try {
+            if (patch.size() == 0) {
+                return;
+            }
+            LOGGER.info("发送的patch：" + patch.toString());
+            JsonNode target = JsonPatch.apply(patch, jsonMapper.readTree(caseContent));
+            testCaseContent = target.toString();
+            leavebroadcastMessageForHttp(patch.toString());
+        } catch (Exception e) {
+            LOGGER.error("服务端合并patch异常：", e);
         }
 
     }

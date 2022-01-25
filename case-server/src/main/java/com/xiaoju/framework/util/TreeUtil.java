@@ -4,9 +4,11 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.xiaoju.framework.constants.enums.ProgressEnum;
 import com.xiaoju.framework.entity.request.cases.FileImportReq;
 import com.xiaoju.framework.entity.xmind.*;
+import jdk.nashorn.internal.ir.ObjectNode;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.http.entity.ContentType;
@@ -222,12 +224,14 @@ public class TreeUtil {
     }
 
     //获取指定节点路径
-    public static boolean getNodePath(JsonNode root, String nodeId, List<Integer> path) {
+    // 返回值jsonNode为空&path size为0，表示未找到；jsonNode非空，path size为空，表示当前找到根节点；
+    public static boolean getNodePath(JsonNode root, String nodeId, List<Integer> path, Map<String, JsonNode> relatedNode) {
         if (root == null) return false;
 
         String currentid = root.get("data").get("id").asText();
 
         if (currentid.equals(nodeId)) {
+            relatedNode.put("objectNode", root);
             return true;
         }
 
@@ -239,9 +243,12 @@ public class TreeUtil {
 
         for (int i = 0; i < children.size(); i++) {
             path.add(i);
-            boolean ret = getNodePath(children.get(i), nodeId, path);
+            boolean ret = getNodePath(children.get(i), nodeId, path, relatedNode);
             if (ret) {
                 System.out.println("找到了");
+                if (!relatedNode.containsKey("parent")) {
+                    relatedNode.put("parentNode", root);
+                }
                 return true;
             } else {
                 path.remove(path.size()-1);
@@ -250,7 +257,6 @@ public class TreeUtil {
 
         return false;
     }
-
 
     //获取优先级为0的内容，入参为root节点
     public static void getPriority0(Stack<JSONObject> stackCheck, Stack<IntCount> iCheck, JSONObject parent) {
