@@ -150,7 +150,7 @@ public class CaseServiceImpl implements CaseService {
 
         BeanUtils.copyProperties(request, testCase);
         testCase.setGmtModified(new Date());
-
+        testCase.setModifier(request.getModifier());
         DirNodeDto tree = dirService.getDirTree(testCase.getProductLineId(), testCase.getChannel());
         updateDFS(packageTree(tree), String.valueOf(request.getId()), new HashSet<>(addBizs), new HashSet<>(rmBizs));
         updateBiz(testCase, tree);
@@ -342,6 +342,7 @@ public class CaseServiceImpl implements CaseService {
 
                 testCase.setCaseContent(req.getCaseContent());
                 testCase.setGmtModified(new Date(System.currentTimeMillis()));
+                testCase.setModifier(req.getModifier());
                 int ret = caseMapper.update(testCase);
                 if (ret < 1) {
                     LOGGER.error(Thread.currentThread().getName() + ": 数据库用例内容更新失败。http save ret = " + ret);

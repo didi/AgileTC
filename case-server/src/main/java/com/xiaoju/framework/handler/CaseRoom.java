@@ -57,6 +57,7 @@ public class CaseRoom extends Room {
                         // 保存落库
                         testCase.setCaseContent(testCaseContent);
                         testCase.setGmtModified(new Date(System.currentTimeMillis()));
+                        testCase.setModifier(p.getClient().getClientName());
                         int ret = caseMapper.update(testCase);
                         if (ret < 1) {
                             LOGGER.error(Thread.currentThread().getName() + ": 数据库用例内容更新失败。 ret = " + ret);
