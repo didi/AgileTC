@@ -49,10 +49,13 @@ export default class CaseMgt extends React.Component {
   componentWillUnmount() {
     // 销毁拦截判断是否离开当前页面
     window.removeEventListener('beforeunload', this.handleAutoSave);
-    this.handleAutoSave();
+  //  this.handleAutoSave();
   }
   ///case/getRequirement
-  handleAutoSave = () => {
+  handleAutoSave = (e) => {
+    e.preventDefault();
+    e.returnValue = '内容会被存储到浏览器缓存中！';
+    localStorage.setItem(window.location.href, JSON.stringify(this.editorNode.getAllData()));
     const { iscore } = this.props.match.params;
     const minderData = this.editorNode
       ? this.editorNode.getAllData()
@@ -68,6 +71,7 @@ export default class CaseMgt extends React.Component {
         this.updateCase();
       }
     }
+
   };
   getRequirementsById = requirementIds => {
     // request(`${this.props.oeApiPrefix}/business-lines/requirements`, {
