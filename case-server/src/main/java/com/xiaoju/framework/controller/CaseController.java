@@ -189,7 +189,7 @@ public class CaseController {
     @PostMapping(value = "/update")
     public Response<?> updateWsCase(@RequestBody WsSaveReq req) {
         try {
-            caseService.wsSave(req);
+//            caseService.wsSave(req);
             return Response.success();
         } catch (CaseServerException e) {
             throw new CaseServerException(e.getLocalizedMessage(), e.getStatus());

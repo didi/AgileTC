@@ -117,6 +117,11 @@
 			<artifactId>spring-boot-starter-thymeleaf</artifactId>
 		</dependency>
 
+		<dependency>
+			<groupId>com.corundumstudio.socketio</groupId>
+			<artifactId>netty-socketio</artifactId>
+			<version>1.7.19</version>
+		</dependency>
 		<!-- exclude掉spring-boot的默认log配置 -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
