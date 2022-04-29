@@ -1,23 +1,23 @@
 /** 历史版本对比结果 */
-import React from 'react'
-import AgileTCEditor from 'react-agiletc-editor'
-import { message, Spin, Card, Tag } from 'antd'
-import moment from 'moment'
-moment.locale('zh-cn')
-import request from '@/utils/axios'
-import Headers from '../../layouts/headers'
-import './index.scss'
+import React from 'react';
+import { message, Spin, Card, Tag } from 'antd';
+import moment from 'moment';
+moment.locale('zh-cn');
+import request from '@/utils/axios';
+import Headers from '../../layouts/headers';
+import AgileTCEditor from '../../components/react-mindmap-editor';
+import './index.scss';
 
 class SeeResult extends React.Component {
   constructor(props) {
-    super(props)
+    super(props);
     this.state = {
       loading: false,
       info: [],
-    }
+    };
   }
   componentDidMount() {
-    this.setState({ loading: true })
+    this.setState({ loading: true });
     request(`/backup/getCaseDiff`, {
       method: 'GET',
       params: {
@@ -25,14 +25,14 @@ class SeeResult extends React.Component {
         caseId2: this.props.match.params.caseId2,
       },
     }).then(res => {
-      this.setState({ loading: false })
+      this.setState({ loading: false });
       if (res.code === 200) {
-        this.editorNode.setEditerData(res.data.content.root)
-        this.setState({ info: res.data.backupinfo })
+        this.editorNode.setEditerData(res.data.content.root);
+        this.setState({ info: res.data.backupinfo });
       } else {
-        message.error(res.msg)
+        message.error(res.msg);
       }
-    })
+    });
   }
   render() {
     return (
@@ -49,7 +49,8 @@ class SeeResult extends React.Component {
                         <span>
                           创建人: {item.user}
                           <br />
-                          创建时间: {moment(item.time).format('YYYY-MM-DD HH:mm:ss')}
+                          创建时间:{' '}
+                          {moment(item.time).format('YYYY-MM-DD HH:mm:ss')}
                         </span>
                       </Card>
                     ))}
@@ -75,13 +76,13 @@ class SeeResult extends React.Component {
                 noteTemplate: '# test',
               }}
               uploadUrl="/api/file/uploadAttachment"
-              wsUrl="ws://localhost:8094/api/case/2227/undefined/0/user"
+              // wsUrl="ws://localhost:8094/api/case/2227/undefined/0/user"
               type="compare"
             />
           </div>
         </Spin>
       </React.Fragment>
-    )
+    );
   }
 }
-export default SeeResult
+export default SeeResult;

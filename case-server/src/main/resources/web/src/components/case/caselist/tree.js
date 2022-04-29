@@ -451,7 +451,6 @@ class FileTree extends React.Component {
   onDrop = info => {
     const dropNode = info.node.props;
     const dragNode = info.dragNode.props;
-    // console.log(info);
     if (dragNode.eventKey === '-1') {
       message.error('未分类用例集不可移动！');
     } else if (dropNode.eventKey === '-1') {
