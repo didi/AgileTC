@@ -1,0 +1,64 @@
+.ant-btn.priority-btn {
+  span {
+    color: #fff;
+    display: inline-block;
+    width: 17px;
+    text-align: center;
+  }
+  border-radius: 8px;
+  padding: 0px 2px;
+  margin-left: 2px;
+  font-style: italic;
+  font-size: 12px;
+  height: 22px;
+  margin-left: 4px;
+  &:first {
+    margin-left: 0px;
+  }
+  &.ant-btn-link {
+    background-color: #a3a3a3;
+    border-bottom: 3px solid #515151;
+  }
+  &.p1 {
+    background-color: #ff1200;
+    border-bottom: 3px solid #840023;
+    &[disabled]:hover {
+      background-color: #ff1200;
+    }
+  }
+  &.p2 {
+    background-color: #0074ff;
+    border-bottom: 3px solid #01467f;
+    &[disabled]:hover {
+      background-color: #0074ff;
+    }
+  }
+  &.p3 {
+    background-color: #00af00;
+    border-bottom: 3px solid #006300;
+    &[disabled]:hover {
+      background-color: #00af00;
+    }
+  }
+  &.p4 {
+    background-color: #ff962e;
+    border-bottom: 3px solid #b25000;
+    &[disabled]:hover {
+      background-color: #ff962e;
+    }
+  }
+  &.p5 {
+    background-color: #a464ff;
+    border-bottom: 3px solid #4720c4;
+    &[disabled]:hover {
+      background-color: #a464ff;
+    }
+  }
+  &:hover {
+    color: #fff;
+    opacity: 0.7;
+  }
+  &[disabled] {
+    opacity: 0.4;
+  }
+}

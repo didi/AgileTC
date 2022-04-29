@@ -1,0 +1,11 @@
+.km-btn-item.undo:after {
+  content: '撤销';
+  color: #1890ff;
+}
+.km-btn-item.redo:after {
+  content: '重做';
+  color: #1890ff;
+}
+.km-btn-item {
+  height: 24px;
+}

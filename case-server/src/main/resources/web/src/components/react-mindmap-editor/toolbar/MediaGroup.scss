@@ -1,0 +1,16 @@
+.big-icon {
+  height: 64px !important;
+  padding: 0px 4px;
+  &.ant-btn > .anticon + span,
+  &.ant-btn > span + .anticon {
+    margin-left: 2px;
+  }
+  &.ant-btn > .anticon:first-of-type {
+    width: 22px;
+    height: 22px;
+    & > svg {
+      width: inherit;
+      height: inherit;
+    }
+  }
+}

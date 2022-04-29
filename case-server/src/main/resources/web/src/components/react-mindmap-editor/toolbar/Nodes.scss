@@ -1,0 +1,16 @@
+.km-node-command-menu.insert-node {
+  display: inline-block;
+  margin-right: 12px;
+}
+.ant-btn > .anticon + span,
+.ant-btn > span + .anticon {
+  margin-left: 4px;
+}
+.nodes-actions {
+  .ant-btn-link {
+    padding: 0px 6px;
+  }
+  .ant-btn-link:hover {
+    background-color: #eff3fa;
+  }
+}
