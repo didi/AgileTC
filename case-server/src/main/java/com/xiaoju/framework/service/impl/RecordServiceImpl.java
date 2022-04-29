@@ -16,8 +16,6 @@ import com.xiaoju.framework.entity.request.ws.RecordWsClearReq;
 import com.xiaoju.framework.entity.response.records.RecordGeneralInfoResp;
 import com.xiaoju.framework.entity.response.records.RecordListResp;
 import com.xiaoju.framework.entity.xmind.IntCount;
-import com.xiaoju.framework.handler.Room;
-import com.xiaoju.framework.handler.WebSocket;
 import com.xiaoju.framework.mapper.ExecRecordMapper;
 import com.xiaoju.framework.mapper.TestCaseMapper;
 import com.xiaoju.framework.service.RecordService;
@@ -114,13 +112,13 @@ public class RecordServiceImpl implements RecordService {
             throw new CaseServerException("对应执行任务不存在", StatusCode.NOT_FOUND_ENTITY);
         }
         // 如果修改圈选用例时，有人在协同修改任务或者用例，那么就不让改
-        if (!record.getChooseContent().equals(req.getChooseContent())) {
-            Room room = getWsEditingCount(record);
-            if (room != null && room.players.size() > 0) {
-                LOGGER.info("[异步编辑任务属性]入参={}, 这些人正在编辑={}", req.toString(), room.getRoomPlayersName());
-                throw new CaseServerException("当前" + room.getRoomPlayersName() + "正在修改，不允许修改圈选用例", StatusCode.INTERNAL_ERROR);
-            }
-        }
+//        if (!record.getChooseContent().equals(req.getChooseContent())) {
+//            Room room = getWsEditingCount(record);
+//            if (room != null && room.players.size() > 0) {
+//                LOGGER.info("[异步编辑任务属性]入参={}, 这些人正在编辑={}", req.toString(), room.getRoomPlayersName());
+//                throw new CaseServerException("当前" + room.getRoomPlayersName() + "正在修改，不允许修改圈选用例", StatusCode.INTERNAL_ERROR);
+//            }
+//        }
         // 日期类转换,在request.validate()已经解决单边输入为null的不完整问题
         if (req.getExpectStartTime() != null) {
             // 就是说这里是有日期区间的
@@ -310,14 +308,14 @@ public class RecordServiceImpl implements RecordService {
      * @param record 执行任务实体
      * @return 响应体
      */
-    public Room getWsEditingCount(ExecRecord record) {
-        TestCase testCase = caseMapper.selectOne(record.getCaseId());
-        if (testCase == null) {
-            throw new CaseServerException("当前用例不存在", StatusCode.INTERNAL_ERROR);
-        }
-
-        return WebSocket.getRoom(false, BitBaseUtil.mergeLong(record.getId(), record.getCaseId()));
-    }
+//    public Room getWsEditingCount(ExecRecord record) {
+//        TestCase testCase = caseMapper.selectOne(record.getCaseId());
+//        if (testCase == null) {
+//            throw new CaseServerException("当前用例不存在", StatusCode.INTERNAL_ERROR);
+//        }
+//
+//        return WebSocket.getRoom(false, BitBaseUtil.mergeLong(record.getId(), record.getCaseId()));
+//    }
 
     /**
      * ☆将当前record的操作记录和用例集的内容进行merge，返回合并后的内容
@@ -325,7 +323,7 @@ public class RecordServiceImpl implements RecordService {
     public JSONObject getData(MergeCaseDto dto) {
         String websocketCaseContent = null;
         if (dto.getRecordId() > 0L) {
-            websocketCaseContent = WebSocket.getRoom(false, BitBaseUtil.mergeLong(dto.getRecordId(), dto.getCaseId())).getTestCaseContent();
+//            websocketCaseContent = WebSocket.getRoom(false, BitBaseUtil.mergeLong(dto.getRecordId(), dto.getCaseId())).getTestCaseContent();
         }
 
         String caseContent = caseMapper.selectOne(dto.getCaseId()).getCaseContent();

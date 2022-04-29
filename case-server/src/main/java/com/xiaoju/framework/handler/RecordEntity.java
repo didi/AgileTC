@@ -3,7 +3,12 @@ package com.xiaoju.framework.handler;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.corundumstudio.socketio.SocketIOClient;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.xiaoju.framework.constants.enums.StatusCode;
+import com.xiaoju.framework.entity.exception.CaseServerException;
 import com.xiaoju.framework.entity.persistent.ExecRecord;
+import com.xiaoju.framework.entity.persistent.TestCase;
 import com.xiaoju.framework.entity.xmind.IntCount;
 import com.xiaoju.framework.mapper.ExecRecordMapper;
 import com.xiaoju.framework.mapper.TestCaseMapper;
@@ -11,14 +16,15 @@ import com.xiaoju.framework.util.TreeUtil;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Stack;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static com.xiaoju.framework.constants.SystemConstant.COMMA;
 
 public class RecordEntity extends RoomEntity {
     Long recordId;
-    ExecRecord execRecord;
+//    ExecRecord execRecord;
+    ExecRecordMapper recordMapper;
 
     public RecordEntity(String roomId, Long caseId, TestCaseMapper caseMapper, Long recordId, ExecRecordMapper execRecordMapper) {
         super(roomId, caseId, caseMapper);
@@ -26,6 +32,53 @@ public class RecordEntity extends RoomEntity {
         String recordContent = mergeRecord(recordId, testCase.getCaseContent(), execRecordMapper);
         testCase.setCaseContent(recordContent);
         testCase.setGroupId(recordId);
+        this.recordMapper = execRecordMapper;
+
+    }
+
+    @Override
+    public void removeClient(SocketIOClient client) {
+        this.clientMap.remove(client.getSessionId());
+        LOGGER.info("remove client, current user number:" + this.clientMap.size());
+        testCase.setGmtModified(new Date(System.currentTimeMillis()));
+        String user = client.getHandshakeData().getSingleUrlParam("user");
+        ExecRecord record = recordMapper.selectOne(Long.valueOf(client.getHandshakeData().getSingleUrlParam("recordId")));
+        if (record == null) {
+            throw new CaseServerException("执行任务不存在", StatusCode.NOT_FOUND_ENTITY);
+        }
+        JSONObject jsonObject = TreeUtil.parse(testCase.getCaseContent());
+        JSONObject jsonProgress = jsonObject.getJSONObject("progress");
+        Integer totalCount = jsonObject.getInteger("totalCount");
+        Integer passCount = jsonObject.getInteger("passCount");
+        Integer failCount = jsonObject.getInteger("failCount");
+        Integer blockCount = jsonObject.getInteger("blockCount");
+        Integer successCount = jsonObject.getInteger("successCount");
+        Integer ignoreCount = jsonObject.getInteger("ignoreCount");
+
+        List<String> names = Arrays.stream(record.getExecutors().split(COMMA)).filter(e->!StringUtils.isEmpty(e)).collect(Collectors.toList());
+        long count = names.stream().filter(e -> e.equals(user)).count();
+
+        if (count > 0) {
+            // 有重合，不管了
+            ;
+        } else {
+            // 没重合往后面塞一个
+            names.add(user);
+        }
+
+        record.setExecutors(String.join(",", names));
+        record.setModifier(user);
+        record.setGmtModified(new Date(System.currentTimeMillis()));
+        record.setCaseContent(jsonProgress.toJSONString());
+        record.setFailCount(failCount);
+        record.setBlockCount(blockCount);
+        record.setIgnoreCount(ignoreCount);
+        record.setPassCount(passCount);
+        record.setTotalCount(totalCount);
+        record.setSuccessCount(successCount);
+        recordMapper.update(record);
+
+        LOGGER.info(Thread.currentThread().getName() + ": 数据库用例记录更新。record: " + record.getCaseContent());
     }
 
     private String mergeRecord(Long recordId, String caseContentStr, ExecRecordMapper execRecordMapper) {

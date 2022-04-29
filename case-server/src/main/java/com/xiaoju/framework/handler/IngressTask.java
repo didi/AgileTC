@@ -29,7 +29,6 @@ public abstract class IngressTask implements Runnable{
 
     Lock lock;
 
-
     public IngressTask(SocketIOClient client, SocketIOServer socketIOServer, RoomEntity room, ExecutorService executorEgressService) {
         this.client = client;
         this.socketIOServer = socketIOServer;
@@ -50,7 +49,7 @@ public abstract class IngressTask implements Runnable{
         String recordId = client.getHandshakeData().getSingleUrlParam("recordId");
         clientEntity.setCaseIdStr(caseId);
         clientEntity.setCaseId(Long.valueOf(caseId));
-        if (recordId != null) {
+        if (!recordId.equals("undefined")) {
             clientEntity.setRecordId(Long.valueOf(recordId));
             clientEntity.setRecordIdStr(recordId);
             clientEntity.setRoomId(String.valueOf(BitBaseUtil.mergeLong(clientEntity.getRecordId(), clientEntity.getCaseId())));

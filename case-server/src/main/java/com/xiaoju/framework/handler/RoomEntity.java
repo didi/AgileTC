@@ -11,9 +11,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
@@ -21,7 +19,7 @@ public class RoomEntity {
     protected static final Logger LOGGER = LoggerFactory.getLogger(RoomEntity.class);
     String roomId;
     Long caseId;
-    Set<SocketIOClient> clientSet;
+    Map<UUID, String> clientMap;
     TestCase testCase;
     TestCaseMapper caseMapper;
     SocketIOClient lockClient;
@@ -34,7 +32,7 @@ public class RoomEntity {
         this.caseMapper = caseMapper;
         this.caseId = caseId;
         this.testCase = caseMapper.selectOne(caseId);
-        this.clientSet = new HashSet<>();
+        this.clientMap = new HashMap<>();
         this.jsonMapper = new ObjectMapper();
         this.FACTORY = JsonNodeFactory.instance;
         String res = testCase == null ? null : testCase.getCaseContent();
@@ -47,14 +45,16 @@ public class RoomEntity {
     }
 
     public void addClient(SocketIOClient client) {
-        this.clientSet.add(client);
-        LOGGER.info("add client, current user number:" + this.clientSet.size());
+
+        this.clientMap.put(client.getSessionId(), client.getHandshakeData().getSingleUrlParam("user"));
+        LOGGER.info("add client, current user number:" + this.clientMap.size() + ", name: " + client.getHandshakeData().getSingleUrlParam("user"));
+
     }
 
     public void removeClient(SocketIOClient client) {
-        this.clientSet.remove(client);
-        LOGGER.info("remove client, current user number:" + this.clientSet.size());
-        if (this.clientSet.size() == 0) {
+        this.clientMap.remove(client.getSessionId());
+        LOGGER.info("remove client, current user number:" + this.clientMap.size());
+        if (this.clientMap.size() == 0) {
             try {
                 TestCase testCaseBase = caseMapper.selectOne(caseId);
                 JsonNode saveContent = jsonMapper.readTree(testCase.getCaseContent());
@@ -82,7 +82,7 @@ public class RoomEntity {
     }
 
     public int getClientNum() {
-        return this.clientSet.size();
+        return this.clientMap.size();
     }
 
     public boolean isLockedByClient() {
@@ -110,10 +110,18 @@ public class RoomEntity {
 //        this.lock.unlock();
     }
 
-    public String getClientName() {
-        return clientSet.stream().map(f->f.getHandshakeData().getSingleUrlParam("user")).collect(Collectors.joining(","));
+    public String getRoomId() {
+        return this.roomId;
     }
 
+    public String getClientName() {
+
+        return clientMap.values().stream().collect(Collectors.joining(","));
+    }
+
+    public Long getCaseId() {
+        return this.caseId;
+    }
     public String getCaseContent() {
         return testCase.getCaseContent();
     }

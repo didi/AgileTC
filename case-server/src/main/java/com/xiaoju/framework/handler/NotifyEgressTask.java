@@ -4,8 +4,7 @@ import com.corundumstudio.socketio.BroadcastOperations;
 import com.corundumstudio.socketio.SocketIOClient;
 
 public class NotifyEgressTask extends EgressTask{
-//    String name;
-//    String egressMsg;
+
     BroadcastOperations broadcastOperations;
 
     public NotifyEgressTask(String name, PushMessage egressMsg, BroadcastOperations broadcastOperations) {
@@ -15,6 +14,7 @@ public class NotifyEgressTask extends EgressTask{
 
     @Override
     public void run() {
+        LOGGER.info("notify egress message: " + egressMsg);
         broadcastOperations.sendEvent(name, egressMsg);
     }
 }

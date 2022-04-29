@@ -354,9 +354,11 @@ public class TreeUtil {
             caseContent.getJSONObject("data").put("progress", execContent.getLong(srcId));
             execCount.del();
         }
-        for (Object o : caseContent.getJSONArray("children")) {
-            if (execCount.get() != 0) {
-                mergeExecRecord(((JSONObject) o), execContent, execCount);
+        if (null != caseContent && null != caseContent.getJSONArray("children")) {
+            for (Object o : caseContent.getJSONArray("children")) {
+                if (execCount.get() != 0) {
+                    mergeExecRecord(((JSONObject) o), execContent, execCount);
+                }
             }
         }
     }

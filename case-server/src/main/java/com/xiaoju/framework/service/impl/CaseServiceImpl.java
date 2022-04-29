@@ -2,19 +2,12 @@ package com.xiaoju.framework.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.flipkart.zjsonpatch.JsonDiff;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.xiaoju.framework.constants.SystemConstant;
 import com.xiaoju.framework.constants.enums.StatusCode;
 import com.xiaoju.framework.entity.dto.DirNodeDto;
 import com.xiaoju.framework.entity.dto.RecordNumDto;
-import com.xiaoju.framework.entity.dto.RecordWsDto;
 import com.xiaoju.framework.entity.exception.CaseServerException;
 import com.xiaoju.framework.entity.persistent.Biz;
 import com.xiaoju.framework.entity.persistent.CaseBackup;
@@ -33,8 +26,6 @@ import com.xiaoju.framework.entity.response.cases.CaseListResp;
 import com.xiaoju.framework.entity.response.controller.PageModule;
 import com.xiaoju.framework.entity.response.dir.BizListResp;
 import com.xiaoju.framework.entity.response.dir.DirTreeResp;
-import com.xiaoju.framework.handler.Room;
-import com.xiaoju.framework.handler.WebSocket;
 import com.xiaoju.framework.mapper.BizMapper;
 import com.xiaoju.framework.mapper.ExecRecordMapper;
 import com.xiaoju.framework.mapper.TestCaseMapper;
@@ -42,7 +33,6 @@ import com.xiaoju.framework.service.CaseBackupService;
 import com.xiaoju.framework.service.CaseService;
 import com.xiaoju.framework.service.DirService;
 import com.xiaoju.framework.service.RecordService;
-import com.xiaoju.framework.util.BitBaseUtil;
 import com.xiaoju.framework.util.TimeUtil;
 import com.xiaoju.framework.util.TreeUtil;
 import org.slf4j.Logger;
@@ -51,13 +41,11 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.xiaoju.framework.constants.SystemConstant.COMMA;
 import static com.xiaoju.framework.constants.SystemConstant.IS_DELETE;
 
 /**
@@ -257,106 +245,10 @@ public class CaseServiceImpl implements CaseService {
         LOGGER.info(Thread.currentThread().getName() + ": http开始保存用例。");
 
         CaseBackup caseBackup = new CaseBackup();
-        // 这里触发保存record
-        if (!StringUtils.isEmpty(req.getRecordId())) {
-            synchronized (WebSocket.getRoomLock()) {
-                RecordWsDto dto = recordService.getWsRecord(req.getRecordId());
-                // 看看是不是有重合的执行人
-                List<String> names = Arrays.stream(dto.getExecutors().split(COMMA)).filter(e -> !StringUtils.isEmpty(e)).collect(Collectors.toList());
-                long count = names.stream().filter(e -> e.equals(req.getModifier())).count();
-                String executors;
-                if (count > 0) {
-                    // 有重合，不管了
-                    executors = dto.getExecutors();
-                } else {
-                    // 没重合往后面塞一个
-                    names.add(req.getModifier());
-                    executors = String.join(",", names);
-                }
 
-                JSONObject jsonObject = TreeUtil.parse(req.getCaseContent());
-                ExecRecord record = new ExecRecord();
-                record.setId(req.getRecordId());
-                record.setCaseId(req.getId());
-                record.setModifier(req.getModifier());
-                record.setGmtModified(new Date(System.currentTimeMillis()));
-                record.setCaseContent(jsonObject.getJSONObject("progress").toJSONString());
-                record.setFailCount(jsonObject.getInteger("failCount"));
-                record.setBlockCount(jsonObject.getInteger("blockCount"));
-                record.setIgnoreCount(jsonObject.getInteger("ignoreCount"));
-                record.setPassCount(jsonObject.getInteger("passCount"));
-                record.setTotalCount(jsonObject.getInteger("totalCount"));
-                record.setSuccessCount(jsonObject.getInteger("successCount"));
-                record.setExecutors(executors);
-                if (null == WebSocket.getRoom(false, BitBaseUtil.mergeLong(req.getRecordId(), Long.valueOf(req.getId())))) {
-                    recordService.modifyRecord(record);
-                    LOGGER.info("当前是最后一个退出, 落库保存执行记录.");
-                } else {
-                    LOGGER.info("还有编辑人未退出, 不落库保存执行记录.");
-                }
-            }
-            caseBackup.setCaseId(req.getRecordId());
-            caseBackup.setRecordContent(req.getCaseContent());
-            caseBackup.setCaseContent("");
-        } else {
-            // 这里触发保存testcase
-            synchronized (WebSocket.getRoomLock()) {
-                TestCase testCase = caseMapper.selectOne(req.getId());
-//                String caseContent = testCase.getCaseContent();
-                JSONObject caseContentToSave = JSON.parseObject(req.getCaseContent());
-                JSONObject caseContentBase = JSON.parseObject(testCase.getCaseContent());
-//                if (caseContentToSave.getInteger("base") > caseContentBase.getInteger("base")) {
-//                    // 保存落库
-//
-//                } else {
-                    // 保存落库,且发送消息给其他客户端(如果有)
-                ObjectMapper jsonMapper = new ObjectMapper();
-                Room room = WebSocket.getRoom(false, BitBaseUtil.mergeLong(0l, Long.valueOf(req.getId())));
-                if (null != room && room.getTestCaseContent() != null) {
-                    try {
-                        JsonNode baseContent = jsonMapper.readTree(room.getTestCaseContent());
-                        JsonNode reqContent = jsonMapper.readTree(req.getCaseContent());
-
-                        ArrayNode patches = (ArrayNode) JsonDiff.asJson(baseContent, reqContent);
-                        if (patches.size() > 1) { // 此处待验证
-                            JsonNodeFactory FACTORY = JsonNodeFactory.instance;
-                            ObjectNode basePatch = FACTORY.objectNode();
-                            basePatch.put("op", "replace");
-                            basePatch.put("path", "/base");
-                            basePatch.put("value", reqContent.get("base").asLong() + 1);
-                            patches.add(basePatch);
-                            room.leavebroadcastMessageForHttp(req.getCaseContent());
-                            room.setTestCaseContent(req.getCaseContent());
-                            LOGGER.info("非最后离开, 将变更补丁信息发送给其他用户. req内容是: ", reqContent.toString());
-                            LOGGER.info("room内容是: ", baseContent.toString());
-                        } else {
-                            LOGGER.info("内存中数据与待保存数据一致." + patches.toString());
-                        }
-
-                        TreeUtil.caseDFSValidate(reqContent.get("root"));
-                        testCase.setCaseContent(reqContent.toString());
-
-                    } catch (Exception e) {
-                        LOGGER.error("http保存比较内容失败.", e);
-                    }
-                } else {
-                    LOGGER.info("websocket实例已经退出或未编辑,无需发送消息.");
-                    testCase.setCaseContent(req.getCaseContent());
-                }
-
-                testCase.setGmtModified(new Date(System.currentTimeMillis()));
-                testCase.setModifier(req.getModifier());
-                int ret = caseMapper.update(testCase);
-                if (ret < 1) {
-                    LOGGER.error(Thread.currentThread().getName() + ": 数据库用例内容更新失败。http save ret = " + ret);
-                    LOGGER.error("http应该保存的用例内容是：" + req.getCaseContent());
-                }
-
-            }
-            caseBackup.setCaseId(req.getId());
-            caseBackup.setCaseContent(req.getCaseContent());
-            caseBackup.setRecordContent("");
-        }
+        caseBackup.setCaseId(req.getId());
+        caseBackup.setCaseContent(req.getCaseContent());
+        caseBackup.setRecordContent("");
         caseBackup.setCreator(req.getModifier());
         caseBackup.setExtra("");
         caseBackupService.insertBackup(caseBackup);

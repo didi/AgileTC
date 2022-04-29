@@ -22,6 +22,7 @@ import javax.validation.constraints.NotNull;
  * @date 2020/11/20
  */
 @RestController
+@CrossOrigin
 @RequestMapping(value = "/api/record")
 public class RecordController {
 

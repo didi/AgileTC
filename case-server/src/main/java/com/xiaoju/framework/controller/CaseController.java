@@ -20,6 +20,7 @@ import javax.validation.constraints.NotNull;
  * @date 2020/11/20
  */
 @RestController
+@CrossOrigin
 @RequestMapping("/api/case")
 public class CaseController {
 
@@ -189,7 +190,7 @@ public class CaseController {
     @PostMapping(value = "/update")
     public Response<?> updateWsCase(@RequestBody WsSaveReq req) {
         try {
-//            caseService.wsSave(req);
+            caseService.wsSave(req);
             return Response.success();
         } catch (CaseServerException e) {
             throw new CaseServerException(e.getLocalizedMessage(), e.getStatus());

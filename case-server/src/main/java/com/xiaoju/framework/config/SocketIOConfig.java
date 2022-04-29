@@ -7,6 +7,8 @@ import org.springframework.context.annotation.Configuration;
 
 import com.corundumstudio.socketio.SocketIOServer;
 
+import java.net.InetAddress;
+
 @Configuration
 public class SocketIOConfig {
 
@@ -34,6 +36,13 @@ public class SocketIOConfig {
     @Value("${socketio.pingInterval}")
     private int pingInterval;
 
+    @Value("2097152")
+    private int maxFramePayloadLength;
+
+    @Value("2097152")
+    private int maxHttpContentLength;
+
+
     /**
      * 以下配置在上面的application.properties中已经注明
      * @return
@@ -45,14 +54,16 @@ public class SocketIOConfig {
         socketConfig.setSoLinger(0);
         com.corundumstudio.socketio.Configuration config = new com.corundumstudio.socketio.Configuration();
         config.setSocketConfig(socketConfig);
-        config.setHostname(host);
         config.setPort(port);
+        config.setOrigin(null);
         config.setBossThreads(bossCount);
         config.setWorkerThreads(workCount);
         config.setAllowCustomRequests(allowCustomRequests);
         config.setUpgradeTimeout(upgradeTimeout);
         config.setPingTimeout(pingTimeout);
         config.setPingInterval(pingInterval);
+        config.setMaxFramePayloadLength(maxFramePayloadLength);
+        config.setMaxHttpContentLength(maxHttpContentLength);
         return new SocketIOServer(config);
     }
 }

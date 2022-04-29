@@ -1,7 +1,5 @@
 package com.xiaoju.framework.listener;
 
-import com.xiaoju.framework.handler.WebSocket;
-import lombok.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -9,7 +7,6 @@ import org.springframework.stereotype.Component;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import javax.servlet.annotation.WebListener;
-import java.util.Map;
 
 /**
  * 容器监听器，用来看关闭容器时有哪些session存在
