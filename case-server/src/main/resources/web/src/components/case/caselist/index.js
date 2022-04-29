@@ -116,7 +116,7 @@ class CaseLists extends React.Component {
     createrFilter,
     iterationFilter,
     choiseDate = [],
-    caseKeyWords,
+    caseKeyWords = '',
   ) => {
     const { caseIds } = this.state;
     request(`${this.props.doneApiPrefix}/case/list`, {
@@ -145,6 +145,7 @@ class CaseLists extends React.Component {
           createrFilter,
           iterationFilter,
           choiseDate,
+          caseKeyWords,
         });
       } else {
         message.error(res.msg);
@@ -200,6 +201,7 @@ class CaseLists extends React.Component {
       nameFilter: '',
       choiseDate: [],
       createrFilter: '',
+      caseKeyWords: '',
     });
   };
   onClose = vis => {
@@ -228,6 +230,7 @@ class CaseLists extends React.Component {
       choiseDate,
       treeData,
       caseIds,
+      caseKeyWords,
     } = this.state;
     const { match, doneApiPrefix } = this.props;
     const { productLineId } = match.params;
@@ -299,6 +302,7 @@ class CaseLists extends React.Component {
               doneApiPrefix={this.props.doneApiPrefix}
               current={this.state.current}
               nameFilter={nameFilter}
+              caseKeyWords={caseKeyWords}
               createrFilter={createrFilter}
               iterationFilter={iterationFilter}
               choiseDate={choiseDate}

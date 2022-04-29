@@ -68,6 +68,7 @@ class Lists extends React.Component {
           iterationFilter: this.props.iterationFilter,
           createrFilter: this.props.createrFilter,
           nameFilter: this.props.nameFilter,
+          caseKeyWords: this.props.caseKeyWords,
           expendKeys: [],
         });
       });
@@ -298,6 +299,7 @@ class Lists extends React.Component {
         createrFilter,
         iterationFilter,
         choiseDate,
+        caseKeyWords,
       } = this.state;
       this.props.getCaseList(
         this.state.current,
@@ -305,6 +307,7 @@ class Lists extends React.Component {
         createrFilter || '',
         iterationFilter || '',
         choiseDate || [],
+        caseKeyWords || '',
       );
     });
   };

@@ -50,7 +50,7 @@ export default class CaseMgt extends React.Component {
   componentWillUnmount() {
     // 销毁拦截判断是否离开当前页面
     window.removeEventListener('beforeunload', this.handleAutoSave);
-    this.handleAutoSave();
+  //  this.handleAutoSave();
   }
   ///case/getRequirement
   handleAutoSave = () => {
@@ -71,6 +71,7 @@ export default class CaseMgt extends React.Component {
         this.updateCase();
       }
     }
+
   };
   getRequirementsById = requirementIds => {
     // request(`${this.props.oeApiPrefix}/business-lines/requirements`, {
