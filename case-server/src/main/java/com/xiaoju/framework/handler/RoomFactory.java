@@ -23,4 +23,7 @@ public class RoomFactory {
 //        }
     }
 
+    public static void clearRoom(String roomId) {
+        roomEntityMap.remove(roomId);
+    }
 }

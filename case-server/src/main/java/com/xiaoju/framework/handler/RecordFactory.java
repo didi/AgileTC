@@ -18,4 +18,8 @@ public class RecordFactory {
             return roomEntity;
         }
     }
+
+    public static void clearRoom(String roomId) {
+        recordEntityMap.remove(roomId);
+    }
 }

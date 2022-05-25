@@ -136,6 +136,9 @@ public class SocketIOServiceImpl implements SocketIOService {
             if (null == clientEntity.getRecordId()) {
                 RoomEntity roomEntity = RoomFactory.getRoom(roomId, clientEntity.getCaseId(), caseMapper);
                 roomEntity.removeClient(client);
+                if (roomEntity.getClientNum() == 0) {
+                    RoomFactory.clearRoom(roomId);
+                }
                 clientRoomMap.remove(client);
                 LOGGER.info("remove case client room map size: " + clientRoomMap.keySet().size());
                 client.leaveRoom(roomId);
@@ -144,6 +147,9 @@ public class SocketIOServiceImpl implements SocketIOService {
             } else {
                 RecordEntity recordEntity = RecordFactory.getRoom(roomId, clientEntity.getCaseId(), caseMapper, clientEntity.getRecordId(), recordMapper);
                 recordEntity.removeClient(client);
+                if (recordEntity.getClientNum() == 0) {
+                    RecordFactory.clearRoom(roomId);
+                }
                 clientRoomMap.remove(client);
                 LOGGER.info("remove record client room map size: " + clientRoomMap.keySet().size());
                 client.leaveRoom(roomId);
