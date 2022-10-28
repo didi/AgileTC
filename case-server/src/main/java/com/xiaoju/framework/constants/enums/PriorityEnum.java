@@ -10,7 +10,8 @@ public enum PriorityEnum {
     // 枚举
     Priority0(1,"P0用例"),
     Priority1(2,"P1用例"),
-    Priority2(3,"P2用例");
+    Priority2(3,"P2用例"),
+    Priority3(4,"P3用例");
 
     private Integer value;
     private String name;

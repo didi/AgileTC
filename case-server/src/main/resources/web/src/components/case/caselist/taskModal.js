@@ -176,7 +176,7 @@ class TaskModal extends React.Component {
       marginTop: '10px',
       fontSize: '14px',
     };
-    const grade = ['P0', 'P1', 'P2'];
+    const grade = ['P0', 'P1', 'P2', 'P3'];
     return (
       <Modal
         visible={this.props.visible}

@@ -1,19 +1,19 @@
-import React, { Component } from 'react';
-import { Icon, Button, Tooltip } from 'antd';
-import './PriorityGroup.scss';
+import React, { Component } from 'react'
+import { Icon, Button, Tooltip } from 'antd'
+import './PriorityGroup.scss'
 
 class PriorityGroup extends Component {
-  handleAction = (priority) => {
-    const { minder } = this.props;
-    minder.execCommand('Priority', priority);
-  };
+  handleAction = priority => {
+    const { minder } = this.props
+    minder.execCommand('Priority', priority)
+  }
   render() {
-    const { minder, priority = [1, 2, 3], isLock } = this.props;
-    let disabled = minder.getSelectedNodes().length === 0;
-    if (isLock) disabled = true;
+    const { minder, priority = [1, 2, 3, 4], isLock } = this.props
+    let disabled = minder.getSelectedNodes().length === 0
+    if (isLock) disabled = true
     return (
       <div className="nodes-actions" style={{ width: 120 }}>
-        <Tooltip title="移除优先级" getPopupContainer={(triggerNode) => triggerNode.parentNode}>
+        <Tooltip title="移除优先级" getPopupContainer={triggerNode => triggerNode.parentNode}>
           <Button
             type="link"
             size="small"
@@ -29,7 +29,7 @@ class PriorityGroup extends Component {
           </Button>
         </Tooltip>
         {priority &&
-          priority.map((item) => {
+          priority.map(item => {
             return (
               <Button
                 key={item}
@@ -41,10 +41,10 @@ class PriorityGroup extends Component {
               >
                 P{item - 1}
               </Button>
-            );
+            )
           })}
       </div>
-    );
+    )
   }
 }
-export default PriorityGroup;
+export default PriorityGroup

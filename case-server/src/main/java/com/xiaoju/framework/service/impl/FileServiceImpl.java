@@ -180,8 +180,8 @@ public class FileServiceImpl implements FileService {
                     data.put("id", UUID.randomUUID().toString());
                     data.put("created", System.currentTimeMillis());
                     String priority = row.getCell(row.getFirstCellNum()+1) == null ? "" : row.getCell(row.getFirstCellNum()+1).getStringCellValue().trim();
-                    if (priority.equals("P0") || priority.equals("P1") || priority.equals("P2")) {
-                        data.put("priority", Integer.valueOf(priority.split("P")[1])+1);
+                    if (priority.equals("P0") || priority.equals("P1") || priority.equals("P2") || priority.equals("P3")) {
+                        data.put("priority", Integer.parseInt(priority.split("P")[1])+1);
                     } // 非法字符的或者其他级别,则不添加priority字段
                     data.put("resource", row.getCell(row.getFirstCellNum()+8) == null ? "" : row.getCell(row.getFirstCellNum()+8).getStringCellValue().trim().split(","));
                     String note = "";
