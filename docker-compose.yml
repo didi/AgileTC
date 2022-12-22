@@ -1,0 +1,34 @@
+version: '3'
+services:
+  case-server:
+    image: yestodayhadrain/case-server:v1.0.6
+    container_name: agileTC-caseserver
+    env_file:
+      - ./agile.env
+    command: bash -c "cd /app/ && java -jar case-server-1.0-SNAPSHOT.jar"
+    # docker 端口映射,如果宿主机 8080 端口被占用需要更改
+    ports:
+      - "8080:8094"
+    depends_on:
+      - mysql
+    restart: always
+    networks:
+      - agile-net
+  mysql:
+    image: mysql:latest
+    container_name: agileTC-mysql
+    # 挂载到宿主机目录 /data/mysql/data 
+    volumes:
+      - /data/mysql/data:/var/lib/mysql
+    env_file:
+      - ./agile.env
+    # docker 端口映射,如果宿主机 6666 端口被占用需要更改
+    ports:
+      - "6666:3306" 
+    restart: always
+    networks:
+      - agile-net
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+networks:
+  agile-net:
+    driver: bridge

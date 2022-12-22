@@ -86,7 +86,7 @@ alter table exec_record
 # 增加用户信息表
 CREATE TABLE `user` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键id',
-  `username` varchar(255) NOT NULL DEFAULT '' COMMENT '用户名',
+  `username` varchar(1023) NOT NULL DEFAULT '' COMMENT '用户名',
   `password` varchar(1023) NOT NULL DEFAULT '' COMMENT '密码',
   `salt` varchar(1023) NOT NULL DEFAULT '' COMMENT '盐',
   `is_delete` int(1) NOT NULL DEFAULT '0' COMMENT '是否删除',
