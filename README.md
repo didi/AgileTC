@@ -92,7 +92,9 @@ Group members exceed 200, you need to scan the QR code to add customer service a
 
 ![image](https://dpubstatic.udache.com/static/dpubimg/1caac875-675a-4078-a946-6680f30553ef.png)
 
+#### Attention
 
+Please avoid deploying this project to the public network. If you need to deploy, please improve the security of the identity authentication function. This project will not be responsible for any security problems in the deployment of public networks.
 
 
 

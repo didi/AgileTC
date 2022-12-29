@@ -50,3 +50,7 @@ git clone https://github.com/didi/AgileTC.git
 群成员超200，需要扫描二维码添加客服，邀请入群
 
 ![image](https://dpubstatic.udache.com/static/dpubimg/1caac875-675a-4078-a946-6680f30553ef.png)
+
+#### 注意
+请避免将本项目部署到公网，如需部署，请完善身份认证功能的安全性。如果部署公网出现安全问题，本项目概不负责。 
+
