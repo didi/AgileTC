@@ -1,5 +1,6 @@
 package com.xiaoju.framework.handler;
 
+import com.alibaba.fastjson.JSON;
 import com.corundumstudio.socketio.BroadcastOperations;
 import com.corundumstudio.socketio.SocketIOClient;
 import com.corundumstudio.socketio.SocketIOServer;
@@ -16,6 +17,7 @@ public class LockIngressTask extends IngressTask {
 
     @Override
     public void run()  {
+        LOGGER.info("websocket client:{}",JSON.toJSONString(client));
         room.lock();
         LOGGER.info(data.getMessage());
         ClientEntity clientEntity = getRoomFromClient(client);
