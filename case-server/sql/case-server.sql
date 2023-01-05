@@ -94,6 +94,7 @@ CREATE TABLE `user` (
   `product_line_id` bigint(20) NOT NULL DEFAULT '0' COMMENT '业务线',
   `gmt_created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '注册时间',
   `gmt_updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `authority_name` varchar(63) NOT NULL DEFAULT ''COMMENT '权限名称，ROLE_开头，全大写',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=677 DEFAULT CHARSET=utf8 COMMENT='用户信息';
 
@@ -110,7 +111,9 @@ CREATE TABLE `authority` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='权限信息';
 
-INSERT INTO `authority` (id,authority_name,authority_desc,authority_content) VALUES (1, 'ROLE_USER', '普通用户', '/api/dir/list,/api/record/list,/api/record/getRecordInfo,/api/user/**,/api/case/list*');
+INSERT INTO `authority` (id,authority_name,authority_desc,authority_content) VALUES (1, 'ROLE_USER', '普通用户', '/api/dir/list,/api/record/list,/api/record/getRecordInfo,/api/user/**,/api/case/list*,api/dir/cardTree,api/case/getCaseInfo');
 INSERT INTO `authority` (id,authority_name,authority_desc,authority_content) VALUES (2, 'ROLE_ADMIN', '管理员', '/api/dir/list,/api/backup/**,/api/record/**,/api/file/**,/api/user/**,/api/case/**');
 INSERT INTO `authority` (id,authority_name,authority_desc,authority_content) VALUES (3, 'ROLE_SA', '超级管理员','/api/**');
+INSERT INTO `authority` (id,authority_name,authority_desc,authority_content) VALUES (4, 'ROLE_QA', '普通测试人员','/api/**');
+INSERT INTO `authority` (id,authority_name,authority_desc,authority_content) VALUES (5, 'ROLE_RD', '普通开发人员','/api/dir/list,/api/record/list,/api/record/getRecordInfo,/api/user/**,/api/case/list*,/api/dir/cardTree,/api/case/**');
 
