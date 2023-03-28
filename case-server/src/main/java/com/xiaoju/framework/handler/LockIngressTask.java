@@ -20,29 +20,33 @@ public class LockIngressTask extends IngressTask {
         LOGGER.info(data.getMessage());
         ClientEntity clientEntity = getRoomFromClient(client);
         String roomId = clientEntity.getRoomId();
-
+        BroadcastOperations broadcastOperations = socketIOServer.getRoomOperations(roomId);
         if (data.getMessage().equals("lock")) { // lock消息
             if (room.isLockedByClient()) {
                 client.sendEvent("lock", PushMessage.builder().message("3").build()); // 当前已经lock了,后续可以发送详细锁住人信息
+                room.unlock();
                 return;
             } else {
                 room.clientLock(client);
+                broadcastOperations.sendEvent("lock", client, PushMessage.builder().message("0").build());
             }
         } else if(data.getMessage().equals("unlock")) {
             if (!room.isLockedByClient()) { // 当前已经unlock状态
                 client.sendEvent("lock", PushMessage.builder().message("3").build()); // 当前已经lock了,后续可以发送详细锁住人信息
+                room.unlock();
                 return;
             } else {
                 if (room.lockByClient(client)) { // 自己锁的
                     room.clientUnlock();
+                    broadcastOperations.sendEvent("lock", client, PushMessage.builder().message("1").build());
                 } else {// 其他人锁的
                     client.sendEvent("lock", PushMessage.builder().message("3").build()); // 当前已经lock了,后续可以发送详细锁住人信息
+                    room.unlock();
                     return;
                 }
             }
         }
-        BroadcastOperations broadcastOperations = socketIOServer.getRoomOperations(roomId);
-        broadcastOperations.sendEvent("lock", client, PushMessage.builder().message("0").build());
+
         client.sendEvent("lock", PushMessage.builder().message("2").build()); // 当前已经lock了,后续可以发送详细锁住人信息
         room.unlock();
     }

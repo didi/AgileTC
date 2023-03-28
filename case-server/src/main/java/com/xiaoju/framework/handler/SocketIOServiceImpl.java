@@ -103,6 +103,10 @@ public class SocketIOServiceImpl implements SocketIOService {
                 LOGGER.info("add case client room map size: " + clientRoomMap.keySet().size());
                 executorEgressService.submit(new AckEgressTask("open_event",
                         PushMessage.builder().message(roomEntity.getCaseContent()).build(), client));
+                if (roomEntity.isLockedByClient()) {
+                    LOGGER.info("add client, case is locked by others");
+                    executorEgressService.submit(new AckEgressTask("lock", PushMessage.builder().message("0").build(), client));
+                }
 
                 executorEgressService.submit(new NotifyEgressTask("connect_notify_event",
                         PushMessage.builder().message(roomEntity.getClientName()).build(), socketIOServer.getRoomOperations(roomId)));
@@ -118,6 +122,10 @@ public class SocketIOServiceImpl implements SocketIOService {
                 executorEgressService.submit(new AckEgressTask("open_event",
                         PushMessage.builder().message(recordEntity.getCaseContent()).build(), client));
 
+                if (recordEntity.isLockedByClient()) {
+                    LOGGER.info("add client, record is locked by others");
+                    executorEgressService.submit(new AckEgressTask("lock", PushMessage.builder().message("0").build(), client));
+                }
                 executorEgressService.submit(new NotifyEgressTask("connect_notify_event",
                         PushMessage.builder().message(recordEntity.getClientName()).build(), socketIOServer.getRoomOperations(roomId)));
 
@@ -135,6 +143,11 @@ public class SocketIOServiceImpl implements SocketIOService {
             String roomId = clientEntity.getRoomId();
             if (null == clientEntity.getRecordId()) {
                 RoomEntity roomEntity = RoomFactory.getRoom(roomId, clientEntity.getCaseId(), caseMapper);
+                if (roomEntity.lockByClient(client)) {
+                    LOGGER.info("remove client who has lock, case unlock");
+                    executorEgressService.submit(new NotifyEgressTask("lock", PushMessage.builder().message("1").build(), socketIOServer.getRoomOperations(roomId)));
+                    roomEntity.clientUnlock();
+                }
                 roomEntity.removeClient(client);
                 if (roomEntity.getClientNum() == 0) {
                     RoomFactory.clearRoom(roomId);
@@ -142,10 +155,16 @@ public class SocketIOServiceImpl implements SocketIOService {
                 clientRoomMap.remove(client);
                 LOGGER.info("remove case client room map size: " + clientRoomMap.keySet().size());
                 client.leaveRoom(roomId);
+
                 executorEgressService.submit(new NotifyEgressTask("connect_notify_event",
                         PushMessage.builder().message(roomEntity.getClientName()).build(), socketIOServer.getRoomOperations(roomId)));
             } else {
                 RecordEntity recordEntity = RecordFactory.getRoom(roomId, clientEntity.getCaseId(), caseMapper, clientEntity.getRecordId(), recordMapper);
+                if (recordEntity.lockByClient(client)) {
+                    LOGGER.info("remove client who has lock, record unlock");
+                    executorEgressService.submit(new NotifyEgressTask("lock", PushMessage.builder().message("1").build(), socketIOServer.getRoomOperations(roomId)));
+                    recordEntity.clientUnlock();
+                }
                 recordEntity.removeClient(client);
                 if (recordEntity.getClientNum() == 0) {
                     RecordFactory.clearRoom(roomId);
