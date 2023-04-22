@@ -1,0 +1,5 @@
+dist/
+.idea
+logs
+target
+temp
