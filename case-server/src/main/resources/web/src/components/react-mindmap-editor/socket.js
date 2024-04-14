@@ -111,7 +111,26 @@ class Socket extends React.Component {
             }
             
         });
-
+        websocket.on('undo', evt => {
+            console.log('undo info', evt.message);
+            try {
+                if (typeof this.props.handleUndoAck === 'function') {
+                    this.props.handleUndoAck(evt.message);
+                }
+            } catch(e) {
+                alert('客户端接受通知消息异常，请刷新重试');
+            }
+        })
+        websocket.on('redo', evt => {
+            console.log('redo info', evt.message);
+            try {
+                if (typeof this.props.handleRedoAck === 'function') {
+                    this.props.handleRedoAck(evt.message);
+                }
+            } catch(e) {
+                alert('客户端接受通知消息异常，请刷新重试');
+            }
+        })
         // message 0:加锁；1：解锁；2:加/解锁成功；3:加/解锁失败
         websocket.on('lock', evt => {
             console.log('lock info', evt.message);
@@ -144,7 +163,6 @@ class Socket extends React.Component {
 
     sendMessage(type, message) {
         let websocket = this.state.ws;
-        console.log('-- message --', message);
         // var jsonObject = {userName: 'userName', message: message};
         websocket.emit(type, message);
     }
@@ -181,6 +199,8 @@ Socket.propTypes = {
     onOpen: PropTypes.func,
     onClose: PropTypes.func,
     handleLock: PropTypes.func,
+    handleUndoAck: PropTypes.func,
+    handleRedoAck: PropTypes.func,
     handleWsUserStat: PropTypes.func
 }
 

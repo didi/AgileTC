@@ -30,7 +30,6 @@ class DoGroup extends Component {
   makeUndoDiff = () => {
     const { minder } = this.props;
     let { undoDiffs, lastSnap } = this.state;
-    
     const headSnap = minder.exportJson();
     console.log('----headsnap---', headSnap);
     const diff = jsonDiff.compare(headSnap, lastSnap);
@@ -45,7 +44,6 @@ class DoGroup extends Component {
         undoDiffs.push(diff);
         doDiffs.push(doDiff);
       }
-      
       while (undoDiffs.length > MAX_HISTORY) {
         undoDiffs.shift();
         doDiffs.shift();
@@ -60,32 +58,52 @@ class DoGroup extends Component {
     let { lastSnap, redoDiffs } = this.state;
     let revertSnap = minder.exportJson();
     redoDiffs.push(jsonDiff.compare(revertSnap, lastSnap));
+ 
     lastSnap = revertSnap;
     this.setState({ redoDiffs, lastSnap });
   };
+
   // 撤销
-  undo = () => {
+  undo = (notifyInfo) => {
+    this.notifyInfo = notifyInfo;
     this.setState({ patchLock: true }, () => {
+      console.log('notifyInfo', this.notifyInfo)
       const { minder } = this.props;
       let { undoDiffs } = this.state;
       const undoDiff = undoDiffs.pop();
       doDiffs.pop();
       if (undoDiff) {
-        minder.applyPatches(undoDiff);
+        
+        if (this.notifyInfo instanceof Object) {
+          this.props.wsInstance.sendMessage('undo',{ message: JSON.stringify(undoDiff) })
+          minder.applyPatches(undoDiff)
+        } else {
+          minder.applyPatches(JSON.parse(notifyInfo || '{}'));
+        }
+      
         this.makeRedoDiff();
       }
       this.setState({ patchLock: false });
     });
   };
   // 重做
-  redo = () => {
+  redo = (notifyInfo) => {
+    this.notifyInfo = notifyInfo;
     this.setState({ patchLock: true }, () => {
       const { minder } = this.props;
       let { redoDiffs } = this.state;
       const redoDiff = redoDiffs.pop();
+      
+      console.log('pop redoDiffs ?', redoDiffs.length)
       if (redoDiff) {
-        minder.applyPatches(redoDiff);
+        if (this.notifyInfo instanceof Object) {
+          this.props.wsInstance.sendMessage('redo',{ message: JSON.stringify(redoDiff) })
+          minder.applyPatches(redoDiff);
+        } else {
+          minder.applyPatches(JSON.parse(notifyInfo || '{}'));
+        }
         this.makeUndoDiff();
+        doDiffs.pop()
       }
       this.setState({ patchLock: false });
     });
@@ -110,6 +128,7 @@ class DoGroup extends Component {
   };
   hasRedo = () => {
     const { redoDiffs } = this.state;
+    console.log('has redoDiffs ?', redoDiffs.length)
     return !!redoDiffs.length;
   };
 

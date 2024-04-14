@@ -243,6 +243,7 @@ class KityminderEditor extends Component {
       key: 'Ctrl + Z',
       enable: () => {
         if (this.groupNode) {
+          
           return this.groupNode.undo();
         }
         return !readOnly;
@@ -344,6 +345,17 @@ class KityminderEditor extends Component {
 
     this.hotbox = hotbox;
   };
+  handleUndoAck = (data) => {
+    
+    console.log('undo ack get', data)
+    this.groupNode.undo(data)
+  }
+  handleRedoAck = (data) => { 
+    console.log('redo ack get', data)
+    this.groupNode.redo(data)
+    
+  }
+
   // handleUndo = () => {
   //   this.ws.sendMessage('1undo');
   //   const { undoCnt, redoCnt } = this.state;
@@ -432,7 +444,9 @@ class KityminderEditor extends Component {
         if (ctrlKey && window.event.keyCode === 90) {
           // this.expectedBase = this.minder.getBase() - 1;
           // this.handleUndo();
+          console.log('begin undo')
           e.preventDefault();
+          
           this.groupNode.undo();
         }
         if (ctrlKey && window.event.keyCode === 89) {
@@ -464,6 +478,7 @@ class KityminderEditor extends Component {
       caseObj.right = window.minderData.right || 1;
 
       const patch = this.groupNode.getAndResetPatch();
+      console.log('send patch', patch)
       if (patch.length === 1 && patch[0].path === '/base') {
           e.minder._status = 'normal';
           return;
@@ -482,6 +497,7 @@ class KityminderEditor extends Component {
         // const { undoCnt } = this.state;
         // this.setState({ undoCnt: undoCnt + 1 });
         // this.websocketHeartbeatJs.send(JSON.stringify({ case: caseObj, patch }));
+        
         this.ws.sendMessage('edit', { caseContent: JSON.stringify(caseObj), patch: JSON.stringify(patch), caseVersion: caseObj.base });
         this.base = e.minder.getBase();
         this.expectedBase = this.base + 1;
@@ -865,7 +881,7 @@ class KityminderEditor extends Component {
     const childProps = {
       ...this.props,
       minder,
-      isLock,
+      isLock
     };
 
     const tabContentClass = `toolbar has-right-border`;
@@ -887,6 +903,8 @@ class KityminderEditor extends Component {
               onClose={this.handleWsClose}
               wsMinder={this.minder}
               handleLock={this.handleLock}
+              handleUndoAck={this.handleUndoAck}
+              handleRedoAck={this.handleRedoAck}
               handleWsUserStat={this.handleWsUserStat}
               // onError={e => {
               //   notification.info({
@@ -1009,6 +1027,7 @@ class KityminderEditor extends Component {
                       ref={groupNode => (this.groupNode = groupNode)}
                       initData={this.initData}
                       {...childProps}
+                      wsInstance={this.ws}
                     />
                     {!readOnly && (
                       <Nodes

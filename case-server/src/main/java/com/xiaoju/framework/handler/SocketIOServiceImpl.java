@@ -193,6 +193,14 @@ public class SocketIOServiceImpl implements SocketIOService {
             executorIngressService.submit(new LockIngressTask(client, socketIOServer, clientRoomMap.get(client), executorEgressService, data));
         });
 
+        socketIOServer.addEventListener("undo", PushMessage.class, (client, data, ackSender) -> {
+            executorIngressService.submit(new UndoIngressTask(client, socketIOServer, clientRoomMap.get(client), executorEgressService, data));
+        });
+
+        socketIOServer.addEventListener("redo", PushMessage.class, (client, data, ackSender) -> {
+            executorIngressService.submit(new RedoIngressTask(client, socketIOServer, clientRoomMap.get(client), executorEgressService, data));
+        });
+
         socketIOServer.addEventListener("save", EditMessage.class, (client, data, ackSender) -> {
             executorIngressService.submit(new SaveIngressTask(client, socketIOServer, clientRoomMap.get(client), executorEgressService, data, caseBackupMapper));
         });
