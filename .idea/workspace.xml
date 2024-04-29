@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="bcbc4c35-28b5-45e4-a202-c116986541fa" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/case-server/src/main/resources/web/dist/p__contrast__seeResult.9bbbb882.async.js" beforeDir="false" afterPath="$PROJECT_DIR$/case-server/src/main/resources/web/dist/p__contrast__seeResult.9bbbb882.async.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/case-server/src/main/resources/web/dist/p__testTask__index.9bc59310.async.js" beforeDir="false" afterPath="$PROJECT_DIR$/case-server/src/main/resources/web/dist/p__testTask__index.9bc59310.async.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/case-server/src/main/resources/web/dist/p__testTask__index.9e22d126.async.js" beforeDir="false" afterPath="$PROJECT_DIR$/case-server/src/main/resources/web/dist/p__testTask__index.9e22d126.async.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/case-server/src/main/resources/web/src/components/case/casemgt/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/case-server/src/main/resources/web/src/components/case/casemgt/index.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/case-server/src/main/resources/web/src/pages/contrast/seeResult.js" beforeDir="false" afterPath="$PROJECT_DIR$/case-server/src/main/resources/web/src/pages/contrast/seeResult.js" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectId" id="2J7kGcGXC8Js3Q27OyjWoZBNFSu" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+    <option name="showMembers" value="true" />
+    <option name="showVisibilityIcons" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="node.js.detected.package.eslint" value="true" />
+    <property name="node.js.selected.package.eslint" value="(autodetect)" />
+    <property name="nodejs_package_manager_path" value="npm" />
+  </component>
+  <component name="RunManager" selected="Database Script.case-server.sql">
+    <configuration name="case-server.sql" type="DatabaseScript" editBeforeRun="true" temporary="true" nameIsGenerated="true">
+      <script-file value="$PROJECT_DIR$/case-server/sql/case-server.sql" />
+      <script-mode>FILE</script-mode>
+      <method v="2" />
+    </configuration>
+    <configuration name="CaseServerApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+      <module name="case-server" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.xiaoju.framework.CaseServerApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Database Script.case-server.sql" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="bcbc4c35-28b5-45e4-a202-c116986541fa" name="Changes" comment="" />
+      <created>1671436414908</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1671436414908</updated>
+      <workItem from="1671436421900" duration="5909000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>

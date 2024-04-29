@@ -2,7 +2,7 @@ CREATE TABLE `case_backup` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键id',
   `case_id` bigint(20) NOT NULL DEFAULT '0' COMMENT '用例集id',
   `title` varchar(64) NOT NULL DEFAULT '' COMMENT '用例名称',
-  `creator` varchar(20) NOT NULL DEFAULT '' COMMENT '用例保存人',
+  `creator` varchar(1023) NOT NULL DEFAULT '' COMMENT '用例保存人',
   `gmt_created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '用例保存时间',
   `case_content` longtext CHARACTER SET utf8mb4,
   `record_content` longtext COMMENT '任务执行内容',
@@ -22,9 +22,9 @@ CREATE TABLE `exec_record` (
   `pass_count` int(10) NOT NULL DEFAULT '0' COMMENT '执行个数',
   `total_count` int(10) NOT NULL DEFAULT '0' COMMENT '需执行总个数',
   `success_count` int(10) NOT NULL DEFAULT '0' COMMENT '成功个数',
-  `creator` varchar(20) NOT NULL DEFAULT '' COMMENT '用例创建人',
-  `modifier` varchar(20) NOT NULL DEFAULT '' COMMENT '用例修改人',
-  `executors` varchar(200) NOT NULL DEFAULT '' COMMENT '执行人',
+  `creator` varchar(1023) NOT NULL DEFAULT '' COMMENT '用例创建人',
+  `modifier` varchar(1023) NOT NULL DEFAULT '' COMMENT '用例修改人',
+  `executors` varchar(1023) NOT NULL DEFAULT '' COMMENT '执行人',
   `description` varchar(1000) NOT NULL DEFAULT '' COMMENT '描述',
   `choose_content` varchar(200) NOT NULL DEFAULT '' COMMENT '圈选用例内容',
   `gmt_created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '记录创建时间',
@@ -33,7 +33,7 @@ CREATE TABLE `exec_record` (
   `expect_end_time` timestamp NOT NULL DEFAULT '1971-01-01 00:00:00' COMMENT '预计结束时间',
   `actual_start_time` timestamp NOT NULL DEFAULT '1971-01-01 00:00:00' COMMENT '实际开始时间',
   `actual_end_time` timestamp NOT NULL DEFAULT '1971-01-01 00:00:00' COMMENT '实际结束时间',
-  `owner` varchar(200) NOT NULL DEFAULT '' COMMENT '负责人',
+  `owner` varchar(1023) NOT NULL DEFAULT '' COMMENT '负责人',
   PRIMARY KEY (`id`),
   KEY `idx_caseId_isdelete` (`case_id`,`is_delete`)
 ) ENGINE=InnoDB AUTO_INCREMENT=898 DEFAULT CHARSET=utf8 COMMENT='用例执行记录';
@@ -44,7 +44,7 @@ CREATE TABLE `test_case` (
   `title` varchar(64) NOT NULL DEFAULT 'testcase' COMMENT '用例名称',
   `description` varchar(512) NOT NULL DEFAULT '' COMMENT '用例描述',
   `is_delete` int(11) NOT NULL DEFAULT '0' COMMENT '用例状态 0-正常 1-删除',
-  `creator` varchar(20) NOT NULL DEFAULT '' COMMENT '用例创建人',
+  `creator` varchar(1023) NOT NULL DEFAULT '' COMMENT '用例创建人',
   `modifier` varchar(1000) NOT NULL DEFAULT '' COMMENT '用例修改人',
   `case_content` longtext CHARACTER SET utf8mb4,
   `gmt_created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '记录创建时间',
@@ -86,7 +86,7 @@ alter table exec_record
 # 增加用户信息表
 CREATE TABLE `user` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键id',
-  `username` varchar(255) NOT NULL DEFAULT '' COMMENT '用户名',
+  `username` varchar(1023) NOT NULL DEFAULT '' COMMENT '用户名',
   `password` varchar(1023) NOT NULL DEFAULT '' COMMENT '密码',
   `salt` varchar(1023) NOT NULL DEFAULT '' COMMENT '盐',
   `is_delete` int(1) NOT NULL DEFAULT '0' COMMENT '是否删除',
@@ -94,6 +94,7 @@ CREATE TABLE `user` (
   `product_line_id` bigint(20) NOT NULL DEFAULT '0' COMMENT '业务线',
   `gmt_created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '注册时间',
   `gmt_updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `authority_name` varchar(63) NOT NULL DEFAULT ''COMMENT '权限名称，ROLE_开头，全大写',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=677 DEFAULT CHARSET=utf8 COMMENT='用户信息';
 
@@ -110,7 +111,9 @@ CREATE TABLE `authority` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='权限信息';
 
-INSERT INTO `authority` (id,authority_name,authority_desc,authority_content) VALUES (1, 'ROLE_USER', '普通用户', '/api/dir/list,/api/record/list,/api/record/getRecordInfo,/api/user/**,/api/case/list*');
+INSERT INTO `authority` (id,authority_name,authority_desc,authority_content) VALUES (1, 'ROLE_USER', '普通用户', '/api/dir/list,/api/record/list,/api/record/getRecordInfo,/api/user/**,/api/case/list*,api/dir/cardTree,api/case/getCaseInfo');
 INSERT INTO `authority` (id,authority_name,authority_desc,authority_content) VALUES (2, 'ROLE_ADMIN', '管理员', '/api/dir/list,/api/backup/**,/api/record/**,/api/file/**,/api/user/**,/api/case/**');
 INSERT INTO `authority` (id,authority_name,authority_desc,authority_content) VALUES (3, 'ROLE_SA', '超级管理员','/api/**');
+INSERT INTO `authority` (id,authority_name,authority_desc,authority_content) VALUES (4, 'ROLE_QA', '普通测试人员','/api/**');
+INSERT INTO `authority` (id,authority_name,authority_desc,authority_content) VALUES (5, 'ROLE_RD', '普通开发人员','/api/dir/list,/api/record/list,/api/record/getRecordInfo,/api/user/**,/api/case/list*,/api/dir/cardTree,/api/case/**');
 
