@@ -201,7 +201,7 @@ export default class CaseMgt extends React.Component {
             background: '#fff',
           }}
         >
-          {(recordDetail && (
+          {/*(recordDetail && (
             <Row>
               <Col span={6} className="description-case elipsis-case">
                 <Tooltip
@@ -330,10 +330,9 @@ export default class CaseMgt extends React.Component {
                   : null}
               </Col>
             </Row>
-          )) ||
-            null}
+          )) || null*/}
 
-          {(casedetail && (
+          {/*(casedetail && (
             <Row>
               <Col span={6} className="description-case elipsis-case">
                 <Tooltip title={casedetail.description} placement="topLeft">
@@ -349,15 +348,15 @@ export default class CaseMgt extends React.Component {
               </Col>
             </Row>
           )) ||
-            null}
-           
+          null*/}
+
           <AgileTCEditor
             ref={editorNode => (this.editorNode = editorNode)}
             tags={['前置条件', '执行步骤', '预期结果']}
             iscore={iscore}
             progressShow={progressShow}
             readOnly={readOnly}
-            mediaShow={!progressShow}
+            // mediaShow={!progressShow}
             editorStyle={{ height: 'calc(100vh - 100px)' }}
             toolbar={{
               image: true,
@@ -369,7 +368,10 @@ export default class CaseMgt extends React.Component {
             baseUrl=""
             uploadUrl="/api/file/uploadAttachment"
             wsUrl={`http://${window.location.hostname}:8095`}
-            wsParam = {{ transports:['websocket','xhr-polling','jsonp-polling'], query: { caseId: caseId, recordId: itemid, user: user }}}
+            wsParam={{
+              transports: ['websocket', 'xhr-polling', 'jsonp-polling'],
+              query: { caseId: caseId, recordId: itemid, user: user },
+            }}
             // wsUrl={`ws://localhost:8094/api/case/${caseId}/${itemid}/${iscore}/${user}`}
             onSave={
               Number(iscore) !== 2
